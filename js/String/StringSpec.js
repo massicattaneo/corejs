@@ -1,0 +1,5 @@
+describe("PROTOTYPE - STRING", function () {
+
+    
+
+});

@@ -1,0 +1,32 @@
+{
+  "name": "corejs",
+  "version": "1.0.0",
+  "description": "Javascript Framework",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/massicattaneo/corejs.git"
+  },
+  "author": "Massimiliano Cattaneo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/massicattaneo/corejs/issues"
+  },
+  "homepage": "https://github.com/massicattaneo/corejs#readme",
+  "dependencies": {
+    "gulp": "^3.9.1",
+    "jasmine": "^2.4.1",
+    "jasmine-core": "^2.4.1",
+    "jasmine-sinon": "^0.4.0",
+    "karma": "^0.13.22",
+    "karma-chrome-launcher": "^1.0.1",
+    "karma-jasmine": "^0.3.8",
+    "karma-jasmine-sinon": "^1.0.4",
+    "require-dir": "^0.3.0",
+    "karma-mocha-reporter": "1.1.1",
+    "karma-jasmine-html-reporter": "0.1.8"
+  }
+}
