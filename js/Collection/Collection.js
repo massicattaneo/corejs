@@ -9,9 +9,7 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-var Collection;
-
-(function () {
+var Collection = function () {
 
     var sortTogether = function(array1, array2, versus) {
         var merged = [];
@@ -183,7 +181,7 @@ var Collection;
         }
     };
 
-    Collection = function (ClassType) {
+    return function (ClassType) {
         var obj = Object.extend(proto);
         obj.initValues();
         if (Array.isArray(ClassType)) {
@@ -196,6 +194,7 @@ var Collection;
 
         return obj;
     }
-})();
+
+}();
 
 

@@ -10,186 +10,159 @@
  */
 
 var Need = function () {
-
-};
-
-var Promise, Promises;
-
-(function () {
-    var WAIT = 0, DONE = 1, FAIL = 2;
-
-    var PromiseAbstract = function () {
-
-        // var obj = {};
-        // var id = -1;
-        // var status = WAIT;
-        // var returnData = [];
-        // var actions = [];
-        //
-        // obj.setStatus = function (status) {
-        //     status = status;
-        // };
-        // obj.isStatus = function (status) {
-        //     return status === status;
-        // };
-        // obj.setAction = function (status, action) {
-        //     this.add(action, status);
-        // };
-        // obj.getActions = function (status) {
-        //     return this.filter(status);
-        // };
-            // eachAction: function (status, callback) {
-            //     this.getActions(status).each(function(index, key, action) {
-            //         callback.call(this, index, key, action);
-            //     });
-            // },
-        //     hasActions: function (status) {
-        //         return !this.filter(status).isEmpty();
-        //     },
-        //     setData: function(status, action) {
-        //         this.returnData[status] = action;
-        //     },
-        //     getData: function(status) {
-        //         return this.returnData[status];
-        //     },
-        //     finalize: function(status, data) {
-        //         var self = this;
-        //         this.setData(status, data);
-        //         this.setStatus(status);
-        //         this.eachAction(status, function(i,k,action) {
-        //             action.call(self, data, self.id);
-        //         });
-        //     },
-        //     callAction: function(status, action) {
-        //         var self = this;
-        //         if (this.isStatus(status)) {
-        //             action.call(self, self.getData(status), self.id);
-        //         } else {
-        //             this.setAction(status, action);
-        //         }
-        //     }
-        //
+    /** CONSTANTS **/
+    var c = {
+        WAIT: 0, DONE: 1, FAIL: 2
     };
 
-    //
-    // Promise = Object.extend(PromiseAbstract).create({
-    //     constructor: function() {
-    //         this.parent();
-    //     },
-    //     resolve: function(data) {
-    //         this.finalize(DONE, data);
-    //     },
-    //     unresolvable: function(error) {
-    //         this.finalize(FAIL, error);
-    //     },
-    //     onDone: function (action) {
-    //         this.callAction(DONE, action);
-    //         return this;
-    //     },
-    //     onFail: function(action) {
-    //         this.callAction(FAIL, action);
-    //         return this;
-    //     }
-    // });
+    /** SINGLE NEED **/
+    var finalize = function (props, status, data) {
+        props.returnData[status] = data;
+        props.status = status;
+        props.collection.filter(status).forEach(function (action) {
+            action(data, props.id);
+        });
+    };
+    var attach = function (props, status, action) {
+        if (props.status === status) {
+            action(props.returnData[status], props.id);
+        } else {
+            props.collection.add(action, status);
+        }
+    };
+    var singleNeed = function () {
+        var m = {};
+        var p = {
+            returnData: [],
+            status: c.WAIT,
+            id: -1,
+            collection: Collection()
+        };
 
-    // var PromisesAbstract = Class.CollectionOf(Promise).create({
-    //     constructor: function(object) {
-    //         this.parent(object);
-    //         this.done = null;
-    //         this.fail = function() {};
-    //         this.args = [];
-    //         this.errors = [];
-    //         this.count = 0;
-    //         this.counter = 0;
-    //         this.importsCounter = 0;
-    //         this.status = WAIT;
-    //     },
-    //     setStatus: function (status) {
-    //         this.status = status;
-    //     },
-    //     isStatus: function (status) {
-    //         return this.status === status;
-    //     },
-    //     setData: function(status, data, id) {
-    //         if (status === DONE) {
-    //             this.args[id] = data;
-    //         } else {
-    //             this.errors.push(data);
-    //         }
-    //     },
-    //     getData: function (status) {
-    //         var args = this.errors;
-    //         if (status === DONE) {
-    //             args = this.args.slice(-this.importsCounter);
-    //             args = args.concat(this.args.slice(0, this.importsCounter+1));
-    //         }
-    //         return args;
-    //     },
-    //     finalize: function (status, callback) {
-    //         if (callback) {
-    //             callback.apply(this, this.getData(status));
-    //         }
-    //     },
-    //     setAction: function (status, action) {
-    //         if (status === DONE) {
-    //             this.done = action;
-    //         } else {
-    //             this.fail = action;
-    //         }
-    //     },
-    //     callAction: function(status, callback) {
-    //         if (this.status === status) {
-    //             this.finalize(status, callback);
-    //         } else {
-    //             this.setAction(status, callback);
-    //         }
-    //     }
-    //
-    // });
-    //
-    // Promises = Object.extend(PromisesAbstract).create({
-    //     constructor: function(minimum, object) {
-    //         this.parent(object);
-    //         this.minimum = minimum || 0;
-    //     },
-    //     add: function (promise, key) {
-    //         this.parent(promise, key);
-    //         var self = this;
-    //         promise.id = this.counter++;
-    //         promise.onDone(function(data, id) {
-    //             self.itemOnDone(data,id);
-    //         });
-    //         promise.onFail(function(error) {
-    //             self.itemOnFail(error);
-    //         });
-    //         return this;
-    //     },
-    //     itemOnDone: function (data, id) {
-    //         this.count+=1;
-    //         this.setData(DONE, data, id);
-    //         if (this.count === Math.max(this.minimum, this.size())) {
-    //             this.setStatus(DONE);
-    //             this.finalize(DONE, this.done);
-    //         }
-    //     },
-    //     itemOnFail: function (error) {
-    //         this.setData(FAIL, error);
-    //         this.setStatus(FAIL);
-    //         this.finalize(FAIL, this.fail);
-    //     },
-    //     onDone: function (action) {
-    //         this.callAction(DONE, action);
-    //         return this;
-    //     },
-    //     onFail: function(action) {
-    //         this.callAction(FAIL, action);
-    //         return this;
-    //     },
-    //     imports: function(namespace, pack) {
-    //         this.importsCounter++;
-    //         this.add(pack.retrievePackage(pack.getFullName(namespace)));
-    //         return this;
-    //     }
-    // });
+        m.resolve = function (data) {
+            if (p.status === c.WAIT) {
+                finalize(p, c.DONE, data);
+            }
+        };
 
-})();
+        m.fail = function (error) {
+            finalize(p, c.FAIL, error);
+        };
+
+        m.then = function (action) {
+            attach(p, c.DONE, action);
+        };
+
+        m.onFail = function (action) {
+            attach(p, c.FAIL, action);
+        };
+
+        m.status = function () {
+            return p.status;
+        };
+        return m;
+    };
+
+    /** MULTI NEED **/
+    var getData = function (p) {
+        var args = p.errors;
+        if (p.status === c.DONE) {
+            args = p.args.slice(-p.importsCounter);
+            args = args.concat(p.args.slice(0, p.importsCounter+1));
+        }
+        return args;
+    };
+
+    var callAction = function(status, callback, p) {
+        if (p.status === status) {
+            callback.apply(null, getData(p));
+        } else {
+            if (status === c.DONE) {
+                p.done = callback;
+            } else {
+                p.fail = callback;
+            }
+        }
+    };
+
+    var  multiNeed = function (array) {
+        var m = {};
+        var p = {
+            done : function () {},
+            fail : function() {},
+            args : [],
+            errors : [],
+            count : 0,
+            counter : 0,
+            status : c.WAIT,
+            collection: Collection(),
+            importsCounter: 0
+        };
+
+        m.add = function (promise) {
+            promise.id = p.counter++;
+            promise.then(function(data, id) {
+                m.itemOnDone(data,id);
+            });
+            promise.onFail(function(error) {
+                m.itemOnFail(error);
+            });
+            return this;
+        };
+        m.itemOnDone = function (data, id) {
+            p.count+=1;
+            p.args[id] = data;
+            if (p.count === p.collection.size()) {
+                p.status = c.DONE;
+                p.done.apply(this, getData(p));
+            }
+        };
+        m.itemOnFail = function (error) {
+            p.errors.push(error);
+            p.status = c.FAIL;
+            p.fail.apply(this, getData(p));
+        };
+        m.then = function (action) {
+            callAction(c.DONE, action, p);
+        };
+        m.onFail = function(action) {
+            callAction(c.FAIL, action, p);
+        };
+
+        array.forEach(function (promise) {
+            m.add(promise)
+        });
+
+        return m;
+    };
+
+    /** PACKAGE NEED **/
+    var packageNeed = function (callback) {
+        var m = {};
+        var p = {
+
+        };
+        var needCollector = function () {};
+
+        callback.call(this, needCollector);
+
+        m.status = function () {
+            return c.WAIT;
+        };
+
+        return m;
+    };
+
+
+
+    return function (param) {
+        if (param === undefined) {
+             return singleNeed();
+        } else if (Array.isArray(param)) {
+            return multiNeed(param);
+        } else {
+            return packageNeed(param);
+        }
+    };
+
+}();
