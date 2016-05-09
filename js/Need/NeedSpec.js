@@ -189,11 +189,6 @@ describe('GLOBAL - NEED', function () {
     describe('On creating a need - passing a function', function () {
         var p, needInner, t3 = false;
         beforeEach(function () {
-            Need('t1', function () {
-                return function () {
-                    
-                }    
-            });
 
             Need('t2', function () {
                 return function () {
@@ -219,13 +214,13 @@ describe('GLOBAL - NEED', function () {
 
         it('should not execute the inner function', function () {
             expect(t3).toEqual(false);
+            Need('t1', function () {
+                return function () {
+
+                }
+            });
+            expect(p.status()).toEqual(1);
         });
-
-        it('should have the status to wait', function () {
-            expect(p.status()).toEqual(0);
-        });
-
-
 
     });
 

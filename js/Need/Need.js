@@ -156,12 +156,26 @@ var Need = function () {
         };
 
         var needCollector = function (namespace) {
-            var need = Need();
-            need.namespace = namespace;
-            p.needs.add(need);
+            if (packages.get(namespace)) {
+                p.needs.add(packages.get(namespace))
+            } else {
+                var need = Need();
+                p.needs.add(need);
+                packages.add(need, namespace);
+            }
         };
 
-        callback(needCollector);
+        var func = callback(needCollector);
+
+        if (packages.get(namespace)) {
+            packages.get(namespace).resolve(func);
+        } else {
+            packages.add(Need(), namespace)
+        }
+
+        p.needs.then(function () {
+            func();
+        });
 
         m.status = function () {
             return p.needs.status();
