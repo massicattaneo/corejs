@@ -15,6 +15,8 @@ var Need = function () {
         WAIT: 0, DONE: 1, FAIL: 2
     };
 
+    var packages = Collection();
+
     /** SINGLE NEED **/
     var finalize = function (props, status, data) {
         props.returnData[status] = data;
@@ -60,6 +62,9 @@ var Need = function () {
         m.status = function () {
             return p.status;
         };
+        m.setId = function (id) {
+            p.id = id;
+        };
         return m;
     };
 
@@ -68,12 +73,11 @@ var Need = function () {
         var args = p.errors;
         if (p.status === c.DONE) {
             args = p.args.slice(-p.importsCounter);
-            args = args.concat(p.args.slice(0, p.importsCounter+1));
+            args = args.concat(p.args.slice(0, p.importsCounter + 1));
         }
         return args;
     };
-
-    var callAction = function(status, callback, p) {
+    var callAction = function (status, callback, p) {
         if (p.status === status) {
             callback.apply(null, getData(p));
         } else {
@@ -84,33 +88,35 @@ var Need = function () {
             }
         }
     };
-
-    var  multiNeed = function (array) {
+    var multiNeed = function (array) {
         var m = {};
         var p = {
-            done : function () {},
-            fail : function() {},
-            args : [],
-            errors : [],
-            count : 0,
-            counter : 0,
-            status : c.WAIT,
+            done: function () {
+            },
+            fail: function () {
+            },
+            args: [],
+            errors: [],
+            count: 0,
+            counter: 0,
+            status: c.WAIT,
             collection: Collection(),
             importsCounter: 0
         };
 
         m.add = function (promise) {
-            promise.id = p.counter++;
-            promise.then(function(data, id) {
-                m.itemOnDone(data,id);
+            promise.setId(p.counter++);
+            p.collection.add(promise);
+            promise.then(function (data, id) {
+                m.itemOnDone(data, id);
             });
-            promise.onFail(function(error) {
+            promise.onFail(function (error) {
                 m.itemOnFail(error);
             });
             return this;
         };
         m.itemOnDone = function (data, id) {
-            p.count+=1;
+            p.count += 1;
             p.args[id] = data;
             if (p.count === p.collection.size()) {
                 p.status = c.DONE;
@@ -125,43 +131,52 @@ var Need = function () {
         m.then = function (action) {
             callAction(c.DONE, action, p);
         };
-        m.onFail = function(action) {
+        m.onFail = function (action) {
             callAction(c.FAIL, action, p);
+        };
+        m.get = function (index) {
+            return p.collection.get(index);
+        };
+        m.status = function () {
+            return p.status;
         };
 
         array.forEach(function (promise) {
-            m.add(promise)
+            m.add(promise);
         });
 
         return m;
     };
 
     /** PACKAGE NEED **/
-    var packageNeed = function (callback) {
+    var packageNeed = function (namespace, callback) {
         var m = {};
         var p = {
-
+            needs: Need([])
         };
-        var needCollector = function () {};
 
-        callback.call(this, needCollector);
+        var needCollector = function (namespace) {
+            var need = Need();
+            need.namespace = namespace;
+            p.needs.add(need);
+        };
+
+        callback(needCollector);
 
         m.status = function () {
-            return c.WAIT;
+            return p.needs.status();
         };
 
         return m;
     };
 
-
-
-    return function (param) {
+    return function (param, callback) {
         if (param === undefined) {
-             return singleNeed();
+            return singleNeed();
         } else if (Array.isArray(param)) {
             return multiNeed(param);
         } else {
-            return packageNeed(param);
+            return packageNeed(param, callback);
         }
     };
 
