@@ -78,6 +78,18 @@ describe('GLOBAL - NEED', function () {
             expect(done2).toBeTruthy();
         });
 
+        it('should be resolved also more than 1 time', function () {
+            var done = false, failed = false, over;
+            p.resolve(1);
+            p.resolve(2);
+            p.resolve(3);
+            p.resolve(4);
+            p.then(function(test, id, not) {done = 1; over = not;});
+            p.onFail(function() {failed = true});
+            expect(done).toEqual(1);
+            expect(over).toBeUndefined();
+        });
+
     });
 
     describe('On creating a multi need - passing an array', function () {
@@ -96,11 +108,12 @@ describe('GLOBAL - NEED', function () {
         });
 
         it("should save retrieved data independently on the order resolution", function () {
-            var number = 0;
-            ps.then(function(s1, s2) {number = s1+s2;});
+            var number = 0, over;
+            ps.then(function(s1, s2, s3) {number = s1+s2; over = s3});
             p2.resolve(1);
             p1.resolve(2);
             expect(number).toEqual(3);
+            // expect(over).toEqual(undefined);
         });
 
         it("should fail immediatly after one fails", function () {
