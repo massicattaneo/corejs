@@ -157,7 +157,7 @@ var Need = function () {
 
         var needCollector = function (namespace) {
             if (packages.get(namespace)) {
-                p.needs.add(packages.get(namespace))
+                p.needs.add(packages.get(namespace));
             } else {
                 var need = Need();
                 p.needs.add(need);
@@ -168,13 +168,20 @@ var Need = function () {
         var func = callback(needCollector);
 
         if (packages.get(namespace)) {
+            func.__namespace = namespace;
             packages.get(namespace).resolve(func);
         } else {
             packages.add(Need(), namespace)
         }
 
         p.needs.then(function () {
-            func();
+            var packs = {};
+            for (var i = 0; i < arguments.length; i++) {
+                packs[arguments[i].__namespace] = arguments[i]
+            }
+            callback(function (namespace) {
+                return packs[namespace]();
+            })();
         });
 
         m.status = function () {
@@ -184,7 +191,7 @@ var Need = function () {
         return m;
     };
 
-    return function (param, callback) {
+    return function Need(param, callback) {
         if (param === undefined) {
             return singleNeed();
         } else if (Array.isArray(param)) {

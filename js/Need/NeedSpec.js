@@ -154,55 +154,17 @@ describe('GLOBAL - NEED', function () {
 
         });
 
-        // it("should import packages", function () {
-        //     var done=false;
-        //     packages.create('test', function() {return true;});
-        //
-        //     ps
-        //         .imports('test', packages)
-        //         .onDone(function(test,a,b) {done='' + test + a+ b;});
-        //
-        //     p2.resolve('2');
-        //     expect(done).toBeFalsy();
-        //     p1.resolve('1');
-        //     expect(done).toEqual('true12');
-        // });
-        
-        // it("should import packages also loaded after", function () {
-        //     var done=false;
-        //     ps
-        //         .imports('test', packages)
-        //         .onDone(function(test) {done=test;});
-        //     packages.create('test', function() {return true;});
-        //
-        //
-        //     p2.resolve();
-        //     expect(done).toBeFalsy();
-        //     p1.resolve();
-        //     expect(done).toBeTruthy();
-        // });
-
-
-
     });
-    
-    describe('On creating a need - passing a function', function () {
-        var p, needInner, t3 = false;
+
+    describe('On creating a need - passing a namespace, function', function () {
+        var p, needInner, executed = false, t1,t2;
         beforeEach(function () {
-
-            Need('t2', function () {
-                return function () {
-
-                }
-            });
-            
             p = Need('t3', function (need) {
                 needInner = need;
-                var t1 = need('t1');
-                var t2 = need('t2');
-
+                t1 = need('t1');
+                t2 = need('t2');
                 return function () {
-                    t3 = true;
+                    executed = true;
                 };
 
             });
@@ -213,14 +175,48 @@ describe('GLOBAL - NEED', function () {
         });
 
         it('should not execute the inner function', function () {
-            expect(t3).toEqual(false);
-            Need('t1', function () {
-                return function () {
-
-                }
-            });
-            expect(p.status()).toEqual(1);
+            expect(executed).toEqual(false);
         });
+
+        it('should set the status to 0', function () {
+            expect(p.status()).toEqual(0);
+        });
+
+        it('should not execute the packages', function () {
+            expect(t1).toEqual(undefined);
+            expect(t2).toEqual(undefined);
+        });
+
+        describe('When all the packages are created', function () {
+
+            beforeEach(function () {
+                Need('t1', function () {
+                    return function () {
+                        return 1;
+                    }
+                });
+                Need('t2', function () {
+                    return function () {
+                        return 2;
+                    }
+                });
+            });
+
+            it('should execute the inner function', function () {
+                expect(executed).toEqual(true);
+            });
+
+            it('should set the status to 1', function () {
+                expect(p.status()).toEqual(1);
+            });
+
+            it('should execute the packages', function () {
+                expect(t1).toEqual(1);
+                expect(t2).toEqual(2);
+            })
+
+        })
+
 
     });
 

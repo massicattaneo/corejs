@@ -5,6 +5,27 @@
     <title>Test page</title>
     <script src="js/Object/Object.js"></script>
     <script src="js/Collection/Collection.js"></script>
+    <script src="js/Need/Need.js"></script>
+    <script>
+        var a;
+        Need('pack2', function (needs) {
+            var p1 = needs('pack1');
+            return function () {
+                a = p1.name;
+            }
+        });
+
+        Need('pack1', function () {
+            return function () {
+                return {
+                    name: 'pack1'
+                }
+            }
+        });
+
+
+
+    </script>
 </head>
 <body>
 
