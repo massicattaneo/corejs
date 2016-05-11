@@ -72,8 +72,7 @@ var Need = function () {
     var getData = function (p) {
         var args = p.errors;
         if (p.status === c.DONE) {
-            args = p.args.slice(-p.importsCounter);
-            args = args.concat(p.args.slice(0, p.importsCounter + 1));
+            args = p.args.slice(0);
         }
         return args;
     };
@@ -82,7 +81,7 @@ var Need = function () {
             callback.apply(null, getData(p));
         } else {
             if (status === c.DONE) {
-                p.done = callback;
+                p.done.push(callback);
             } else {
                 p.fail = callback;
             }
@@ -91,8 +90,7 @@ var Need = function () {
     var multiNeed = function (array) {
         var m = {};
         var p = {
-            done: function () {
-            },
+            done: [],
             fail: function () {
             },
             args: [],
@@ -100,8 +98,7 @@ var Need = function () {
             count: 0,
             counter: 0,
             status: c.WAIT,
-            collection: Collection(),
-            importsCounter: 0
+            collection: Collection()
         };
 
         m.add = function (promise) {
@@ -120,7 +117,9 @@ var Need = function () {
             p.args[id] = data;
             if (p.count === p.collection.size()) {
                 p.status = c.DONE;
-                p.done.apply(this, getData(p));
+                p.done.forEach(function (func) {
+                    func.apply(this, getData(p));
+                });
             }
         };
         m.itemOnFail = function (error) {

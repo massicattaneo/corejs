@@ -109,11 +109,11 @@ describe('GLOBAL - NEED', function () {
 
         it("should save retrieved data independently on the order resolution", function () {
             var number = 0, over;
-            ps.then(function(s1, s2, s3) {number = s1+s2; over = s3});
+            ps.then(function(s1, s2, s3, s4) {number = s1+s2; over = s3});
             p2.resolve(1);
             p1.resolve(2);
             expect(number).toEqual(3);
-            // expect(over).toEqual(undefined);
+            expect(over).toEqual(undefined);
         });
 
         it("should fail immediatly after one fails", function () {
@@ -165,6 +165,16 @@ describe('GLOBAL - NEED', function () {
             });
             expect(done).toBeTruthy();
 
+        });
+
+        it("should attach more than one callback", function () {
+            var done1=false, done2 = false;
+            ps.then(function(a) {done1=a;});
+            ps.then(function(a) {done2=a;});
+            p2.resolve(true);
+            p1.resolve(true);
+            expect(done1).toBeTruthy();
+            expect(done2).toBeTruthy();
         });
 
     });

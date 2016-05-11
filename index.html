@@ -7,14 +7,11 @@
     <script src="js/Collection/Collection.js"></script>
     <script src="js/Need/Need.js"></script>
     <script>
-        var n1 = Need();
-        var n2 = Need();
-        var ns = Need([n1,n2]);
-        ns.then(function () {
-            console.log('ok', arguments);
+        var p1 = Need(), p2 = Need(), ps = Need([p1,p2]);
+        var number = 0, over;
+        ps.then(function() {
+            console.log(arguments)
         });
-        n1.resolve('1');
-//        n2.resolve();
     </script>
 </head>
 <body>
