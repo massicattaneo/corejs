@@ -27,6 +27,7 @@
     "karma-jasmine-sinon": "^1.0.4",
     "require-dir": "^0.3.0",
     "karma-mocha-reporter": "1.1.1",
-    "karma-jasmine-html-reporter": "0.1.8"
+    "karma-jasmine-html-reporter": "0.1.8",
+    "karma-coverage": "^1.0.0"
   }
 }
