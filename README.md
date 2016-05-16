@@ -3,5 +3,7 @@ COREJS
 
 UNIT TEST
 ---------
+```
+npm run coverage
+```
 
-npm run ut
