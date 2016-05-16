@@ -7,11 +7,17 @@
     <script src="js/Collection/Collection.js"></script>
     <script src="js/Need/Need.js"></script>
     <script>
-        var p1 = Need(), p2 = Need(), ps = Need([p1,p2]);
-        var number = 0, over;
-        ps.then(function() {
-            console.log(arguments)
+        Need(':test', function (need) {
+            var testAfter = need(':testAfter');
+            return function () {
+                return {name: 'test + ' + testAfter.name};
+            }
         });
+        Need(':testAfter', function () {
+            return function () {
+                return {name: 'testAfter'}
+            }
+        })
     </script>
 </head>
 <body>
