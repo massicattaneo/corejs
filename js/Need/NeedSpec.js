@@ -179,7 +179,43 @@ describe('GLOBAL - NEED', function () {
 
     });
 
-    describe('On creating a need - passing a namespace, function', function () {
+    describe('On retrieving a package', function () {
+
+        beforeEach(function () {
+            Need(':test', function () {
+                return function () {
+                    return {name: 'test'}
+                }
+            });
+        });
+
+        it('should get the package', function () {
+            expect(Need(':test')).toBeDefined();
+            expect(Need(':test').name).toEqual('test');
+        });
+
+        describe('On retrieving a package with needs inside', function() {
+
+            beforeEach(function () {
+                Need(':test1', function (need) {
+                    var test = need(':test');
+
+                    return function () {
+                        return {name: 'test1 ' + test.name}
+                    }
+                });
+            });
+
+            it('should get the package', function () {
+                expect(Need(':test1')).toBeDefined();
+                expect(Need(':test1').name).toEqual('test1 test');
+            });
+
+        });
+
+    });
+
+    describe('On creating a package - passing a namespace, function', function () {
         var p, needInner, executed = false, t1,t2;
         beforeEach(function () {
             p = Need('t3', function (need) {

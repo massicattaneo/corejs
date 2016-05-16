@@ -148,11 +148,15 @@ var Need = function () {
     };
 
     /** PACKAGE NEED **/
-    var packageNeed = function (namespace, callback) {
+    var createPackage = function (namespace, callback) {
         var m = {};
         var p = {
             needs: Need([])
         };
+
+        if (!packages.get(namespace)) {
+            packages.add(Need(), namespace)
+        }
 
         var needCollector = function (namespace) {
             if (packages.get(namespace)) {
@@ -165,22 +169,20 @@ var Need = function () {
         };
 
         var func = callback(needCollector);
-
-        if (packages.get(namespace)) {
-            func.__namespace = namespace;
-            packages.get(namespace).resolve(func);
-        } else {
-            packages.add(Need(), namespace)
-        }
+        var pack = packages.get(namespace);
+        func.__namespace = namespace;
+        pack.__callback = func;
+        pack.resolve(func);
 
         p.needs.then(function () {
             var packs = {};
             for (var i = 0; i < arguments.length; i++) {
                 packs[arguments[i].__namespace] = arguments[i]
             }
-            callback(function (namespace) {
+            packages.get(namespace).__callback = callback(function (namespace) {
                 return packs[namespace]();
-            })();
+            });
+            packages.get(namespace).__callback();
         });
 
         m.status = function () {
@@ -190,13 +192,19 @@ var Need = function () {
         return m;
     };
 
+    var retrievePackage = function (param) {
+        return packages.get(param).__callback();
+    };
+
     return function Need(param, callback) {
         if (param === undefined) {
             return singleNeed();
         } else if (Array.isArray(param)) {
             return multiNeed(param);
+        } else if (arguments.length === 1) {
+            return retrievePackage(param);
         } else {
-            return packageNeed(param, callback);
+            return createPackage(param, callback);
         }
     };
 
