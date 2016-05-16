@@ -5,13 +5,13 @@ var args = require('get-gulp-args')();
 
 gulp.task('ut', function (done) {
 
-    var files = config.tests.concat(config.files);
+    var files = config.tests;
     var preprocessors = {
         'js/**/!(*Spec).js': ['coverage']
     };
 
     if (args.test) {
-        files = ['js/**/'+args.test+'Spec.js'].concat(config.files);
+        files = ['js/**/'+args.test+'Spec.js'];
         preprocessors = {};
         preprocessors['js/**/'+args.test+'.js'] = ['coverage'];
     }
@@ -21,7 +21,7 @@ gulp.task('ut', function (done) {
         action: 'run',
         singleRun: false,
         autoWatch: true,
-        files: files,
+        files: files.concat(config.vendors).concat(config.files),
         reporters: ['mocha', 'coverage'],
         preprocessors: preprocessors,
         coverageReporter: {

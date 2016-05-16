@@ -15,10 +15,13 @@ module.exports = (function () {
         files: [
             'js/String/String.js',
             'js/Object/Object.js',
+            'js/Element/Element.js',
             'js/Collection/Collection.js',
-            'js/Need/Need.js'
+            'js/Need/Need.js',
+            'js/Component/Component.js'
         ],
-        tests: ['js/**/*Spec.js']
+        tests: ['js/**/*Spec.js'],
+        vendors: ['node_modules/jquery/dist/jquery.js']
     };
 
     return config;

@@ -4,20 +4,12 @@
     <meta charset="UTF-8">
     <title>Test page</title>
     <script src="js/Object/Object.js"></script>
+    <script src="js/Element/Element.js"></script>
     <script src="js/Collection/Collection.js"></script>
     <script src="js/Need/Need.js"></script>
+    <script src="js/Component/Component.js"></script>
     <script>
-        Need(':test', function (need) {
-            var testAfter = need(':testAfter');
-            return function () {
-                return {name: 'test + ' + testAfter.name};
-            }
-        });
-        Need(':testAfter', function () {
-            return function () {
-                return {name: 'testAfter'}
-            }
-        })
+        var c = Component('<div data-name="test"></div>');
     </script>
 </head>
 <body>
