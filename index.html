@@ -8,11 +8,21 @@
     <script src="js/Collection/Collection.js"></script>
     <script src="js/Need/Need.js"></script>
     <script src="js/Component/Component.js"></script>
-    <script>
-        var c = Component('<div data-name="test"></div>');
-    </script>
 </head>
 <body>
 
+<script>
+    var c = Component('<div data-name="test">' +
+            '<input type="text" data-on="keyup:changeName" data-item="name" />' +
+            '<span data-item="nameText"></span>' +
+            '</div>');
+    c.createIn(document.body);
+    c.greet = function () {
+        alert(c.name);
+    };
+    c.changeName = function (e) {
+        c.get('nameText').innerText = c.get('name').value;
+    }
+</script>
 </body>
 </html>
