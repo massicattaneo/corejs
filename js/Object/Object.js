@@ -10,7 +10,7 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-Object.prototype.extend = function () {
+Object.extend = function () {
     var ret = {};
     for (var i = 0, j = arguments.length; i < j; i++){
         var obj = arguments[i];
@@ -19,4 +19,19 @@ Object.prototype.extend = function () {
         });
     }
     return ret;
+};
+
+Object.prototype.extend = function () {
+    for (var i = 0, j = arguments.length; i < j; i++){
+        var obj = arguments[i];
+        debugger;
+        Object.keys(obj).forEach(function (key) {
+            this[key] = obj[key];
+        });
+    }
+    return this;
+};
+
+Object.prototype.clone = function () {
+    return Object.extend(this);
 };

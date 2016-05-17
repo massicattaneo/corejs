@@ -12,17 +12,13 @@
 <body>
 
 <script>
-    var c = Component('<div data-name="test">' +
-            '<input type="text" data-on="keyup:changeName" data-item="name" />' +
-            '<span data-item="nameText"></span>' +
-            '</div>');
+    Component.register('input', '<div><input data-item="input" type="text" data-on="mouseover:over" /><span data-item="error">text</span></div>', {
+        over: function (e) {
+            e.getTarget().css.style.border = "1px solid red"
+        }
+    });
+    var c = Component('<div><corejs:input  data-component="c1"></corejs:input><corejs:input  data-component="c2"></corejs:input></div>');
     c.createIn(document.body);
-    c.greet = function () {
-        alert(c.name);
-    };
-    c.changeName = function (e) {
-        c.get('nameText').innerText = c.get('name').value;
-    }
 </script>
 </body>
 </html>

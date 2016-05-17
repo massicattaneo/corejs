@@ -31,14 +31,17 @@ describe('GLOBAL - COMPONENT', function () {
     });
 
     describe('On reusing components', function () {
-        var input;
-        
+        var c;
+
         beforeEach(function () {
-            input = Component('<input data-item="input" type="text" /><span data-item="error"');
+            Component.register('input', '<input data-item="input" type="text" /><span data-item="error"', {});
+            c = Component('<div><corejs:input  data-component="c1"/></div>');
+            c.createIn(document.body);
         });
 
         it('should replace the html', function () {
-            var c = Component('<div><utils:input/></div>');
+            expect(c.get('c1')).toBeDefined();
+            expect(c.get('c1').get('input')).toBeDefined();
         });
 
     })

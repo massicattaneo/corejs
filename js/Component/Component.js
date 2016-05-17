@@ -11,7 +11,7 @@
 
 var Component = function () {
 
-    var components = [];
+    var components = Collection();
 
     var createNode = function (markup) {
         var doc = document.implementation.createHTMLDocument("");
@@ -44,6 +44,19 @@ var Component = function () {
         }
     };
 
+    var parseNodeComponent = function (node, obj) {
+        if (node.tagName) {
+            var match = node.tagName.match(/COREJS:(.*)/);
+            if (match) {
+                var c = components.get(match[1]);
+                debugger;
+                var comp = Component(c.template).extend(c);
+                comp.createIn(node.parentNode);
+                obj.items.add(comp ,node.getAttribute('data-component'))
+            }
+        }
+    };
+
     var parseNode = function (node, obj) {
         attach(node, obj, 'data-on');
         attach(node, obj, 'data-item');
@@ -51,13 +64,15 @@ var Component = function () {
         nodes.forEach(function (n) {
             parseNode(n, obj);
         });
+        parseNodeComponent(node, obj);
     };
 
     var Component = function (template) {
         var node = createNode(template);
 
         var obj = {
-            items: Collection()
+            items: Collection(),
+            template: template
         };
 
         obj.createIn = function (parent) {
@@ -70,6 +85,11 @@ var Component = function () {
         };
 
         return obj;
+    };
+
+    Component.register = function (name, template, obj) {
+        obj.template = template;
+        components.add(obj, name.toUpperCase());
     };
 
     return Component;
