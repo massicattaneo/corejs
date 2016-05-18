@@ -25,7 +25,7 @@ var Component = function () {
         var listener = split[1];
         actions.forEach(function (action) {
             node.addListener(action, function (event) {
-                obj[listener](event);
+                obj[listener].call(obj, event);
             });
         })
     }
@@ -49,10 +49,9 @@ var Component = function () {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
                 var c = components.get(match[1]);
-                debugger;
                 var comp = Component(c.template).extend(c);
                 comp.createIn(node.parentNode);
-                obj.items.add(comp ,node.getAttribute('data-component'))
+                obj.items.add(comp, node.getAttribute('data-id'))
             }
         }
     };

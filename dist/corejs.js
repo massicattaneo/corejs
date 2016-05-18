@@ -1,16 +1,100 @@
 
 
 
+
 Object.prototype.extend = function () {
-    var ret = {};
+    var self = this;
     for (var i = 0, j = arguments.length; i < j; i++){
         var obj = arguments[i];
         Object.keys(obj).forEach(function (key) {
-            ret[key] = obj[key];
+            self[key] = obj[key];
         });
     }
-    return ret;
+    return this;
 };
+
+Object.prototype.clone = function () {
+    return Object.extend(this);
+};
+
+Element.prototype.addClass = function () {
+    for (var a = 0; a < arguments.length; a++) {
+        var className = arguments[a].trim();
+        if (this.className) {
+            if (!this.className.match(className)) {
+                this.className += ' ' + className;
+            }
+        } else {
+            this.className = className;
+        }
+    }
+};
+
+Element.prototype.removeClass = function () {
+    for (var a = 0; a < arguments.length; a++) {
+        var className = arguments[a].trim();
+        if (this.className.match(className)) {
+            this.className = this.className.replace(className, '').replace(/\s\s/g, ' ').trim();
+        }
+    }
+};
+
+Element.prototype.hasClass = function (className) {
+    return this.className.match(className);
+};
+
+Element.prototype.toggleClass = function (className) {
+    if (this.hasClass(className)) {
+        this.removeClass(className);
+    } else {
+        this.addClass(className);
+    }
+};
+
+Element.prototype.trigger = function (eventTypeArg) {
+    if ("createEvent" in document) {
+        var evt = document.createEvent("HTMLEvents");
+        evt.initEvent(eventTypeArg, true, true);
+        this.dispatchEvent(evt);
+    }
+    else
+        this.fireEvent("on" + eventTypeArg);
+};
+
+Element.prototype.addListener = function (action, callback) {
+    this._listeners = this._listeners || [];
+    this._listeners.push({
+        action: action,
+        callback: callback
+    });
+    if (this.addEventListener) {
+        this.addEventListener(action, callback);
+    } else {
+        this.attachEvent('on' + action, callback);
+    }
+};
+
+Element.prototype.removeListener = function (action, callback) {
+    if (this.removeEventListener) {
+        this.removeEventListener(action, callback);
+    } else {
+        this.detachEvent('on' + action, callback);
+    }
+};
+
+Element.prototype.resetListeners = function () {
+    if (this._listeners) {
+        this._listeners.forEach(function (listener) {
+            this.removeListener(listener.action, listener.callback)
+        }, this);
+    }
+};
+
+Event.prototype.getTarget = function () {
+    var event = this || window.event;
+    return event.target || event.srcElement;
+};
+
 
 var Collection = function () {
 
@@ -185,7 +269,8 @@ var Collection = function () {
     };
 
     return function (ClassType) {
-        var obj = Object.extend(proto);
+        var obj = {};
+        obj.extend(proto);
         obj.initValues();
         if (Array.isArray(ClassType)) {
             ClassType.forEach(function (item) {
@@ -338,11 +423,15 @@ var Need = function () {
         return m;
     };
 
-    var packageNeed = function (namespace, callback) {
+    var createPackage = function (namespace, callback) {
         var m = {};
         var p = {
             needs: Need([])
         };
+
+        if (!packages.get(namespace)) {
+            packages.add(Need(), namespace)
+        }
 
         var needCollector = function (namespace) {
             if (packages.get(namespace)) {
@@ -355,22 +444,20 @@ var Need = function () {
         };
 
         var func = callback(needCollector);
-
-        if (packages.get(namespace)) {
-            func.__namespace = namespace;
-            packages.get(namespace).resolve(func);
-        } else {
-            packages.add(Need(), namespace)
-        }
+        var pack = packages.get(namespace);
+        func.__namespace = namespace;
+        pack.__callback = func;
+        pack.resolve(func);
 
         p.needs.then(function () {
             var packs = {};
             for (var i = 0; i < arguments.length; i++) {
                 packs[arguments[i].__namespace] = arguments[i]
             }
-            callback(function (namespace) {
+            packages.get(namespace).__callback = callback(function (namespace) {
                 return packs[namespace]();
-            })();
+            });
+            packages.get(namespace).__callback();
         });
 
         m.status = function () {
@@ -380,14 +467,107 @@ var Need = function () {
         return m;
     };
 
+    var retrievePackage = function (param) {
+        return packages.get(param).__callback();
+    };
+
     return function Need(param, callback) {
         if (param === undefined) {
             return singleNeed();
         } else if (Array.isArray(param)) {
             return multiNeed(param);
+        } else if (arguments.length === 1) {
+            return retrievePackage(param);
         } else {
-            return packageNeed(param, callback);
+            return createPackage(param, callback);
         }
     };
+
+}();
+
+
+var Component = function () {
+
+    var components = Collection();
+
+    var createNode = function (markup) {
+        var doc = document.implementation.createHTMLDocument("");
+        doc.body.innerHTML = markup;
+        return doc.body.childNodes[0];
+    };
+
+    function createListeners(attribute, node, obj) {
+        var split = attribute.trim().split(':');
+        var actions = split[0].split(',');
+        var listener = split[1];
+        actions.forEach(function (action) {
+            node.addListener(action, function (event) {
+                obj[listener].call(obj, event);
+            });
+        })
+    }
+
+    var createItems = function (attribute, node, obj) {
+        obj.items.add(node, attribute);
+    };
+
+    var attach = function (node, obj, attrName) {
+        if (node.getAttribute) {
+            var attribute = node.getAttribute(attrName);
+            if (attribute) {
+                attrName === 'data-on' && createListeners(attribute, node, obj);
+                attrName === 'data-item' && createItems(attribute, node, obj);
+            }
+        }
+    };
+
+    var parseNodeComponent = function (node, obj) {
+        if (node.tagName) {
+            var match = node.tagName.match(/COREJS:(.*)/);
+            if (match) {
+                var c = components.get(match[1]);
+                var comp = Component(c.template).extend(c);
+                comp.createIn(node.parentNode);
+                obj.items.add(comp, node.getAttribute('data-id'))
+            }
+        }
+    };
+
+    var parseNode = function (node, obj) {
+        attach(node, obj, 'data-on');
+        attach(node, obj, 'data-item');
+        var nodes = Array.prototype.slice.call(node.childNodes);
+        nodes.forEach(function (n) {
+            parseNode(n, obj);
+        });
+        parseNodeComponent(node, obj);
+    };
+
+    var Component = function (template) {
+        var node = createNode(template);
+
+        var obj = {
+            items: Collection(),
+            template: template
+        };
+
+        obj.createIn = function (parent) {
+            parent.appendChild(node);
+            node && parseNode(node, obj);
+        };
+
+        obj.get = function (itemName) {
+            return obj.items.get(itemName);
+        };
+
+        return obj;
+    };
+
+    Component.register = function (name, template, obj) {
+        obj.template = template;
+        components.add(obj, name.toUpperCase());
+    };
+
+    return Component;
 
 }();

@@ -35,7 +35,7 @@ describe('GLOBAL - COMPONENT', function () {
 
         beforeEach(function () {
             Component.register('input', '<input data-item="input" type="text" /><span data-item="error"', {});
-            c = Component('<div><corejs:input  data-component="c1"/></div>');
+            c = Component('<div><corejs:input  data-id="c1"/></div>');
             c.createIn(document.body);
         });
 

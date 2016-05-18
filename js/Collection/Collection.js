@@ -182,7 +182,8 @@ var Collection = function () {
     };
 
     return function (ClassType) {
-        var obj = Object.extend(proto);
+        var obj = {};
+        obj.extend(proto);
         obj.initValues();
         if (Array.isArray(ClassType)) {
             ClassType.forEach(function (item) {

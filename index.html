@@ -12,12 +12,12 @@
 <body>
 
 <script>
-    Component.register('input', '<div><input data-item="input" type="text" data-on="mouseover:over" /><span data-item="error">text</span></div>', {
-        over: function (e) {
-            e.getTarget().css.style.border = "1px solid red"
+    Component.register('input', '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error">text</span></div>', {
+        check: function (e) {
+            this.get('error').innerText = this.get('input').value
         }
     });
-    var c = Component('<div><corejs:input  data-component="c1"></corejs:input><corejs:input  data-component="c2"></corejs:input></div>');
+    var c = Component('<div><corejs:input  data-id="c1"></corejs:input><corejs:input  data-component="c2"></corejs:input></div>');
     c.createIn(document.body);
 </script>
 </body>
