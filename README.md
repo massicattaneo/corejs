@@ -3,7 +3,9 @@ COREJS - v1.0.0
 
 Basic Javascript Framework: 
 
-- Object extension
+- String extensions
+- Object extensions
+- HTML Element extensions
 - Collections
 - Promises
 - Dependecy Injection
