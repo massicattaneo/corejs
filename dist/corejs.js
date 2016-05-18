@@ -486,6 +486,56 @@ var Need = function () {
 }();
 
 
+
+var Http = function () {
+
+    var obj = {};
+
+    var Response = function () {
+        var abstract = {
+            toJSON: function () {
+                return JSON.parse(this.response.responseText);
+            },
+            getResponseText: function () {
+                return this.response.responseText;
+            }
+        };
+
+        return function (response) {
+            return {response: response}.extend(abstract);
+        }
+    }();
+
+    obj.send = function (method, url, options) {
+        var promise = Need();
+        var request = getHttpObject();
+        request.open(method, url, 1);
+        request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        options.overrideMimeType && request.overrideMimeType(options.overrideMimeType);
+        request.onreadystatechange = function () {
+            if (request.status === 200 && request.readyState === 4) {
+                promise.resolve(Response(request));
+            }
+            else if (request.status !== 200 && request.readyState === 4) {
+                promise.fail(request);
+            }
+        };
+        request.send();
+        return promise;
+    };
+
+    var getHttpObject = function () {
+        if (window.ActiveXObject) {
+            return new ActiveXObject('MSXML2.XMLHTTP.3.0'); 
+        } else {
+            return new XMLHttpRequest();
+        }
+    };
+
+    return obj;
+}();
+
 var Component = function () {
 
     var components = Collection();
