@@ -18,7 +18,7 @@ module.exports = (function () {
             'js/Element/Element.js',
             'js/Collection/Collection.js',
             'js/Need/Need.js',
-            'js/Http/Http.js',
+            'js/navigator/navigator.js',
             'js/Component/Component.js'
         ],
         tests: ['js/**/*Spec.js'],

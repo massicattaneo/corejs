@@ -9,24 +9,7 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-var Http = function () {
-
-    var obj = {};
-
-    var Response = function () {
-        var abstract = {
-            toJSON: function () {
-                return JSON.parse(this.response.responseText);
-            },
-            getResponseText: function () {
-                return this.response.responseText;
-            }
-        };
-
-        return function (response) {
-            return {response: response}.extend(abstract);
-        }
-    }();
+(function (obj) {
 
     obj.send = function (method, url, options) {
         options = options || {};
@@ -61,6 +44,21 @@ var Http = function () {
         return obj.send('DELETE', url, options || {});
     };
 
+    var Response = function () {
+        var abstract = {
+            toJSON: function () {
+                return JSON.parse(this.response.responseText);
+            },
+            getResponseText: function () {
+                return this.response.responseText;
+            }
+        };
+
+        return function (response) {
+            return {response: response}.extend(abstract);
+        }
+    }();
+
     var getHttpObject = function () {
         if (window.ActiveXObject) {
             return new ActiveXObject('MSXML2.XMLHTTP.3.0'); //coverage:exclude
@@ -68,6 +66,5 @@ var Http = function () {
             return new XMLHttpRequest();
         }
     };
-
-    return obj;
-}();
+    
+})(navigator);

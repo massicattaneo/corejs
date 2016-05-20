@@ -12,13 +12,17 @@
 <body>
 
 <script>
-    Component.register('input', '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error">text</span></div>', {
+    var inputController = {
         check: function (e) {
             this.get('error').innerText = this.get('input').value
         }
-    });
-    var c = Component('<div><corejs:input  data-id="c1"></corejs:input><corejs:input  data-component="c2"></corejs:input></div>');
+    };
+    Component.register('input', '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error">text</span></div>', inputController);
+    var c = Component('<div><corejs:input  data-id="c1" /><corejs:input  data-id="c2"/><input type="submit" data-on="click:submit" /></div>');
     c.createIn(document.body);
+    c.submit = function () {
+        c.get('c1').check()
+    }
 </script>
 </body>
 </html>

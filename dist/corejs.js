@@ -486,27 +486,10 @@ var Need = function () {
 }();
 
 
-
-var Http = function () {
-
-    var obj = {};
-
-    var Response = function () {
-        var abstract = {
-            toJSON: function () {
-                return JSON.parse(this.response.responseText);
-            },
-            getResponseText: function () {
-                return this.response.responseText;
-            }
-        };
-
-        return function (response) {
-            return {response: response}.extend(abstract);
-        }
-    }();
+(function (obj) {
 
     obj.send = function (method, url, options) {
+        options = options || {};
         var promise = Need();
         var request = getHttpObject();
         request.open(method, url, 1);
@@ -525,6 +508,34 @@ var Http = function () {
         return promise;
     };
 
+    obj.get = function(url, options) {
+        return obj.send('GET', url, options || {});
+    };
+    obj.post = function(url, options) {
+        return obj.send('POST', url, options || {});
+    };
+    obj.put = function(url, options) {
+        return obj.send('PUT', url, options || {});
+    };
+    obj.delete = function(url, options) {
+        return obj.send('DELETE', url, options || {});
+    };
+
+    var Response = function () {
+        var abstract = {
+            toJSON: function () {
+                return JSON.parse(this.response.responseText);
+            },
+            getResponseText: function () {
+                return this.response.responseText;
+            }
+        };
+
+        return function (response) {
+            return {response: response}.extend(abstract);
+        }
+    }();
+
     var getHttpObject = function () {
         if (window.ActiveXObject) {
             return new ActiveXObject('MSXML2.XMLHTTP.3.0'); 
@@ -533,8 +544,8 @@ var Http = function () {
         }
     };
 
-    return obj;
-}();
+    })(navigator);
+
 
 var Component = function () {
 

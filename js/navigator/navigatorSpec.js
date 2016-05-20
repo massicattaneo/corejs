@@ -10,13 +10,13 @@ describe('XMLHttpRequest', function () {
     });
 
     it('Should return a Need', function () {
-        expect(Http.send('POST', '/url').then).toBeDefined();
+        expect(navigator.send('POST', '/url').then).toBeDefined();
     });
 
     describe('On receiving a correct response from server', function () {
         var http;
         beforeEach(function () {
-            http = Http.send('POST', '/url');
+            http = navigator.send('POST', '/url');
             server.respondWith('POST','/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify({})]);
         });
@@ -32,7 +32,7 @@ describe('XMLHttpRequest', function () {
     describe('On sending a ...', function () {
 
         it('GET: should resolve the promise', function () {
-            var http = Http.get('/url');
+            var http = navigator.get('/url');
             server.respondWith('GET','/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify({})]);
             server.respond();
@@ -40,7 +40,7 @@ describe('XMLHttpRequest', function () {
         });
 
         it('POST: should resolve the promise', function () {
-            var http = Http.post('/url');
+            var http = navigator.post('/url');
             server.respondWith('POST','/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify({})]);
             server.respond();
@@ -48,7 +48,7 @@ describe('XMLHttpRequest', function () {
         });
 
         it('PUT: should resolve the promise', function () {
-            var http = Http.put('/url');
+            var http = navigator.put('/url');
             server.respondWith('PUT','/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify({})]);
             server.respond();
@@ -56,7 +56,7 @@ describe('XMLHttpRequest', function () {
         });
 
         it('DELETE: should resolve the promise', function () {
-            var http = Http.delete('/url');
+            var http = navigator.delete('/url');
             server.respondWith('DELETE','/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify({})]);
             server.respond();
@@ -68,7 +68,7 @@ describe('XMLHttpRequest', function () {
     describe('On receiving a wrong response from server', function () {
         var http;
         beforeEach(function () {
-            http = Http.send('POST', '/url');
+            http = navigator.send('POST', '/url');
             server.respondWith('POST','/url',
                 [404, {'Content-Type': 'application/json'}, JSON.stringify({})]);
         });
@@ -83,7 +83,7 @@ describe('XMLHttpRequest', function () {
     describe('On receiving a response from server', function () {
         var response;
         beforeEach(function () {
-            Http.send('POST', '/url').then(function (resp) {
+            navigator.send('POST', '/url').then(function (resp) {
                 response = resp
             });
         });
