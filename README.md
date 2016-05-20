@@ -9,6 +9,7 @@ Basic Javascript Framework:
 - Collections
 - Promises
 - Dependecy Injection
+- Http requests
 
 UNIT TEST
 ---------
