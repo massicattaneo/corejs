@@ -28,6 +28,12 @@ Element.prototype.addClass = function () {
             this.className = className;
         }
     }
+    return this;
+};
+
+Element.prototype.clearClass = function () {
+    this.className = "";
+    return this;
 };
 
 Element.prototype.removeClass = function () {
@@ -37,6 +43,7 @@ Element.prototype.removeClass = function () {
             this.className = this.className.replace(className, '').replace(/\s\s/g, ' ').trim();
         }
     }
+    return this;
 };
 
 Element.prototype.hasClass = function (className) {
@@ -49,16 +56,7 @@ Element.prototype.toggleClass = function (className) {
     } else {
         this.addClass(className);
     }
-};
-
-Element.prototype.trigger = function (eventTypeArg) {
-    if ("createEvent" in document) {
-        var evt = document.createEvent("HTMLEvents");
-        evt.initEvent(eventTypeArg, true, true);
-        this.dispatchEvent(evt);
-    }
-    else
-        this.fireEvent("on" + eventTypeArg);
+    return this;
 };
 
 Element.prototype.addListener = function (action, callback) {
@@ -95,6 +93,11 @@ Event.prototype.getTarget = function () {
     return event.target || event.srcElement;
 };
 
+Element.prototype.setInnerText = function (text) {
+    this.textContent = text;
+    this.innerText = text;
+    return this;
+};
 
 var Collection = function () {
 
@@ -549,7 +552,7 @@ var Need = function () {
 
 var Component = function () {
 
-    var components = Collection();
+    var components = [];
 
     var createNode = function (markup) {
         var doc = document.implementation.createHTMLDocument("");
@@ -586,10 +589,14 @@ var Component = function () {
         if (node.tagName) {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
-                var c = components.get(match[1]);
-                var comp = Component(c.template).extend(c);
-                comp.createIn(node.parentNode);
-                obj.items.add(comp, node.getAttribute('data-id'))
+                var c = components.filter(function (c) {
+                    return c.name.toUpperCase() === match[1];
+                })[0];
+                var comp = Component(c.template, c.style).extend(c.controller);
+                comp.createIn(node, 'before');
+                comp.node.id = node.id;
+                obj.items.add(comp, node.getAttribute('data-id'));
+                node.parentNode.removeChild(node);
             }
         }
     };
@@ -604,17 +611,40 @@ var Component = function () {
         parseNodeComponent(node, obj);
     };
 
-    var Component = function (template) {
+    var appendStyle = function (style) {
+        var sheet = function() {
+            var style = document.createElement("style");
+            style.appendChild(document.createTextNode(""));
+            document.head.appendChild(style);
+            return style.sheet;
+        }();
+
+        style.split('}').forEach(function (rule) {
+            var m = rule.concat("}").match(/(.*)\{(.*)\}/);
+            m && sheet.addRule(m[1], m[2]);
+        })
+
+            };
+
+        var Component = function (template, style) {
         var node = createNode(template);
 
         var obj = {
             items: Collection(),
-            template: template
+            template: template,
+            style: style,
+            node: node
         };
 
-        obj.createIn = function (parent) {
-            parent.appendChild(node);
+        obj.createIn = function (parent, position) {
+            if (!position) {
+                parent.appendChild(node);
+            } else {
+                position === 'before' && parent.parentNode.insertBefore(node, parent);
+                position === 'after' && parent.parentNode.insertBefore(node, parent.nextSibling);
+            }
             node && parseNode(node, obj);
+            style && appendStyle(style);
         };
 
         obj.get = function (itemName) {
@@ -624,9 +654,15 @@ var Component = function () {
         return obj;
     };
 
-    Component.register = function (name, template, obj) {
-        obj.template = template;
-        components.add(obj, name.toUpperCase());
+    Component.register = function (name, controller, template, style) {
+        controller.template = template;
+        controller.style = style;
+        components.push({
+            name: name,
+            controller: controller,
+            template: template,
+            style: style
+        });
     };
 
     return Component;

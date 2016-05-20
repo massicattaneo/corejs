@@ -1,4 +1,5 @@
 describe("HTML node", function () {
+
     it("should have the addClass method", function () {
         var node = document.createElement("div");
         node.id = 'id';
@@ -13,6 +14,21 @@ describe("HTML node", function () {
         expect(document.getElementById('id').className).toEqual('first second third fourth');
         node.addClass('  first', 'fifth');
         expect(document.getElementById('id').className).toEqual('first second third fourth fifth');
+        document.body.removeChild(node);
+    });
+
+    it("should have the clearClass method", function () {
+        var node = document.createElement("div");
+        node.id = 'id';
+        node.addClass('first');
+        document.body.appendChild(node);
+        expect(document.getElementById('id').className).toEqual('first');
+        node.clearClass();
+        expect(document.getElementById('id').className).toEqual('');
+        node.addClass('first second');
+        expect(document.getElementById('id').className).toEqual('first second');
+        node.clearClass();
+        expect(document.getElementById('id').className).toEqual('');
         document.body.removeChild(node);
     });
 
@@ -88,7 +104,7 @@ describe("HTML node", function () {
 
 
     it("should have the getTarget method", function () {
-        var button = document.createElement('button'), x;
+        var button = document.createElement('button'), x = {};
         button.addEventListener('click', function (ev) {
             x = ev.getTarget()
         });
@@ -96,5 +112,15 @@ describe("HTML node", function () {
         button.click();
         expect(x).toBe(button);
     });
+
+    it("should have the setInnerText method", function () {
+        var span = document.createElement('span');
+        document.body.appendChild(span);
+        span.setInnerText('ciao');
+        expect(span.innerText).toBe('ciao');
+        expect(span.textContent).toBe('ciao');
+    });
+
+
 
 });

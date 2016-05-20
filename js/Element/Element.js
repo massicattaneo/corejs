@@ -20,6 +20,12 @@ Element.prototype.addClass = function () {
             this.className = className;
         }
     }
+    return this;
+};
+
+Element.prototype.clearClass = function () {
+    this.className = "";
+    return this;
 };
 
 Element.prototype.removeClass = function () {
@@ -29,6 +35,7 @@ Element.prototype.removeClass = function () {
             this.className = this.className.replace(className, '').replace(/\s\s/g, ' ').trim();
         }
     }
+    return this;
 };
 
 Element.prototype.hasClass = function (className) {
@@ -41,16 +48,7 @@ Element.prototype.toggleClass = function (className) {
     } else {
         this.addClass(className);
     }
-};
-
-Element.prototype.trigger = function (eventTypeArg) {
-    if ("createEvent" in document) {
-        var evt = document.createEvent("HTMLEvents");
-        evt.initEvent(eventTypeArg, true, true);
-        this.dispatchEvent(evt);
-    }
-    else
-        this.fireEvent("on" + eventTypeArg);
+    return this;
 };
 
 Element.prototype.addListener = function (action, callback) {
@@ -62,7 +60,7 @@ Element.prototype.addListener = function (action, callback) {
     if (this.addEventListener) {
         this.addEventListener(action, callback);
     } else {
-        this.attachEvent('on' + action, callback);
+        this.attachEvent('on' + action, callback);//cover:false
     }
 };
 
@@ -88,10 +86,11 @@ Event.prototype.getTarget = function () {
     return event.target || event.srcElement;
 };
 
-// Element.prototype.setInnerText = function (text) {
-//     this.textContent = text;
-//     this.innerText = text;
-// };
+Element.prototype.setInnerText = function (text) {
+    this.textContent = text;
+    this.innerText = text;
+    return this;
+};
 //
 // if (!Event.prototype.stopPropagation) {
 //     Event.prototype.stopPropagation = function () {
@@ -103,3 +102,13 @@ Event.prototype.getTarget = function () {
 //         this.returnValue = false;
 //     };
 // }
+//
+// Element.prototype.trigger = function (eventTypeArg) {
+//     if ("createEvent" in document) {
+//         var evt = document.createEvent("HTMLEvents");
+//         evt.initEvent(eventTypeArg, true, true);
+//         this.dispatchEvent(evt);
+//     }
+//     else
+//         this.fireEvent("on" + eventTypeArg);
+// };

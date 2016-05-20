@@ -11,7 +11,7 @@
 
 var Component = function () {
 
-    var components = Collection();
+    var components = [];
 
     var createNode = function (markup) {
         var doc = document.implementation.createHTMLDocument("");
@@ -48,10 +48,14 @@ var Component = function () {
         if (node.tagName) {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
-                var c = components.get(match[1]);
-                var comp = Component(c.template).extend(c);
-                comp.createIn(node.parentNode);
-                obj.items.add(comp, node.getAttribute('data-id'))
+                var c = components.filter(function (c) {
+                    return c.name.toUpperCase() === match[1];
+                })[0];
+                var comp = Component(c.template, c.style).extend(c.controller);
+                comp.createIn(node, 'before');
+                comp.node.id = node.id;
+                obj.items.add(comp, node.getAttribute('data-id'));
+                node.parentNode.removeChild(node);
             }
         }
     };
@@ -66,17 +70,43 @@ var Component = function () {
         parseNodeComponent(node, obj);
     };
 
-    var Component = function (template) {
+    var appendStyle = function (style) {
+        var sheet = function() {
+            var style = document.createElement("style");
+            // Add a media (and/or media query) here if you'd like!
+            // style.setAttribute("media", "screen")
+            // style.setAttribute("media", "only screen and (max-width : 1024px)")
+            style.appendChild(document.createTextNode(""));
+            document.head.appendChild(style);
+            return style.sheet;
+        }();
+
+        style.split('}').forEach(function (rule) {
+            var m = rule.concat("}").match(/(.*)\{(.*)\}/);
+            m && sheet.addRule(m[1], m[2]);
+        })
+        
+    };
+    
+    var Component = function (template, style) {
         var node = createNode(template);
 
         var obj = {
             items: Collection(),
-            template: template
+            template: template,
+            style: style,
+            node: node
         };
 
-        obj.createIn = function (parent) {
-            parent.appendChild(node);
+        obj.createIn = function (parent, position) {
+            if (!position) {
+                parent.appendChild(node);
+            } else {
+                position === 'before' && parent.parentNode.insertBefore(node, parent);
+                position === 'after' && parent.parentNode.insertBefore(node, parent.nextSibling);
+            }
             node && parseNode(node, obj);
+            style && appendStyle(style);
         };
 
         obj.get = function (itemName) {
@@ -86,9 +116,15 @@ var Component = function () {
         return obj;
     };
 
-    Component.register = function (name, template, obj) {
-        obj.template = template;
-        components.add(obj, name.toUpperCase());
+    Component.register = function (name, controller, template, style) {
+        controller.template = template;
+        controller.style = style;
+        components.push({
+            name: name,
+            controller: controller,
+            template: template,
+            style: style
+        });
     };
 
     return Component;

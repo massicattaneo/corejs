@@ -3,26 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <title>Test page</title>
-    <script src="js/Object/Object.js"></script>
-    <script src="js/Element/Element.js"></script>
-    <script src="js/Collection/Collection.js"></script>
-    <script src="js/Need/Need.js"></script>
-    <script src="js/Component/Component.js"></script>
 </head>
 <body>
 
+<script src="js/Object/Object.js"></script>
+<script src="js/Element/Element.js"></script>
+<script src="js/Collection/Collection.js"></script>
+<script src="js/Need/Need.js"></script>
+<script src="js/Component/Component.js"></script>
+<script src="js/navigator/navigator.js"></script>
+
 <script>
-    var inputController = {
-        check: function (e) {
-            this.get('error').innerText = this.get('input').value
+    var validate = function (string) {
+        if (string === "") {
+            return {isValid: false, message: ":fieldEmpty", class: "invalid"}
+        } else {
+            return {isValid: true, message: ":fieldValid", class: "valid"}
         }
     };
-    Component.register('input', '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error">text</span></div>', inputController);
-    var c = Component('<div><corejs:input  data-id="c1" /><corejs:input  data-id="c2"/><input type="submit" data-on="click:submit" /></div>');
+
+    var inputController = {
+        check: function () {
+            var check = validate(this.get('input').value);
+            this.get('error')
+                    .clearClass()
+                    .addClass(check.class)
+                    .setInnerText(check.message);
+            return check.isValid;
+        }
+    };
+    Component.register('input', inputController, '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error"></span></div>', 'span.invalid {color: red;} span{color:green;}');
+    Component.register('check', {}, '<div><input type="checkbox" data-trigger="click:change" /></div>');
+    var c = Component('<div><corejs:check data-id="c1"></corejs:check><corejs:input id="comp1"  data-id="c2" ></corejs:input><input type="submit" data-on="click:submit" /></div>',
+            'div {display:inline-block} input[type=submit] {color: white; display: block; margin-top: 10px}');
+
     c.createIn(document.body);
     c.submit = function () {
-        c.get('c1').check()
-    }
+        if (c.get('c2').check()) {
+            alert('submit');
+        }
+    };
+
 </script>
 </body>
 </html>

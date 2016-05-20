@@ -4,7 +4,7 @@ describe('GLOBAL - COMPONENT', function () {
         expect(Component('')).toBeDefined();
     });
 
-    describe('On having a HTML template', function () {
+    describe('On passing a HTML template', function () {
 
         it('should attach listeners', function () {
             var test = Component('<div><button id="button1" data-on="click:click1"></button><button id="button2" data-on="click:click2"></button></div>');
@@ -30,12 +30,22 @@ describe('GLOBAL - COMPONENT', function () {
 
     });
 
+    describe('On passing a style', function () {
+
+        it('should add it to the document', function () {
+            // var test = Component('<div><span>CIAO</span></div>', 'span {color: red}');
+            // test.createIn(document.body);
+            // expect(document.styleSheets[0].rules[0].cssText).toEqual("span { color: red; }");
+        })
+
+    });
+
     describe('On reusing components', function () {
         var c;
 
         beforeEach(function () {
-            Component.register('input', '<input data-item="input" type="text" /><span data-item="error"', {});
-            c = Component('<div><corejs:input  data-id="c1"/></div>');
+            Component.register('input', {}, '<input data-item="input" type="text" /><span data-item="error"');
+            c = Component('<div><corejs:input data-id="c1"/></div>');
             c.createIn(document.body);
         });
 
