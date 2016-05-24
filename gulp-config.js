@@ -13,6 +13,7 @@ module.exports = (function () {
 
     var config = {
         files: [
+            'js/Array/Array.js',
             'js/String/String.js',
             'js/Object/Object.js',
             'js/Element/Element.js',
