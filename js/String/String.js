@@ -1,6 +1,5 @@
-
- /*/
-///////////////////////////////////////////////////////////////////////////
+/*/
+ ///////////////////////////////////////////////////////////////////////////
  Module: String
  Created Date: 03 May 2016
  Author: mcattaneo
@@ -10,16 +9,75 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
- String.prototype.padLeft = function (size, char) {
-     if (size === 0) {
-         return '';
-     }
-     return (Array(size + 1).join(char) + this).slice(-size);
- };
+String.prototype.replaceAt = function (start, length, string) {
+    return this.substr(0, start) + string + this.substr(start + length);
+};
 
- String.prototype.padRight = function (size, char) {
-     if (size === 0) {
-         return '';
-     }
-     return (this + Array(size + 1).join(char)).slice(0, size);
- };
+String.prototype.insertAt = function (index, string) {
+    return this.substr(0, index) + string + this.substr(index);
+};
+
+String.prototype.removeAt = function (index, length) {
+    length = (typeof length === "undefined") ? 1 : length;
+    return this.substr(0, index) + this.substr(index + length);
+};
+
+String.prototype.padLeft = function (size, char) {
+    if (size === 0) {
+        return '';
+    }
+    return (Array(size + 1).join(char) + this).slice(-size);
+};
+
+String.prototype.padRight = function (size, char) {
+    if (size === 0) {
+        return '';
+    }
+    return (this + Array(size + 1).join(char)).slice(0, size);
+};
+
+String.prototype.removeHTMLTags = function () {
+    return this.replace(/<\/?[^>]+(>|$)/g, '');
+};
+
+String.prototype.startsWith = function (start) {
+    return this.substr(0, start.length) === start;
+};
+
+String.prototype.highlightWord = function (wordToHighlight, tagName, cssClass) {
+    tagName = tagName || 'strong';
+    var regex = new RegExp('(' + wordToHighlight + ')', 'gi');
+    strClass = (cssClass) ? ' class="' + cssClass + '"' : '';
+    return this.replace(regex, '<' + tagName + strClass + '>$1</' + tagName + '>');
+};
+
+String.prototype.isTime = function () {
+    return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(this);
+};
+
+String.prototype.isDate = function () {
+    var separator = this.indexOf('-') !== -1 ?'-' : '/';
+    var d = this.split(separator);
+    if (d.join("-").length < 10) return false;
+
+    var date = new Date(d.join("-"));
+    // check if date if date is incomplete
+    if (/Invalid|NaN/.test(date.toString())) return false;
+
+    // check if the date exist (30/02/2012 no exist!!!)
+    if (date.getDate() !== parseInt(d[2], 10) || date.getFullYear() !== parseInt(d[0], 10)) return false;
+
+    return true;
+};
+
+String.prototype.capitalize = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1).toString().toLowerCase();
+};
+
+String.prototype.toDate = function () {
+    if (!isNaN(this)) {
+        return new Date(parseInt(this));
+    }
+    var array = this.split(this.match(/\D/));
+    return new Date(parseInt(array[0], 10), parseInt(array[1], 10) - 1, parseInt(array[2], 10));
+};
