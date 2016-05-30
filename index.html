@@ -6,6 +6,7 @@
 </head>
 <body>
 
+<script src="js/String/String.js"></script>
 <script src="js/Object/Object.js"></script>
 <script src="js/Element/Element.js"></script>
 <script src="js/Collection/Collection.js"></script>
@@ -34,7 +35,7 @@
     };
     Component.register('input', inputController, '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error"></span></div>', 'span.invalid {color: red;} span{color:green;}');
     Component.register('check', {}, '<div><input type="checkbox" data-trigger="click:change" /></div>');
-    var c = Component('<div><corejs:check data-id="c1"></corejs:check><corejs:input id="comp1"  data-id="c2" ></corejs:input><input type="submit" data-on="click:submit" /></div>',
+    var c = Component('<div><corejs:check data-id="c1"></corejs:check><corejs:input class="input" id="comp1" data-id="c2" ></corejs:input><input type="submit" data-on="click:submit" /></div>',
             'div {display:inline-block} input[type=submit] {color: white; display: block; margin-top: 10px}');
 
     c.createIn(document.body);
@@ -45,5 +46,10 @@
     };
 
 </script>
+
+<div>
+    <span class="valid">TEST</span>
+</div>
+
 </body>
 </html>

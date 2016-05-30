@@ -11,7 +11,8 @@
 
 var Component = function () {
 
-    var components = [];
+    var components = [],
+        cssStyleIndex = 0;
 
     var createNode = function (markup) {
         var doc = document.implementation.createHTMLDocument("");
@@ -54,6 +55,7 @@ var Component = function () {
                 var comp = Component(c.template, c.style).extend(c.controller);
                 comp.createIn(node, 'before');
                 comp.node.id = node.id;
+                comp.node.addClass(node.className);
                 obj.items.add(comp, node.getAttribute('data-id'));
                 node.parentNode.removeChild(node);
             }
@@ -70,7 +72,7 @@ var Component = function () {
         parseNodeComponent(node, obj);
     };
 
-    var appendStyle = function (style) {
+    var appendStyle = function (style, cssSelector) {
         var sheet = function() {
             var style = document.createElement("style");
             // Add a media (and/or media query) here if you'd like!
@@ -82,8 +84,12 @@ var Component = function () {
         }();
 
         style.split('}').forEach(function (rule) {
-            var m = rule.concat("}").match(/(.*)\{(.*)\}/);
-            m && sheet.addRule(m[1], m[2]);
+            var m1 = rule.concat("}").match(/.*\{.*\}/);
+            m1 && m1.forEach(function (r) {
+                var m = r.trim().match(/(.*)\{(.*)\}/);
+                m && sheet.addRule((cssSelector + ' ') + m[1], m[2]);
+            });
+
         })
         
     };
@@ -106,7 +112,11 @@ var Component = function () {
                 position === 'after' && parent.parentNode.insertBefore(node, parent.nextSibling);
             }
             node && parseNode(node, obj);
-            style && appendStyle(style);
+            if (style) {
+                var cssSelector = 'ID' + (cssStyleIndex++).toString().padLeft(8, '0');
+                node.addClass(cssSelector);
+                style && appendStyle(style, '.' + cssSelector);
+            }
         };
 
         obj.get = function (itemName) {
