@@ -54,26 +54,33 @@ var Component = function () {
                 })[0];
                 var comp = Component(c.template, c.style).extend(c.controller);
                 comp.createIn(node, 'before');
-                comp.node.id = node.id;
+                for (var i = 0; i < node.attributes.length; i++) {
+                    var a = node.attributes[i];
+                    if (a.name !== 'class') {
+                        comp.node.setAttribute(a.name, a.value);
+                    }
+                }
                 comp.node.addClass(node.className);
                 obj.items.add(comp, node.getAttribute('data-id'));
                 node.parentNode.removeChild(node);
+                return comp.node;
             }
         }
+        return null;
     };
 
     var parseNode = function (node, obj) {
-        attach(node, obj, 'data-on');
-        attach(node, obj, 'data-item');
         var nodes = Array.prototype.slice.call(node.childNodes);
         nodes.forEach(function (n) {
             parseNode(n, obj);
         });
-        parseNodeComponent(node, obj);
+        node = parseNodeComponent(node, obj) || node;
+        attach(node, obj, 'data-on');
+        attach(node, obj, 'data-item');
     };
 
     var appendStyle = function (style, cssSelector) {
-        var sheet = function() {
+        var sheet = function () {
             var style = document.createElement("style");
             // Add a media (and/or media query) here if you'd like!
             // style.setAttribute("media", "screen")
@@ -91,9 +98,9 @@ var Component = function () {
             });
 
         })
-        
+
     };
-    
+
     var Component = function (template, style) {
         var node = createNode(template);
 

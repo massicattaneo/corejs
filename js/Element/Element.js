@@ -92,14 +92,16 @@ Element.prototype.setInnerText = function (text) {
     return this;
 };
 
-Element.prototype.fire = function (action) {
+Element.prototype.fire = function (action, params) {
     if (document.action) {
         var evt = document.createEventObject();
+        evt.data = params;
         return this.fireEvent('on' + action, evt)
     }
     else {
         var evt = document.createEvent("HTMLEvents");
         evt.initEvent(action, true, true);
+        evt.data = params;
         return !this.dispatchEvent(evt);
     }
 };

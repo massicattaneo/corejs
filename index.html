@@ -23,21 +23,42 @@
         }
     };
 
-    var inputController = {
-        check: function () {
+    var inputController = function () {
+        var obj = {};
+        var disabled = false;
+
+        obj.check = function () {
             var check = validate(this.get('input').value);
             this.get('error')
                     .clearClass()
                     .addClass(check.class)
                     .setInnerText(check.message);
             return check.isValid;
-        }
+        };
+        obj.disable = function () {
+            disabled = true;
+            this.get('input').setAttribute('disabled', 'disabled');
+        };
+        obj.enable = function () {
+            disabled = false;
+            this.get('input').removeAttribute('disabled');
+        };
+
+        return obj;
     };
-    Component.register('input', inputController, '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error"></span></div>', 'span.invalid {color: red;} span{color:green;}');
-    Component.register('check', {}, '<div><input type="checkbox" data-fire="click:change" /></div>');
-    var c = Component('<div><corejs:check data-id="c1"></corejs:check><corejs:input class="input" id="comp1" data-id="c2" ></corejs:input><input type="submit" data-on="click:submit" /></div>',
+
+    Component.register('input', inputController(), '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error"></span></div>', 'span.invalid {color: red;} span{color:green;}');
+    Component.register('check', {
+        change: function (e) {
+            e.getTarget().fire('custom', {value: e.getTarget().checked});
+        }
+    }, '<div><input type="checkbox" data-on="change:change" data-item="checkbox" /></div>');
+    var c = Component('<div><corejs:check data-id="c1" data-on="custom:alert"></corejs:check><corejs:input class="input" id="comp1" data-id="c2" ></corejs:input><input type="submit" data-on="click:submit" /></div>',
             'div {display:inline-block} input[type=submit] {color: white; display: block; margin-top: 10px}');
 
+    c.alert = function (e) {
+        (e.data.value) ? c.get('c2').disable() : c.get('c2').enable();
+    };
     c.createIn(document.body);
     c.submit = function () {
         if (c.get('c2').check()) {
