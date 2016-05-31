@@ -120,7 +120,16 @@ describe("HTML node", function () {
         expect(span.innerText).toBe('ciao');
         expect(span.textContent).toBe('ciao');
     });
-
-
+    
+    it('should have the fire method', function () {
+        var span = document.createElement('span');
+        document.body.appendChild(span);
+        var o = {};
+        o.callback = function (event) {o.event = event;};
+        spyOn(o, 'callback').and.callThrough();
+        span.addEventListener('customClick', o.callback);
+        span.fire('customClick');
+        expect(o.callback).toHaveBeenCalledWith(o.event);
+    });
 
 });

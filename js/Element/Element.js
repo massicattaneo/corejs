@@ -91,6 +91,19 @@ Element.prototype.setInnerText = function (text) {
     this.innerText = text;
     return this;
 };
+
+Element.prototype.fire = function (action) {
+    if (document.action) {
+        var evt = document.createEventObject();
+        return this.fireEvent('on' + action, evt)
+    }
+    else {
+        var evt = document.createEvent("HTMLEvents");
+        evt.initEvent(action, true, true);
+        return !this.dispatchEvent(evt);
+    }
+};
+
 //
 // if (!Event.prototype.stopPropagation) {
 //     Event.prototype.stopPropagation = function () {
