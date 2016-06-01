@@ -76,6 +76,8 @@ Need('standardComponent', function () {
             }
         };
 
+        return c;
+
     }
 
 });

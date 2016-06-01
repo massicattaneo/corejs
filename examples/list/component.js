@@ -46,7 +46,7 @@ Need('listComponent', function () {
 
         c.createIn(document.body);
 
-
+        return c;
     }
 
 });
