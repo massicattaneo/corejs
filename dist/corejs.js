@@ -11,6 +11,76 @@ Array.prototype.clone = function() {
     return this.slice(0);
 };
 
+String.prototype.replaceAt = function (start, length, string) {
+    return this.substr(0, start) + string + this.substr(start + length);
+};
+
+String.prototype.insertAt = function (index, string) {
+    return this.substr(0, index) + string + this.substr(index);
+};
+
+String.prototype.removeAt = function (index, length) {
+    length = (typeof length === "undefined") ? 1 : length;
+    return this.substr(0, index) + this.substr(index + length);
+};
+
+String.prototype.padLeft = function (size, char) {
+    if (size === 0) {
+        return '';
+    }
+    return (Array(size + 1).join(char) + this).slice(-size);
+};
+
+String.prototype.padRight = function (size, char) {
+    if (size === 0) {
+        return '';
+    }
+    return (this + Array(size + 1).join(char)).slice(0, size);
+};
+
+String.prototype.removeHTMLTags = function () {
+    return this.replace(/<\/?[^>]+(>|$)/g, '');
+};
+
+String.prototype.startsWith = function (start) {
+    return this.substr(0, start.length) === start;
+};
+
+String.prototype.highlightWord = function (wordToHighlight, tagName, cssClass) {
+    tagName = tagName || 'strong';
+    var regex = new RegExp('(' + wordToHighlight + ')', 'gi');
+    strClass = (cssClass) ? ' class="' + cssClass + '"' : '';
+    return this.replace(regex, '<' + tagName + strClass + '>$1</' + tagName + '>');
+};
+
+String.prototype.isTime = function () {
+    return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(this);
+};
+
+String.prototype.isDate = function () {
+    var separator = this.indexOf('-') !== -1 ?'-' : '/';
+    var d = this.split(separator);
+    if (d.join("-").length < 10) return false;
+
+    var date = new Date(d.join("-"));
+    if (/Invalid|NaN/.test(date.toString())) return false;
+
+    if (date.getDate() !== parseInt(d[2], 10) || date.getFullYear() !== parseInt(d[0], 10)) return false;
+
+    return true;
+};
+
+String.prototype.capitalize = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1).toString().toLowerCase();
+};
+
+String.prototype.toDate = function () {
+    if (!isNaN(this)) {
+        return new Date(parseInt(this));
+    }
+    var array = this.split(this.match(/\D/));
+    return new Date(parseInt(array[0], 10), parseInt(array[1], 10) - 1, parseInt(array[2], 10));
+};
 
 
 
@@ -110,6 +180,21 @@ Element.prototype.setInnerText = function (text) {
     this.innerText = text;
     return this;
 };
+
+Element.prototype.fire = function (action, params) {
+    if (document.action) {
+        var evt = document.createEventObject();
+        evt.data = params;
+        return this.fireEvent('on' + action, evt)
+    }
+    else {
+        var evt = document.createEvent("HTMLEvents");
+        evt.initEvent(action, true, true);
+        evt.data = params;
+        return !this.dispatchEvent(evt);
+    }
+};
+
 
 var Collection = function () {
 
@@ -564,7 +649,8 @@ var Need = function () {
 
 var Component = function () {
 
-    var components = [];
+    var components = [],
+        cssStyleIndex = 0;
 
     var createNode = function (markup) {
         var doc = document.implementation.createHTMLDocument("");
@@ -606,25 +692,33 @@ var Component = function () {
                 })[0];
                 var comp = Component(c.template, c.style).extend(c.controller);
                 comp.createIn(node, 'before');
-                comp.node.id = node.id;
+                for (var i = 0; i < node.attributes.length; i++) {
+                    var a = node.attributes[i];
+                    if (a.name !== 'class') {
+                        comp.node.setAttribute(a.name, a.value);
+                    }
+                }
+                comp.node.addClass(node.className);
                 obj.items.add(comp, node.getAttribute('data-id'));
                 node.parentNode.removeChild(node);
+                return comp.node;
             }
         }
+        return null;
     };
 
     var parseNode = function (node, obj) {
-        attach(node, obj, 'data-on');
-        attach(node, obj, 'data-item');
         var nodes = Array.prototype.slice.call(node.childNodes);
         nodes.forEach(function (n) {
             parseNode(n, obj);
         });
-        parseNodeComponent(node, obj);
+        node = parseNodeComponent(node, obj) || node;
+        attach(node, obj, 'data-on');
+        attach(node, obj, 'data-item');
     };
 
-    var appendStyle = function (style) {
-        var sheet = function() {
+    var appendStyle = function (style, cssSelector) {
+        var sheet = function () {
             var style = document.createElement("style");
             style.appendChild(document.createTextNode(""));
             document.head.appendChild(style);
@@ -632,13 +726,17 @@ var Component = function () {
         }();
 
         style.split('}').forEach(function (rule) {
-            var m = rule.concat("}").match(/(.*)\{(.*)\}/);
-            m && sheet.addRule(m[1], m[2]);
+            var m1 = rule.concat("}").match(/.*\{.*\}/);
+            m1 && m1.forEach(function (r) {
+                var m = r.trim().match(/(.*)\{(.*)\}/);
+                m && sheet.addRule((cssSelector + ' ') + m[1], m[2]);
+            });
+
         })
 
-            };
+    };
 
-        var Component = function (template, style) {
+    var Component = function (template, style) {
         var node = createNode(template);
 
         var obj = {
@@ -656,7 +754,12 @@ var Component = function () {
                 position === 'after' && parent.parentNode.insertBefore(node, parent.nextSibling);
             }
             node && parseNode(node, obj);
-            style && appendStyle(style);
+            if (style) {
+                var cssSelector = 'ID' + (cssStyleIndex++).toString().padLeft(8, '0');
+                node.addClass(cssSelector);
+                style && appendStyle(style, '.' + cssSelector);
+            }
+            obj.init && obj.init();
         };
 
         obj.get = function (itemName) {

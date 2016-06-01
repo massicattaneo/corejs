@@ -124,6 +124,7 @@ var Component = function () {
                 node.addClass(cssSelector);
                 style && appendStyle(style, '.' + cssSelector);
             }
+            obj.init && obj.init();
         };
 
         obj.get = function (itemName) {

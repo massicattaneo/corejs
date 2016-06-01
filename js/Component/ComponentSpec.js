@@ -1,5 +1,11 @@
 describe('GLOBAL - COMPONENT', function () {
 
+    beforeEach(function () {
+        while (document.body.firstChild) {
+            document.body.removeChild(document.body.firstChild);
+        }
+    });
+
     it('should exist a function Component', function () {
         expect(Component('')).toBeDefined();
     });
@@ -58,8 +64,8 @@ describe('GLOBAL - COMPONENT', function () {
         });
 
         it('should apply the style only to the scope', function () {
-            expect(window.getComputedStyle(document.body.childNodes[42], null).color).toEqual('rgb(0, 0, 0)');
-            expect(window.getComputedStyle(document.body.childNodes[42].childNodes[0].childNodes[1], null).color).not.toEqual('rgb(0, 0, 0)');
+            expect(window.getComputedStyle(document.body.childNodes[0], null).color).toEqual('rgb(0, 0, 0)');
+            expect(window.getComputedStyle(document.body.childNodes[0].childNodes[0].childNodes[1], null).color).not.toEqual('rgb(0, 0, 0)');
         });
 
     })
