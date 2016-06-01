@@ -4,6 +4,7 @@ COREJS - v1.0.0
 Basic Javascript Framework: 
 
 - String extensions
+- Array extensions
 - Object extensions
 - HTML Element extensions
 - Collections
