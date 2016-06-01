@@ -16,10 +16,14 @@
 <script src="examples/standard/component.js"></script>
 <script src="examples/list/component.js"></script>
 
-<ul>
-    <li onclick="c = Need('standardComponent')">STANDARD COMPONENT</li>
-    <li onclick="c = Need('listComponent')">LIST COMPONENT</li>
-</ul>
+<script>
+    var s = Need('example-standard');
+    var l = Need('example-list');
+
+    s.submit = function () {
+        s.isValid() && l.addItem(s.getValue());
+    };
+</script>
 
 </body>
 </html>

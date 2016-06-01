@@ -9,20 +9,29 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-Need('listComponent', function () {
+Need('example-list', function () {
 
     return function () {
 
         var listController = function () {
             var obj = {};
+            var coll = Collection();
 
+            var replaceValue = function (value) {
+                return 'Item value: {{value}}'.replace('{{value}}', value)
+            };
             obj.addItem = function (array) {
                 array.forEach(function (i) {
                     var c = Component.get('listItem');
                     var item = Component(c.template, c.style).extend(c.controller);
                     item.createIn(this.get('list'));
-                    item.setText(i);
+                    item.setText(replaceValue(i));
+                    coll.add(item)
                 }, this);
+            };
+
+            obj.modifyItem = function (index, value) {
+                coll.getAt(index).setText(replaceValue(value))
             };
 
             return obj;
@@ -40,8 +49,8 @@ Need('listComponent', function () {
 
         var c = Component('<div><corejs:list data-id="list"></corejs:list></div>');
 
-        c.init = function () {
-            c.get('list').addItem([0,'prova',2,3])
+        c.addItem = function (value) {
+            c.get('list').addItem([value]);
         };
 
         c.createIn(document.body);

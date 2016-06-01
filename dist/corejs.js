@@ -1,3 +1,10 @@
+/**
+ * corejs - Javascript Framework
+ * @version v1.0.0
+ * @link https://github.com/massicattaneo/corejs#readme
+ * @license ISC
+ * @author Massimiliano Cattaneo
+ */
 
 Array.prototype.fillWithIndexes = function(lastIndex, firstIndex) {
     firstIndex = firstIndex || 0;
@@ -687,9 +694,7 @@ var Component = function () {
         if (node.tagName) {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
-                var c = components.filter(function (c) {
-                    return c.name.toUpperCase() === match[1];
-                })[0];
+                var c = Component.get(match[1]); 
                 var comp = Component(c.template, c.style).extend(c.controller);
                 comp.createIn(node, 'before');
                 for (var i = 0; i < node.attributes.length; i++) {
@@ -778,6 +783,12 @@ var Component = function () {
             template: template,
             style: style
         });
+    };
+
+        Component.get = function (componentName) {
+        return components.filter(function (c) {
+            return c.name.toUpperCase() === componentName.toUpperCase();
+        })[0];
     };
 
     return Component;

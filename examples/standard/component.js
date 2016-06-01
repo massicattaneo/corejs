@@ -9,7 +9,7 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-Need('standardComponent', function () {
+Need('example-standard', function () {
 
     return function () {
 
@@ -59,7 +59,7 @@ Need('standardComponent', function () {
             }
         }, '<div><input type="checkbox" data-on="change:change" data-item="checkbox" /></div>');
         var c = Component('<div><corejs:check data-id="c1" data-on="custom:toggleCheckbox"></corejs:check><corejs:input class="input" id="comp1" data-id="c2" ></corejs:input><input type="submit" data-on="click:submit" /></div>',
-            'div {display:inline-block} input[type=submit] {color: white; display: block; margin-top: 10px}');
+            'div {display:inline-block} input[type=submit] {color: white; inline-block: block; margin-top: 10px}');
 
         c.toggleCheckbox = function (e) {
             (e.data.value) ? c.get('c2').enable() : c.get('c2').disable();
@@ -70,10 +70,11 @@ Need('standardComponent', function () {
         };
 
         c.createIn(document.body);
-        c.submit = function () {
-            if (c.get('c2').check()) {
-                alert('submit');
-            }
+        c.isValid = function () {
+            return c.get('c2').check();
+        };
+        c.getValue = function () {
+            return c.get('c2').get('input').value;
         };
 
         return c;
