@@ -14,7 +14,9 @@
 <script src="js/Component/Component.js"></script>
 <script src="js/navigator/navigator.js"></script>
 <script src="examples/standard/component.js"></script>
-<script src="examples/list/component.js"></script>
+<script src="examples/list/main.js"></script>
+<script src="examples/list/list.js"></script>
+<script src="examples/list/item.js"></script>
 
 <script>
     var s = Need('example-standard');
@@ -23,6 +25,7 @@
     s.submit = function () {
         s.isValid() && l.addItem(s.getValue());
     };
+
 </script>
 
 </body>
