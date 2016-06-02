@@ -14,12 +14,14 @@ Need('bootstrap', function (Need) {
     var S = Need('example-standard');
     var L = Need('example-list');
 
-    return function () {
+    return function (p) {
         var standard = S();
         var list = L();
 
-        standard.createIn(document.body);
-        list.createIn(document.body);
+        standard.createIn(p.standard);
+        list.createIn(p.list);
+
+        list.addItem(['Test item']);
 
         standard.submit = function () {
             standard.isValid() && list.addItem(standard.getValue());

@@ -28,3 +28,9 @@ BUILD
 ```
 npm run dist
 ```
+
+EXAMPLES
+-----
+```
+Open the index.html into a browser
+```

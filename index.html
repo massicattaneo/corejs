@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Test page</title>
+    <style>
+        body {font-family: Arial; }
+    </style>
 </head>
 <body>
 
@@ -23,8 +26,19 @@
 <script src="examples/list/list.js"></script>
 <script src="examples/list/item.js"></script>
 
+<h2>CoreJS Examples:</h2>
+<div id="examples">
+    <h3>STANDARD:</h3>
+    <div id="standard"></div>
+    <h3>LIST:</h3>
+    <div id="list"></div>
+</div>
+
 <script>
-    Need('bootstrap')();
+    Need('bootstrap')({
+        standard: document.getElementById('standard'),
+        list: document.getElementById('list')
+    });
 </script>
 
 </body>
