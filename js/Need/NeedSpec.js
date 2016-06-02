@@ -179,7 +179,7 @@ describe('GLOBAL - NEED', function () {
 
     });
 
-    describe('On retrieving a package', function () {
+    xdescribe('On retrieving a package', function () {
 
         beforeEach(function () {
             Need(':test', function () {
@@ -216,10 +216,10 @@ describe('GLOBAL - NEED', function () {
     });
 
     describe('On creating a package - passing a namespace, function', function () {
-        var p, needInner, executed = false, t1,t2;
+        var p, needCollector, executed = false, t1,t2,t3;
         beforeEach(function () {
             p = Need('t3', function (need) {
-                needInner = need;
+                needCollector = need;
                 t1 = need('t1');
                 t2 = need('t2');
                 return function () {
@@ -230,7 +230,7 @@ describe('GLOBAL - NEED', function () {
         });
 
         it('should pass an object to get other needs', function () {
-            expect(needInner).toBeDefined();
+            expect(needCollector).toBeDefined();
         });
 
         it('should not execute the inner function', function () {
@@ -250,15 +250,13 @@ describe('GLOBAL - NEED', function () {
 
             beforeEach(function () {
                 Need('t1', function () {
-                    return function () {
-                        return 1;
-                    }
+                    return 1;
                 });
                 Need('t2', function () {
-                    return function () {
-                        return 2;
-                    }
+                    return 2;
                 });
+                t3 = Need('t3');
+                t3();
             });
 
             it('should execute the inner function', function () {
@@ -278,5 +276,6 @@ describe('GLOBAL - NEED', function () {
 
 
     });
+
 
 });

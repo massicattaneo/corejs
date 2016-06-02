@@ -7,25 +7,24 @@
 <body>
 
 <script src="js/String/String.js"></script>
+<script src="js/Array/Array.js"></script>
 <script src="js/Object/Object.js"></script>
 <script src="js/Element/Element.js"></script>
 <script src="js/Collection/Collection.js"></script>
 <script src="js/Need/Need.js"></script>
 <script src="js/Component/Component.js"></script>
 <script src="js/navigator/navigator.js"></script>
-<script src="examples/standard/component.js"></script>
+
+<script src="examples/bootstrap.js"></script>
+<script src="examples/standard/main.js"></script>
+<script src="examples/standard/input.js"></script>
+<script src="examples/standard/check.js"></script>
 <script src="examples/list/main.js"></script>
 <script src="examples/list/list.js"></script>
 <script src="examples/list/item.js"></script>
 
 <script>
-    var s = Need('example-standard');
-    var l = Need('example-list');
-
-    s.submit = function () {
-        s.isValid() && l.addItem(s.getValue());
-    };
-
+    Need('bootstrap')();
 </script>
 
 </body>

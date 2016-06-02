@@ -150,50 +150,58 @@ var Need = function () {
     /** PACKAGE NEED **/
     var createPackage = function (namespace, callback) {
         var m = {};
-        var p = {
-            needs: Need([])
-        };
+        var theseNeeds = Need([]);
 
         if (!packages.get(namespace)) {
             packages.add(Need(), namespace)
         }
 
-        var needCollector = function (namespace) {
-            if (packages.get(namespace)) {
-                p.needs.add(packages.get(namespace));
+        var total = 0;
+        var needCollector = function (ns) {
+            total++;
+            if (packages.get(ns)) {
+                theseNeeds.add(packages.get(ns));
             } else {
                 var need = Need();
-                p.needs.add(need);
-                packages.add(need, namespace);
+                theseNeeds.add(need);
+                packages.add(need, ns);
             }
         };
 
-        var func = callback(needCollector);
-        var pack = packages.get(namespace);
-        func.__namespace = namespace;
-        pack.__callback = func;
-        pack.resolve(func);
+        var needReplacer = function (ns) {
+            return retrievePackage(ns);
+        };
 
-        p.needs.then(function () {
-            var packs = {};
-            for (var i = 0; i < arguments.length; i++) {
-                packs[arguments[i].__namespace] = arguments[i]
-            }
-            packages.get(namespace).__callback = callback(function (namespace) {
-                return packs[namespace]();
+        callback(needCollector);
+
+        var pack = packages.get(namespace);
+
+        if (total === 0) {
+            pack.__callback = function() {return callback()};
+            pack.__namespace = namespace;
+            pack.resolve(pack.__callback);
+        } else {
+            theseNeeds.then(function () {
+                var packs = {};
+                for (var i = 0; i < arguments.length; i++) {
+                    packs[arguments[i].__namespace] = arguments[i]();
+                }
+                pack.__callback = function() {return callback(needReplacer)};
+                pack.__namespace = namespace;
+                pack.resolve(pack.__callback);
             });
-            packages.get(namespace).__callback();
-        });
+        }
+
 
         m.status = function () {
-            return p.needs.status();
+            return theseNeeds.status();
         };
 
         return m;
     };
 
-    var retrievePackage = function (param) {
-        return packages.get(param).__callback();
+    var retrievePackage = function (namespace) {
+        return packages.get(namespace).__callback();
     };
 
     return function Need(param, callback) {
