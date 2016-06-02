@@ -40,4 +40,4 @@ describe('Array', function () {
 
     })
 
-})
+});

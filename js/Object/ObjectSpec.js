@@ -14,7 +14,7 @@ describe('GLOBAL - OBJECT', function () {
 
         it('should accept multiple objects', function () {
             var a1 = {name: 'a1'},
-                b1 = {getName: function () {return this.name;}}
+                b1 = {getName: function () {return this.name;}};
             var obj = {};
             obj.extend(a1,b1);
             expect(obj.name).toEqual('a1');

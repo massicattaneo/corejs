@@ -63,9 +63,8 @@ String.prototype.isDate = function () {
     var date = new Date(d.join("-"));
     // check if date if date is incomplete
     if (/Invalid|NaN/.test(date.toString())) return false;
-
-    // check if the date exist (30/02/2012 no exist!!!)
-    if (date.getDate() !== parseInt(d[2], 10) || date.getFullYear() !== parseInt(d[0], 10)) return false;
+    else if (date.getDate() !== parseInt(d[2], 10)) return false;
+    else if (date.getFullYear() !== parseInt(d[0], 10)) return false;
 
     return true;
 };

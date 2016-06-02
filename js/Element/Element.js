@@ -99,10 +99,10 @@ Element.prototype.fire = function (action, params) {
         return this.fireEvent('on' + action, evt)
     }
     else {
-        var evt = document.createEvent("HTMLEvents");
-        evt.initEvent(action, true, true);
-        evt.data = params;
-        return !this.dispatchEvent(evt);
+        var e = document.createEvent("HTMLEvents");
+        e.initEvent(action, true, true);
+        e.data = params;
+        return !this.dispatchEvent(e);
     }
 };
 

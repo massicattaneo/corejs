@@ -72,7 +72,7 @@ describe("PROTOTYPE - STRING", function () {
     });
 
     it('removeHTMLTags', function() {
-        var str = '<div/>';
+        var str = '<div></div>';
         expect (str.removeHTMLTags()).toEqual('');
 
         str = '<div></div>';
