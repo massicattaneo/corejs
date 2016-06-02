@@ -21,6 +21,15 @@ Need('controller-input', function () {
         }
     };
 
+    var replaceLocalization = function (message) {
+        var messages = {
+            ":fieldEmpty": "The field is Empty",
+            ":fieldValid": "You can add it to the List!",
+            "": ""
+        };
+        return messages[message];
+    };
+
     return function () {
         var obj = {};
         var enabled = true;
@@ -30,8 +39,8 @@ Need('controller-input', function () {
             this.get('error')
                 .clearClass()
                 .addClass(check.class)
-                .setInnerText(check.message);
-            return check.isValid;
+                .setInnerText(replaceLocalization(check.message));
+            return check.isValid && enabled;
         };
         obj.disable = function () {
             enabled = false;
