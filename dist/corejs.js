@@ -1,6 +1,6 @@
 /**
  * corejs - Javascript Framework
- * @version v1.0.0
+ * @version v1.0.0.beta
  * @link https://github.com/massicattaneo/corejs#readme
  * @license ISC
  * @author Massimiliano Cattaneo
@@ -71,8 +71,8 @@ String.prototype.isDate = function () {
 
     var date = new Date(d.join("-"));
     if (/Invalid|NaN/.test(date.toString())) return false;
-
-    if (date.getDate() !== parseInt(d[2], 10) || date.getFullYear() !== parseInt(d[0], 10)) return false;
+    else if (date.getDate() !== parseInt(d[2], 10)) return false;
+    else if (date.getFullYear() !== parseInt(d[0], 10)) return false;
 
     return true;
 };
@@ -88,6 +88,7 @@ String.prototype.toDate = function () {
     var array = this.split(this.match(/\D/));
     return new Date(parseInt(array[0], 10), parseInt(array[1], 10) - 1, parseInt(array[2], 10));
 };
+
 
 
 
@@ -195,12 +196,13 @@ Element.prototype.fire = function (action, params) {
         return this.fireEvent('on' + action, evt)
     }
     else {
-        var evt = document.createEvent("HTMLEvents");
-        evt.initEvent(action, true, true);
-        evt.data = params;
-        return !this.dispatchEvent(evt);
+        var e = document.createEvent("HTMLEvents");
+        e.initEvent(action, true, true);
+        e.data = params;
+        return !this.dispatchEvent(e);
     }
 };
+
 
 
 var Collection = function () {
@@ -342,7 +344,7 @@ var Collection = function () {
             var coll = Collection();
             this.forEach(function (object, k) {
                 if (typeof key === 'undefined' || k === key) {
-                    coll.add(object, key);
+                    coll.add(object, k);
                 }
             });
             return coll;
@@ -664,8 +666,28 @@ var Need = function () {
 
 var Component = function () {
 
+    var injectModel = function (toJSON, node, value) {
+        var v = toJSON;
+        value.split('/').forEach(function (item) {v = v[item];});
+        node.setInnerText(v);
+    };
+
     var components = [],
-        cssStyleIndex = 0;
+        cssStyleIndex = 0,
+        dataProxy = Collection().extend(function () {
+            var obj = {};
+
+            obj.collect = function () {
+                var coll = this.clone();
+                this.clear();
+                coll.forEach(function (node, value) {
+                    navigator.send('POST', '/data/' + value).then(function (data) {
+                       injectModel(data.toJSON(), node, value);
+                    });
+                });
+            };
+            return obj;
+        }());
 
     var createNode = function (markup) {
         var doc = document.implementation.createHTMLDocument("");
@@ -688,12 +710,17 @@ var Component = function () {
         obj.items.add(node, attribute);
     };
 
+    var createBindings = function (attribute, node, obj) {
+        dataProxy.add(node, attribute);
+    };
+
     var attach = function (node, obj, attrName) {
         if (node.getAttribute) {
             var attribute = node.getAttribute(attrName);
             if (attribute) {
                 attrName === 'data-on' && createListeners(attribute, node, obj);
                 attrName === 'data-item' && createItems(attribute, node, obj);
+                attrName === 'data-bind' && createBindings(attribute, node, obj);
             }
         }
     };
@@ -702,7 +729,7 @@ var Component = function () {
         if (node.tagName) {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
-                var c = Component.get(match[1]); 
+                var c = Component.get(match[1]);
                 var comp = Component(c.template, c.style).extend(c.controller);
                 comp.createIn(node, 'before');
                 for (var i = 0; i < node.attributes.length; i++) {
@@ -728,6 +755,7 @@ var Component = function () {
         node = parseNodeComponent(node, obj) || node;
         attach(node, obj, 'data-on');
         attach(node, obj, 'data-item');
+        attach(node, obj, 'data-bind');
     };
 
     var appendStyle = function (style, cssSelector) {
@@ -773,6 +801,7 @@ var Component = function () {
                 style && appendStyle(style, '.' + cssSelector);
             }
             obj.init && obj.init();
+            dataProxy.collect();
         };
 
         obj.get = function (itemName) {
@@ -793,7 +822,7 @@ var Component = function () {
         });
     };
 
-        Component.get = function (componentName) {
+    Component.get = function (componentName) {
         return components.filter(function (c) {
             return c.name.toUpperCase() === componentName.toUpperCase();
         })[0];
