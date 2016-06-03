@@ -148,7 +148,7 @@ var Collection = function () {
             var coll = Collection();
             this.forEach(function (object, k) {
                 if (typeof key === 'undefined' || k === key) {
-                    coll.add(object, key);
+                    coll.add(object, k);
                 }
             });
             return coll;

@@ -11,8 +11,28 @@
 
 var Component = function () {
 
+    var injectModel = function (toJSON, node, value) {
+        var v = toJSON;
+        value.split('/').forEach(function (item) {v = v[item];});
+        node.setInnerText(v);
+    };
+
     var components = [],
-        cssStyleIndex = 0;
+        cssStyleIndex = 0,
+        dataProxy = Collection().extend(function () {
+            var obj = {};
+
+            obj.collect = function () {
+                var coll = this.clone();
+                this.clear();
+                coll.forEach(function (node, value) {
+                    navigator.send('POST', '/data/' + value).then(function (data) {
+                       injectModel(data.toJSON(), node, value);
+                    });
+                });
+            };
+            return obj;
+        }());
 
     var createNode = function (markup) {
         var doc = document.implementation.createHTMLDocument("");
@@ -35,12 +55,18 @@ var Component = function () {
         obj.items.add(node, attribute);
     };
 
+    var createBindings = function (attribute, node, obj) {
+        //attribute: app/name
+        dataProxy.add(node, attribute);
+    };
+
     var attach = function (node, obj, attrName) {
         if (node.getAttribute) {
             var attribute = node.getAttribute(attrName);
             if (attribute) {
                 attrName === 'data-on' && createListeners(attribute, node, obj);
                 attrName === 'data-item' && createItems(attribute, node, obj);
+                attrName === 'data-bind' && createBindings(attribute, node, obj);
             }
         }
     };
@@ -49,7 +75,7 @@ var Component = function () {
         if (node.tagName) {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
-                var c = Component.get(match[1]); 
+                var c = Component.get(match[1]);
                 var comp = Component(c.template, c.style).extend(c.controller);
                 comp.createIn(node, 'before');
                 for (var i = 0; i < node.attributes.length; i++) {
@@ -75,6 +101,7 @@ var Component = function () {
         node = parseNodeComponent(node, obj) || node;
         attach(node, obj, 'data-on');
         attach(node, obj, 'data-item');
+        attach(node, obj, 'data-bind');
     };
 
     var appendStyle = function (style, cssSelector) {
@@ -123,6 +150,7 @@ var Component = function () {
                 style && appendStyle(style, '.' + cssSelector);
             }
             obj.init && obj.init();
+            dataProxy.collect();
         };
 
         obj.get = function (itemName) {
@@ -142,7 +170,7 @@ var Component = function () {
             style: style
         });
     };
-    
+
     Component.get = function (componentName) {
         return components.filter(function (c) {
             return c.name.toUpperCase() === componentName.toUpperCase();

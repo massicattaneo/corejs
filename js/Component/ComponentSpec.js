@@ -1,9 +1,15 @@
 describe('GLOBAL - COMPONENT', function () {
+    var server;
 
     beforeEach(function () {
+        server = sinon.fakeServer.create();
+    });
+
+    afterEach(function () {
         while (document.body.firstChild) {
             document.body.removeChild(document.body.firstChild);
         }
+        server.restore();
     });
 
     it('should exist a function Component', function () {
@@ -67,6 +73,30 @@ describe('GLOBAL - COMPONENT', function () {
             expect(window.getComputedStyle(document.body.childNodes[0], null).color).toEqual('rgb(0, 0, 0)');
             expect(window.getComputedStyle(document.body.childNodes[0].childNodes[0].childNodes[1], null).color).not.toEqual('rgb(0, 0, 0)');
         });
+
+    });
+
+    describe('On having a data-bind attribute', function () {
+        var c;
+
+        beforeEach(function () {
+            Component.register('bind',{},'<div data-bind="app/name"></div>');
+            c = Component('<div id="bind"><corejs:bind data-id="c1"/></div>');
+            c.createIn(document.body);
+        });
+
+        it('should inject the app name when the server respond', function () {
+            var response = {app: {name: 'appName'}};
+            server.respondWith('POST','/data/app/name',
+                [200, {'Content-Type': 'application/json'}, JSON.stringify(response)]);
+            server.respond();
+            expect(document.getElementById('bind').innerText.trim()).toEqual('appName');
+        });
+
+        it('should save the value to the server', function () {
+            c.get('c1').node.setInnerText('change');
+            // c.get('c1').save();
+        })
 
     })
 
