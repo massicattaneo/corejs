@@ -47,7 +47,7 @@ describe('GLOBAL - COMPONENT', function () {
         it('should add it to the document', function () {
             var test = Component('<div><span>CIAO</span></div>', 'span {color: red}');
             test.createIn(document.body);
-            expect(document.styleSheets[0].rules[0].cssText).toEqual(".ID00000000 span { color: red; }");
+            expect(document.styleSheets[0].rules[0].cssText).toEqual(".CJS0 span { color: red; }");
         });
 
     });
@@ -60,7 +60,7 @@ describe('GLOBAL - COMPONENT', function () {
                 {},
                 '<div><input data-item="input" type="text"><div data-item="error"></div></div>',
                 'div {color: red}');
-            c = Component('<div><corejs:input data-id="c1"/></div>');
+            c = Component('<div><corejs:input data-id="c1"/><corejs:input data-id="c2"/></div>');
             c.createIn(document.body);
         });
 
@@ -74,28 +74,37 @@ describe('GLOBAL - COMPONENT', function () {
             expect(window.getComputedStyle(document.body.childNodes[0].childNodes[0].childNodes[1], null).color).not.toEqual('rgb(0, 0, 0)');
         });
 
+        it('should add a same class only once', function () {
+            expect(document.head.children.length).toEqual(5);
+        })
+
     });
 
     describe('On having a data-bind attribute', function () {
         var c;
 
         beforeEach(function () {
-            Component.register('bind',{},'<div data-bind="app/name"></div>');
+            Component.register('bind',{},'<div><span data-bind="app/name"></span><span data-bind="app/version"></span></div>');
             c = Component('<div id="bind"><corejs:bind data-id="c1"/></div>');
             c.createIn(document.body);
         });
 
         it('should inject the app name when the server respond', function () {
             var response = {app: {name: 'appName'}};
-            server.respondWith('POST','/data/app/name',
+            server.respondWith('GET','/data/app/name',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify(response)]);
             server.respond();
             expect(document.getElementById('bind').innerText.trim()).toEqual('appName');
         });
 
         it('should save the value to the server', function () {
-            c.get('c1').node.setInnerText('change');
-            // c.get('c1').save();
+            var a = c.get('c1').save();
+            server.respondWith('POST','/data/app/name',
+                [200, {'Content-Type': 'application/json'}, ""]);
+            server.respondWith('POST','/data/app/version',
+                [200, {'Content-Type': 'application/json'}, ""]);
+            server.respond();
+            expect(a.status()).toEqual(1);
         })
 
     })

@@ -11,6 +11,8 @@
 
 var Component = function () {
 
+    var styles = [];
+
     var injectModel = function (toJSON, node, value) {
         var v = toJSON;
         value.split('/').forEach(function (item) {v = v[item];});
@@ -19,18 +21,34 @@ var Component = function () {
 
     var components = [],
         cssStyleIndex = 0,
-        dataProxy = Collection().extend(function () {
+        dataProxy = (function () {
             var obj = {};
+            var collection = [];
+
+            obj.add = function (item, attribute) {
+                collection.push({item: item, attribute: attribute});
+            };
 
             obj.collect = function () {
-                var coll = this.clone();
-                this.clear();
-                coll.forEach(function (node, value) {
-                    navigator.send('POST', '/data/' + value).then(function (data) {
-                       injectModel(data.toJSON(), node, value);
+                collection.forEach(function (o) {
+                    navigator.send('GET', '/data/' + o.attribute).then(function (data) {
+                       injectModel(data.toJSON(), o.item, o.attribute);
                     });
                 });
             };
+
+            obj.save = function (item) {
+                var elem = this.get(item);
+                return navigator.send('POST', '/data/' + elem.attribute);
+            };
+
+            obj.get = function (item) {
+                var elem = collection.filter(function (o) {
+                    return o.item === item;
+                });
+                return elem ? elem[0] : null;
+            };
+
             return obj;
         }());
 
@@ -104,25 +122,39 @@ var Component = function () {
         attach(node, obj, 'data-bind');
     };
 
-    var appendStyle = function (style, cssSelector) {
-        var sheet = function () {
-            var style = document.createElement("style");
-            // Add a media (and/or media query) here if you'd like!
-            // style.setAttribute("media", "screen")
-            // style.setAttribute("media", "only screen and (max-width : 1024px)")
-            style.appendChild(document.createTextNode(""));
-            document.head.appendChild(style);
-            return style.sheet;
-        }();
+    var appendStyle = function (style) {
+        var existingStyle = styles.filter(function (s) {
+            return s.style === style;
+        });
 
-        style.split('}').forEach(function (rule) {
-            var m1 = rule.concat("}").match(/.*\{.*\}/);
-            m1 && m1.forEach(function (r) {
-                var m = r.trim().match(/(.*)\{(.*)\}/);
-                m && sheet.addRule((cssSelector + ' ') + m[1], m[2]);
+        if (existingStyle.length > 0) {
+            var className = existingStyle[0].className;
+        } else {
+            var className = 'CJS' + (cssStyleIndex++);
+            var cssSelector = '.' + className;
+            var sheet = function () {
+                var style = document.createElement("style");
+                // Add a media (and/or media query) here if you'd like!
+                // style.setAttribute("media", "screen")
+                // style.setAttribute("media", "only screen and (max-width : 1024px)")
+                style.appendChild(document.createTextNode(""));
+                document.head.appendChild(style);
+                return style.sheet;
+            }();
+
+            style.split('}').forEach(function (rule) {
+                var m1 = rule.concat("}").match(/.*\{.*\}/);
+                m1 && m1.forEach(function (r) {
+                    var m = r.trim().match(/(.*)\{(.*)\}/);
+                    m && sheet.addRule((cssSelector + ' ') + m[1], m[2]);
+                });
+
             });
 
-        })
+            styles.push({className: className, style: style});
+        }
+
+        return className;
 
     };
 
@@ -145,9 +177,7 @@ var Component = function () {
             }
             node && parseNode(node, obj);
             if (style) {
-                var cssSelector = 'ID' + (cssStyleIndex++).toString().padLeft(8, '0');
-                node.addClass(cssSelector);
-                style && appendStyle(style, '.' + cssSelector);
+                node.addClass(appendStyle(style));
             }
             obj.init && obj.init();
             dataProxy.collect();
@@ -155,6 +185,18 @@ var Component = function () {
 
         obj.get = function (itemName) {
             return obj.items.get(itemName);
+        };
+
+        obj.save = function () {
+            var needs = [];
+            (function saveNode(n) {
+                if (dataProxy.get(n)) {
+                    needs.push(dataProxy.save(n))
+                }
+                Array.prototype.slice.call(n.childNodes).forEach(saveNode);
+            })(obj.node);
+
+            return Need(needs);
         };
 
         return obj;

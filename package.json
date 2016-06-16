@@ -1,6 +1,6 @@
 {
   "name": "corejs",
-  "version": "1.0.0.beta",
+  "version": "1.0.0",
   "description": "Javascript Framework",
   "main": "dist/corejs.js",
   "scripts": {
