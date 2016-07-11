@@ -9,7 +9,7 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-Need('controller-check', function () {
+function controllerCheck() {
 
     return function () {
         return {
@@ -22,4 +22,4 @@ Need('controller-check', function () {
         };
     }
 
-});
+};

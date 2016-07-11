@@ -9,7 +9,7 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-Need('example-server', function (need) {
+function main() {
 
     return function () {
         var c = Component('<div>to be implemented</div>');
@@ -18,4 +18,4 @@ Need('example-server', function (need) {
 
     }
 
-});
+};

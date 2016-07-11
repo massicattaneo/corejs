@@ -11,6 +11,39 @@
 
 (function (obj) {
 
+    /** PACKAGES **/
+    var packages = Collection();
+
+    var getPackageNeed = function (url) {
+        return packages.get(url) || createPackage(url)
+    };
+    var getPackage = function (url) {
+        return packages.get(url).pack;
+    };
+    var createPackage = function (url) {
+        var pack = Need(), imported;
+        packages.add(pack, url);
+        obj.get(url + '.js').then(function (o) {
+            eval('imported = ' + o.response.response);
+            var needs = Need([]), total = 0;
+            var importer = function (url) {
+                total++;
+                needs.add(getPackageNeed(url));
+            };
+            imported(importer);
+            if (total === 0) {
+                pack.pack = imported();
+                pack.resolve(pack.pack);
+            } else {
+                needs.then(function () {
+                    pack.pack = imported(getPackage);
+                    pack.resolve(pack.pack);
+                });
+            }
+        });
+        return pack;
+    };
+
     obj.send = function (method, url, options) {
         options = options || {};
         var promise = Need();
@@ -31,17 +64,20 @@
         return promise;
     };
 
-    obj.get = function(url, options) {
+    obj.get = function (url, options) {
         return obj.send('GET', url, options || {});
     };
-    obj.post = function(url, options) {
+    obj.post = function (url, options) {
         return obj.send('POST', url, options || {});
     };
-    obj.put = function(url, options) {
+    obj.put = function (url, options) {
         return obj.send('PUT', url, options || {});
     };
-    obj.delete = function(url, options) {
+    obj.delete = function (url, options) {
         return obj.send('DELETE', url, options || {});
+    };
+    obj.import = function (url) {
+        return getPackageNeed(url);
     };
 
     var Response = function () {
@@ -66,5 +102,5 @@
             return new XMLHttpRequest();
         }
     };
-    
+
 })(navigator);

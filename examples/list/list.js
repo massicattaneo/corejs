@@ -1,4 +1,4 @@
-Need('controller-list', function () {
+function item() {
 
     var replaceValue = function (value) {
         return 'Item value: {{value}}'.replace('{{value}}', value)
@@ -24,7 +24,7 @@ Need('controller-list', function () {
             };
 
             return obj;
-        
+
     };
 
-});
+};

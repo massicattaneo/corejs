@@ -9,9 +9,9 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-Need('example-list', function (need) {
-    var list = need('controller-list');
-    var item = need('controller-item');
+function main(need) {
+    var list = need('examples/list/list');
+    var item = need('examples/list/item');
 
     return function () {
 
@@ -27,4 +27,4 @@ Need('example-list', function (need) {
         return c;
     }
 
-});
+};

@@ -9,11 +9,11 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-Need('bootstrap', function (Need) {
+function bootstrap(imports) {
 
-    var S = Need('example-standard');
-    var L = Need('example-list');
-    var Sv = Need('example-server');
+    var S = imports('examples/standard/main');
+    var L = imports('examples/list/main');
+    var Sv = imports('examples/server/main');
 
     return function (p) {
         var standard = S();
@@ -32,7 +32,7 @@ Need('bootstrap', function (Need) {
                 standard.setValue('');
             }
         };
-        
+
     };
 
-});
+}

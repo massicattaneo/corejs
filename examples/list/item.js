@@ -1,4 +1,4 @@
-Need('controller-item', function () {
+function item() {
     
     return function () {
         var obj = {};
@@ -8,4 +8,4 @@ Need('controller-item', function () {
         return obj;
     };
 
-});
+};

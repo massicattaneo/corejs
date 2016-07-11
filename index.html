@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <title>Test page</title>
     <style>
-        body {font-family: Arial; }
+        body {
+            font-family: Arial;
+        }
     </style>
 </head>
 <body>
@@ -38,11 +40,15 @@
 </div>
 
 <script>
-    Need('bootstrap')({
-        standard: document.getElementById('standard'),
-        list: document.getElementById('list'),
-        server: document.getElementById('server')
-    });
+    navigator
+        .import('examples/bootstrap')
+        .then(function (bootstrap) {
+            bootstrap({
+                standard: document.getElementById('standard'),
+                list: document.getElementById('list'),
+                server: document.getElementById('server')
+            })
+        });
 </script>
 
 </body>

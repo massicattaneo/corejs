@@ -17,7 +17,7 @@ describe('XMLHttpRequest', function () {
         var http;
         beforeEach(function () {
             http = navigator.send('POST', '/url');
-            server.respondWith('POST','/url',
+            server.respondWith('POST', '/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify({})]);
         });
 
@@ -33,7 +33,7 @@ describe('XMLHttpRequest', function () {
 
         it('GET: should resolve the promise', function () {
             var http = navigator.get('/url');
-            server.respondWith('GET','/url',
+            server.respondWith('GET', '/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify({})]);
             server.respond();
             expect(http.status()).toEqual(1);
@@ -41,7 +41,7 @@ describe('XMLHttpRequest', function () {
 
         it('POST: should resolve the promise', function () {
             var http = navigator.post('/url');
-            server.respondWith('POST','/url',
+            server.respondWith('POST', '/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify({})]);
             server.respond();
             expect(http.status()).toEqual(1);
@@ -49,7 +49,7 @@ describe('XMLHttpRequest', function () {
 
         it('PUT: should resolve the promise', function () {
             var http = navigator.put('/url');
-            server.respondWith('PUT','/url',
+            server.respondWith('PUT', '/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify({})]);
             server.respond();
             expect(http.status()).toEqual(1);
@@ -57,7 +57,7 @@ describe('XMLHttpRequest', function () {
 
         it('DELETE: should resolve the promise', function () {
             var http = navigator.delete('/url');
-            server.respondWith('DELETE','/url',
+            server.respondWith('DELETE', '/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify({})]);
             server.respond();
             expect(http.status()).toEqual(1);
@@ -69,7 +69,7 @@ describe('XMLHttpRequest', function () {
         var http;
         beforeEach(function () {
             http = navigator.send('POST', '/url');
-            server.respondWith('POST','/url',
+            server.respondWith('POST', '/url',
                 [404, {'Content-Type': 'application/json'}, JSON.stringify({})]);
         });
 
@@ -90,7 +90,7 @@ describe('XMLHttpRequest', function () {
 
         it('should have toJSON method', function () {
             var json = {name: 'test', value: 1.34};
-            server.respondWith('POST','/url',
+            server.respondWith('POST', '/url',
                 [200, {'Content-Type': 'application/json'}, JSON.stringify(json)]);
             server.respond();
             expect(response.toJSON()).toEqual(json);
@@ -98,15 +98,40 @@ describe('XMLHttpRequest', function () {
 
         it('should have getResponseText method', function () {
             var text = 'a response';
-            server.respondWith('POST','/url',
+            server.respondWith('POST', '/url',
                 [200, {'Content-Type': 'application/json'}, text]);
             server.respond();
             expect(response.getResponseText()).toEqual(text);
         });
 
-
-
     });
+
+    describe('On importing a javascript file', function () {
+
+        it('should request and parse the file', function (done) {
+            navigator.import('testA').then(function (testA) {
+                expect(testA).toEqual('a');
+                done();
+            });
+            server.respondWith('GET', 'testA.js', [200, {'Content-Type': 'application/javascript'}, "function () {return 'a';}"]);
+            server.respond();
+        });
+
+        it('should request and parse the multiple files', function (done) {
+            navigator.import('import').then(function (o) {
+                expect(o()).toEqual('b');
+                done();
+            });
+            server.respondWith('GET', 'import.js',
+                [200, {'Content-Type': 'application/javascript'}, "function (imports) {var b  = imports('testB'); return function () {return b;}}"]);
+            server.respond();
+            server.respondWith('GET', 'testB.js',
+                [200, {'Content-Type': 'application/javascript'}, "function () {return 'b';}"]);
+            server.respond();
+        });
+
+
+    })
 
 
 });

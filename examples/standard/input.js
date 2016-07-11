@@ -9,7 +9,7 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-Need('controller-input', function () {
+function controllerInput() {
 
     var validate = function (string, enabled) {
         if (!enabled) {
@@ -56,4 +56,4 @@ Need('controller-input', function () {
         return obj;
     };
 
-});
+};

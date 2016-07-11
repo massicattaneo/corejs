@@ -9,11 +9,11 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-Need('example-standard', function (need) {
+function exampleStandard(need) {
 
-    var inputController = need('controller-input');
-    var checkController = need('controller-check');
-    
+    var inputController = need('examples/standard/input');
+    var checkController = need('examples/standard/check');
+
     return function () {
 
         Component.register('input', inputController(), '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error"></span></div>', 'span.invalid {color: red;} span{color:green;}');
@@ -39,4 +39,4 @@ Need('example-standard', function (need) {
 
     }
 
-});
+};
