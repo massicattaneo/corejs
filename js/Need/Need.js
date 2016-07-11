@@ -15,8 +15,6 @@ var Need = function () {
         WAIT: 0, DONE: 1, FAIL: 2
     };
 
-    var packages = Collection();
-
     /** SINGLE NEED **/
     var finalize = function (props, status, data) {
         props.returnData[status] = data;
@@ -32,7 +30,7 @@ var Need = function () {
             props.collection.add(action, status);
         }
     };
-    var singleNeed = function () {
+    var createSingleNeed = function () {
         var m = {};
         var p = {
             returnData: [],
@@ -49,10 +47,12 @@ var Need = function () {
 
         m.fail = function (error) {
             finalize(p, c.FAIL, error);
+            return m;
         };
 
         m.then = function (action) {
             attach(p, c.DONE, action);
+            return m;
         };
 
         m.onFail = function (action) {
@@ -87,7 +87,7 @@ var Need = function () {
             }
         }
     };
-    var multiNeed = function (array) {
+    var createMultiNeed = function (array) {
         var m = {};
         var p = {
             done: [],
@@ -147,72 +147,49 @@ var Need = function () {
         return m;
     };
 
-    /** PACKAGE NEED **/
-    var createPackage = function (namespace, callback) {
-        var m = {};
-        var theseNeeds = Need([]);
+    /** QUEUE **/
+    var createQueue = function (array) {
+        var queue = {};
+        var index = -1;
 
-        if (!packages.get(namespace)) {
-            packages.add(Need(), namespace)
-        }
+        var clearQueue = function () {
+            array.length = 0;
+            index = -1;
+        };
 
-        var total = 0;
-        var needCollector = function (ns) {
-            total++;
-            if (packages.get(ns)) {
-                theseNeeds.add(packages.get(ns));
+        var runQueue = function (result) {
+            index += 1;
+            if (array.length > index) {
+                array[index](queue, result).then(runQueue).onFail(clearQueue);
             } else {
-                var need = Need();
-                theseNeeds.add(need);
-                packages.add(need, ns);
+                clearQueue();
             }
         };
 
-        var needReplacer = function (ns) {
-            return retrievePackage(ns);
+        queue.start = function (param) {
+            runQueue(param);
         };
 
-        callback(needCollector);
-
-        var pack = packages.get(namespace);
-
-        if (total === 0) {
-            pack.__callback = function() {return callback()};
-            pack.__namespace = namespace;
-            pack.resolve(pack.__callback);
-        } else {
-            theseNeeds.then(function () {
-                var packs = {};
-                for (var i = 0; i < arguments.length; i++) {
-                    packs[arguments[i].__namespace] = arguments[i]();
-                }
-                pack.__callback = function() {return callback(needReplacer)};
-                pack.__namespace = namespace;
-                pack.resolve(pack.__callback);
-            });
-        }
-
-
-        m.status = function () {
-            return theseNeeds.status();
+        queue.push = function (o) {
+            array.push(o);
         };
 
-        return m;
+        queue.isRunning = function () {
+            return index !== -1;
+        };
+
+        return queue;
     };
 
-    var retrievePackage = function (namespace) {
-        return packages.get(namespace).__callback();
-    };
-
-    return function Need(param, callback) {
+    return function Need(param) {
         if (param === undefined) {
-            return singleNeed();
+            return createSingleNeed();
         } else if (Array.isArray(param)) {
-            return multiNeed(param);
-        } else if (arguments.length === 1) {
-            return retrievePackage(param);
-        } else {
-            return createPackage(param, callback);
+            if (typeof param[0] === 'object' || param[0] === undefined) {
+                return createMultiNeed(param);
+            } else if (typeof param[0] === 'function') {
+                return createQueue(param);
+            }
         }
     };
 

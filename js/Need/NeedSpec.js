@@ -24,8 +24,12 @@ describe('GLOBAL - NEED', function () {
 
         it("should call then when everything ok", function () {
             var done = false, failed = false;
-            p.then(function (test) {done = test;});
-            p.onFail(function () {failed = true;});
+            p.then(function (test) {
+                done = test;
+            });
+            p.onFail(function () {
+                failed = true;
+            });
             expect(done).toBeFalsy();
             p.resolve(true);
             expect(done).toBeTruthy();
@@ -34,7 +38,9 @@ describe('GLOBAL - NEED', function () {
 
         it("should call then and pass arguments", function () {
             var result = '';
-            p.then(function(string) {result = string});
+            p.then(function (string) {
+                result = string
+            });
             expect(result).toEqual('');
             p.resolve('data');
             expect(result).toEqual('data');
@@ -43,16 +49,24 @@ describe('GLOBAL - NEED', function () {
         it("should call then when it resolves before assigning the done function", function () {
             var done = false, failed = false;
             p.resolve(true);
-            p.then(function(test) {done = test;});
-            p.onFail(function() {failed = true});
+            p.then(function (test) {
+                done = test;
+            });
+            p.onFail(function () {
+                failed = true
+            });
             expect(done).toBeTruthy();
             expect(failed).toBeFalsy();
         });
 
         it("should call onFail when fails", function () {
             var done = false, failed = false;
-            p.then(function() {done = true;});
-            p.onFail(function() {failed = true});
+            p.then(function () {
+                done = true;
+            });
+            p.onFail(function () {
+                failed = true
+            });
             expect(done).toBeFalsy();
             p.fail();
             p.resolve();
@@ -62,8 +76,12 @@ describe('GLOBAL - NEED', function () {
 
         it("should call much than one callback - case 1", function () {
             var done1 = false, done2 = false;
-            p.then(function() {done1=true;});
-            p.then(function() {done2=true;});
+            p.then(function () {
+                done1 = true;
+            });
+            p.then(function () {
+                done2 = true;
+            });
             p.resolve(); //After
             expect(done1).toBeTruthy();
             expect(done2).toBeTruthy();
@@ -72,8 +90,12 @@ describe('GLOBAL - NEED', function () {
         it("should call much than one callback - case 2", function () {
             var done1 = false, done2 = false;
             p.resolve(); //Before
-            p.then(function() {done1=true;});
-            p.then(function() {done2=true;});
+            p.then(function () {
+                done1 = true;
+            });
+            p.then(function () {
+                done2 = true;
+            });
             expect(done1).toBeTruthy();
             expect(done2).toBeTruthy();
         });
@@ -84,8 +106,13 @@ describe('GLOBAL - NEED', function () {
             p.resolve(2);
             p.resolve(3);
             p.resolve(4);
-            p.then(function(test, id, not) {done = 1; over = not;});
-            p.onFail(function() {failed = true});
+            p.then(function (test, id, not) {
+                done = 1;
+                over = not;
+            });
+            p.onFail(function () {
+                failed = true
+            });
             expect(done).toEqual(1);
             expect(over).toBeUndefined();
         });
@@ -95,12 +122,14 @@ describe('GLOBAL - NEED', function () {
     describe('On creating a multi need - passing an array', function () {
         var ps, p1, p2;
         beforeEach(function () {
-            p1 = Need(), p2 = Need(), ps = Need([p1,p2]);
+            p1 = Need(), p2 = Need(), ps = Need([p1, p2]);
         });
 
         it("should call then when all promises are done ", function () {
-            var done=false;
-            ps.then(function() {done=true;});
+            var done = false;
+            ps.then(function () {
+                done = true;
+            });
             p2.resolve();
             expect(done).toBeFalsy();
             p1.resolve();
@@ -109,7 +138,10 @@ describe('GLOBAL - NEED', function () {
 
         it("should save retrieved data independently on the order resolution", function () {
             var number = 0, over;
-            ps.then(function(s1, s2, s3, s4) {number = s1+s2; over = s3});
+            ps.then(function (s1, s2, s3, s4) {
+                number = s1 + s2;
+                over = s3
+            });
             p2.resolve(1);
             p1.resolve(2);
             expect(number).toEqual(3);
@@ -117,32 +149,42 @@ describe('GLOBAL - NEED', function () {
         });
 
         it("should fail immediatly after one fails", function () {
-            var fail=false;
+            var fail = false;
             p1.resolve();
-            ps.onFail(function(error) {fail=error;});
-            ps.then(function() {});
+            ps.onFail(function (error) {
+                fail = error;
+            });
+            ps.then(function () {
+            });
             p2.fail('error');
             expect(fail).toEqual('error');
         });
 
         it('should work with a lot of promises', function () {
-            var done =false;
-            var pros = Need([Need(),Need(),Need(),Need(),Need(),Need()]);
-            pros.then(function() {done=true;});
+            var done = false;
+            var pros = Need([Need(), Need(), Need(), Need(), Need(), Need()]);
+            pros.then(function () {
+                done = true;
+            });
             expect(done).toBeFalsy();
-            pros.get(0).resolve();pros.get(1).resolve();pros.get(2).resolve();
-            pros.get(3).resolve();pros.get(4).resolve();
+            pros.get(0).resolve();
+            pros.get(1).resolve();
+            pros.get(2).resolve();
+            pros.get(3).resolve();
+            pros.get(4).resolve();
             expect(done).toBeFalsy();
             pros.get(5).resolve();
             expect(done).toBeTruthy();
         });
 
         it('should work with a lot of promises resolving and failing', function () {
-            var done =false;
+            var done = false;
             var newp = Need();
             var pros = Need([newp, Need(), Need(), Need(), Need(), Need()]);
             expect(done).toBeFalsy();
-            pros.then(function() {done=true;});
+            pros.then(function () {
+                done = true;
+            });
             pros.get(1).resolve();
             pros.get(2).resolve();
             pros.get(5).resolve();
@@ -158,9 +200,10 @@ describe('GLOBAL - NEED', function () {
                 _p1 = Need(), _p2 = Need();
 
             _p1.resolve();
-            _prs.add(_p1); _prs.add(_p2);
+            _prs.add(_p1);
+            _prs.add(_p2);
 
-            _prs.then(function() {
+            _prs.then(function () {
                 done = true;
             });
             expect(done).toBeTruthy();
@@ -168,9 +211,13 @@ describe('GLOBAL - NEED', function () {
         });
 
         it("should attach more than one callback", function () {
-            var done1=false, done2 = false;
-            ps.then(function(a) {done1=a;});
-            ps.then(function(a) {done2=a;});
+            var done1 = false, done2 = false;
+            ps.then(function (a) {
+                done1 = a;
+            });
+            ps.then(function (a) {
+                done2 = a;
+            });
             p2.resolve(true);
             p1.resolve(true);
             expect(done1).toBeTruthy();
@@ -179,103 +226,108 @@ describe('GLOBAL - NEED', function () {
 
     });
 
-    xdescribe('On retrieving a package', function () {
+    describe('On creating a queue', function () {
 
+        var queueArray, queue, actions = {}, needs = {};
         beforeEach(function () {
-            Need(':test', function () {
-                return function () {
-                    return {name: 'test'}
-                }
-            });
+            actions['a1'] = function () {return needs['a1'] = Need()};
+            actions['a2'] = function () {return needs['a2'] = Need()};
+            spyOn(actions, 'a1').and.callThrough();
+            spyOn(actions, 'a2').and.callThrough();
+            queueArray = [actions['a1'], actions['a2']];
+            queue = Need(queueArray);
         });
 
-        it('should get the package', function () {
-            expect(Need(':test')).toBeDefined();
-            expect(Need(':test').name).toEqual('test');
+        it('should have the method start', function () {
+            expect(queue.start).toBeDefined();
         });
 
-        describe('On retrieving a package with needs inside', function() {
+        it('should have the method add', function () {
+            expect(queue.push).toBeDefined();
+        });
+
+        describe('When the queue is started', function () {
 
             beforeEach(function () {
-                Need(':test1', function (need) {
-                    var test = need(':test');
-
-                    return function () {
-                        return {name: 'test1 ' + test.name}
-                    }
-                });
+                queue.start(1);
             });
 
-            it('should get the package', function () {
-                expect(Need(':test1')).toBeDefined();
-                expect(Need(':test1').name).toEqual('test1 test');
+            it('should call the 1 action', function () {
+                expect(actions.a1).toHaveBeenCalledWith(jasmine.any(Object), 1);
+            });
+
+            describe('When the a1 is resolved', function () {
+
+                beforeEach(function () {
+                    needs['a1'].resolve(2);
+                });
+
+                it('should call the action 2', function () {
+                    expect(actions['a2']).toHaveBeenCalledWith(jasmine.any(Object), 2);
+                });
+
+                describe('When all the actions are resolved', function () {
+
+                    beforeEach(function () {
+                        needs['a2'].resolve();
+                    });
+
+                    it('should clear the queue', function () {
+                        expect(queue.isRunning()).toEqual(false);
+                    });
+
+                });
+
+            });
+
+            describe('When the a1 fails', function () {
+
+                beforeEach(function () {
+                    needs['a1'].fail();
+                });
+
+                it('should clear the queue', function () {
+                    expect(queueArray.length).toEqual(0);
+                });
+
+                it('should not run the action2', function () {
+                    expect(actions.a2).not.toHaveBeenCalled();
+                });
+
+            });
+
+            describe('When the a1 is resolved and it was added a 3rd action', function () {
+
+                beforeEach(function () {
+                    actions['a3'] = function () {
+                        return needs['a3'] = Need();
+                    };
+                    queue.push(actions['a3']);
+                    needs['a1'].resolve(2);
+                });
+
+                it('should call the action 2', function () {
+                    expect(actions['a2']).toHaveBeenCalledWith(jasmine.any(Object), 2);
+                });
+
+                describe('When all the actions are resolved', function () {
+
+                    beforeEach(function () {
+                        needs['a2'].resolve(3);
+                    });
+
+                    it('should clear the queue', function () {
+                        expect(queue.isRunning()).toEqual(true);
+                        needs['a3'].resolve();
+                        expect(queue.isRunning()).toEqual(false);
+                    });
+
+                });
+
             });
 
         });
 
     });
-
-    describe('On creating a package - passing a namespace, function', function () {
-        var p, needCollector, executed = false, t1,t2,t3;
-        beforeEach(function () {
-            p = Need('t3', function (need) {
-                needCollector = need;
-                t1 = need('t1');
-                t2 = need('t2');
-                return function () {
-                    executed = true;
-                };
-
-            });
-        });
-
-        it('should pass an object to get other needs', function () {
-            expect(needCollector).toBeDefined();
-        });
-
-        it('should not execute the inner function', function () {
-            expect(executed).toEqual(false);
-        });
-
-        it('should set the status to 0', function () {
-            expect(p.status()).toEqual(0);
-        });
-
-        it('should not execute the packages', function () {
-            expect(t1).toEqual(undefined);
-            expect(t2).toEqual(undefined);
-        });
-
-        describe('When all the packages are created', function () {
-
-            beforeEach(function () {
-                Need('t1', function () {
-                    return 1;
-                });
-                Need('t2', function () {
-                    return 2;
-                });
-                t3 = Need('t3');
-                t3();
-            });
-
-            it('should execute the inner function', function () {
-                expect(executed).toEqual(true);
-            });
-
-            it('should set the status to 1', function () {
-                expect(p.status()).toEqual(1);
-            });
-
-            it('should execute the packages', function () {
-                expect(t1).toEqual(1);
-                expect(t2).toEqual(2);
-            })
-
-        })
-
-
-    });
-
 
 });
