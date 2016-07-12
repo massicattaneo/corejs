@@ -11,8 +11,8 @@
 
 function exampleStandard(need) {
 
-    var inputController = need('examples/standard/input');
-    var checkController = need('examples/standard/check');
+    var inputController = need('examples/standard/input.js');
+    var checkController = need('examples/standard/check.js');
 
     return function () {
 

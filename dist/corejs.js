@@ -583,22 +583,20 @@ var Need = function () {
 (function (obj) {
 
     var packages = Collection();
-
-    var getPackageNeed = function (url) {
+    var imports = function (url) {
         return packages.get(url) || createPackage(url)
     };
     var getPackage = function (url) {
         return packages.get(url).pack;
     };
-    var createPackage = function (url) {
-        var pack = Need(), imported;
-        packages.add(pack, url);
-        obj.get(url + '.js').then(function (o) {
+
+    var importer = {
+        js: function (o, imported, pack) {
             eval('imported = ' + o.response.response);
             var needs = Need([]), total = 0;
             var importer = function (url) {
                 total++;
-                needs.add(getPackageNeed(url));
+                needs.add(imports(url));
             };
             imported(importer);
             if (total === 0) {
@@ -610,6 +608,22 @@ var Need = function () {
                     pack.resolve(pack.pack);
                 });
             }
+        },
+        json: function (o, imported, pack) {
+            pack.resolve(o.toJSON());
+        },
+        text: function (o, imported, pack) {
+            pack.resolve(o.getResponseText());
+        }
+    };
+
+    var createPackage = function (url) {
+        var pack = Need(), imported;
+        packages.add(pack, url);
+        obj.get(url).then(function (o) {
+            var ext = url.substr(url.lastIndexOf('.') +1);
+            ext = (ext === 'js' || ext === 'json') ? ext : 'text';
+            importer[ext](o, imported, pack);
         });
         return pack;
     };
@@ -633,7 +647,6 @@ var Need = function () {
         request.send();
         return promise;
     };
-
     obj.get = function (url, options) {
         return obj.send('GET', url, options || {});
     };
@@ -646,8 +659,9 @@ var Need = function () {
     obj.delete = function (url, options) {
         return obj.send('DELETE', url, options || {});
     };
+
     obj.import = function (url) {
-        return getPackageNeed(url);
+        return imports(url);
     };
 
     var Response = function () {

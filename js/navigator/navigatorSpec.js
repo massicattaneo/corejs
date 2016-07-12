@@ -109,7 +109,7 @@ describe('XMLHttpRequest', function () {
     describe('On importing a javascript file', function () {
 
         it('should request and parse the file', function (done) {
-            navigator.import('testA').then(function (testA) {
+            navigator.import('testA.js').then(function (testA) {
                 expect(testA).toEqual('a');
                 done();
             });
@@ -118,20 +118,66 @@ describe('XMLHttpRequest', function () {
         });
 
         it('should request and parse the multiple files', function (done) {
-            navigator.import('import').then(function (o) {
+            navigator.import('import.js').then(function (o) {
                 expect(o()).toEqual('b');
                 done();
             });
             server.respondWith('GET', 'import.js',
-                [200, {'Content-Type': 'application/javascript'}, "function (imports) {var b  = imports('testB'); return function () {return b;}}"]);
+                [200, {'Content-Type': 'application/javascript'}, "function (imports) {var b  = imports('testB.js'); return function () {return b;}}"]);
             server.respond();
             server.respondWith('GET', 'testB.js',
                 [200, {'Content-Type': 'application/javascript'}, "function () {return 'b';}"]);
             server.respond();
         });
 
+    });
 
-    })
+    describe('On importing a JSON file', function () {
 
+        it('should request and parse the file', function (done) {
+            navigator.import('config.json').then(function (testA) {
+                expect(testA).toEqual({a: 1, b:2});
+                done();
+            });
+            server.respondWith('GET', 'config.json', [200, {'Content-Type': 'application/json'}, '{"a": 1, "b":2}']);
+            server.respond();
+        });
+
+    });
+
+    describe('On importing a PNG/JPG file', function () {
+
+        it('should request and parse the file', function (done) {
+            // navigator.import('image.jpg').then(function (testA) {
+            //     expect(testA).toEqual({a: 1, b:2});
+                done();
+            // });
+            // server.respondWith('GET', 'image.jpg', [200, {'Content-Type': 'application/json'}, '{"a": 1, "b":2}']);
+            // server.respond();
+        });
+
+    });
+
+    describe('On importing an HTML/HTML/CSS/SCSS/TEXT file', function () {
+
+        it('should request and parse the file html', function (done) {
+            navigator.import('index.html').then(function (testA) {
+                expect(testA).toEqual('<div></div>');
+                done();
+            });
+            server.respondWith('GET', 'index.html', [200, {'Content-Type': 'application/json'}, '<div></div>']);
+            server.respond();
+        });
+
+        it('should request and parse the file htm', function (done) {
+            navigator.import('index.htm').then(function (testA) {
+                expect(testA).toEqual('<div></div>');
+                done();
+            });
+            server.respondWith('GET', 'index.htm', [200, {'Content-Type': 'application/json'}, '<div></div>']);
+            server.respond();
+        });
+
+    });
 
 });

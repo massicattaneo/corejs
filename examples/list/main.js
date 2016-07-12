@@ -10,8 +10,8 @@
  */
 
 function main(need) {
-    var list = need('examples/list/list');
-    var item = need('examples/list/item');
+    var list = need('examples/list/list.js');
+    var item = need('examples/list/item.js');
 
     return function () {
 

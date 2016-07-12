@@ -11,9 +11,9 @@
 
 function bootstrap(imports) {
 
-    var S = imports('examples/standard/main');
-    var L = imports('examples/list/main');
-    var Sv = imports('examples/server/main');
+    var S = imports('examples/standard/main.js');
+    var L = imports('examples/list/main.js');
+    var Sv = imports('examples/server/main.js');
 
     return function (p) {
         var standard = S();
