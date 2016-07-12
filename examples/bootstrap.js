@@ -12,7 +12,7 @@
 function bootstrap(imports) {
 
     var S = imports('examples/standard/main.js');
-    var L = imports('examples/list/main.js');
+    var L = imports('examples/list/controller.js');
     var Sv = imports('examples/server/main.js');
 
     return function (p) {
