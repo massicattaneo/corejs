@@ -610,10 +610,12 @@ var Need = function () {
             }
         },
         json: function (o, imported, pack) {
+            pack.pack = o.toJSON();
             pack.resolve(o.toJSON());
         },
         text: function (o, imported, pack) {
             pack.resolve(o.getResponseText());
+            pack.pack = o.getResponseText();
         }
     };
 
@@ -774,7 +776,7 @@ var Component = function () {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
                 var c = Component.get(match[1]);
-                var comp = Component(c.template, c.style).extend(c.controller);
+                var comp = Component(c).extend(c.controller);
                 comp.createIn(node, 'before');
                 for (var i = 0; i < node.attributes.length; i++) {
                     var a = node.attributes[i];
@@ -835,13 +837,41 @@ var Component = function () {
 
     };
 
-    var Component = function (template, style) {
+    var parseStyle = function (style, config) {
+        var match = style.match(/\$\w*/g);
+        if (match) {
+            match.forEach(function (string) {
+                string = string.replace('$', '');
+                style = style.replace(new RegExp('\\$'+ string, 'g'), config[string] || '');
+            })
+        }
+        return style;
+    };
+
+    var parseTemplate = function (template, config) {
+        var match = template.match(/\{\{\w*\}\}/g);
+        if (match) {
+            match.forEach(function (string) {
+                string = string.replace('{{', '').replace('}}', '');
+                template = template.replace(new RegExp('\\{\\{'+ string + '\\}\\}', 'g'), config[string] || '');
+            })
+        }
+        return template;
+    };
+
+    var Component = function (p) {
+
+        var config = p.config || {};
+        var style = parseStyle(p.style || '', config);
+        var template = parseTemplate(p.template || '', config);
+
         var node = createNode(template);
 
         var obj = {
             items: Collection(),
             template: template,
             style: style,
+            config: config,
             node: node
         };
 
@@ -879,15 +909,9 @@ var Component = function () {
         return obj;
     };
 
-    Component.register = function (name, controller, template, style) {
-        controller.template = template;
-        controller.style = style;
-        components.push({
-            name: name,
-            controller: controller,
-            template: template,
-            style: style
-        });
+    Component.register = function (p) {
+        p.controller = p.controller || {};
+        components.push(p);
     };
 
     Component.get = function (componentName) {

@@ -21,11 +21,21 @@ function main(need) {
     var item = need('examples/list/item/controller.js');
 
     return function () {
-        
-        Component.register('list', list(), listTemplate, listStyle);
-        Component.register('listItem', item(), listItemTemplate);
 
-        var c = Component(template);
+        Component.register({
+            name: 'list',
+            controller: list(),
+            template: listTemplate,
+            style: listStyle
+        });
+
+        Component.register({
+            name: 'listItem',
+            controller: item(),
+            template: listItemTemplate
+        });
+
+        var c = Component({template: template});
 
         c.addItem = function (value) {
             c.get('list').addItem([value]);

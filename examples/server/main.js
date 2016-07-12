@@ -12,7 +12,7 @@
 function main() {
 
     return function () {
-        var c = Component('<div>to be implemented</div>');
+        var c = Component({template: '<div>to be implemented</div>'});
 
         return c;
 

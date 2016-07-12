@@ -12,7 +12,7 @@ function item() {
             obj.addItem = function (array) {
                 array.forEach(function (i) {
                     var c = Component.get('listItem');
-                    var item = Component(c.template, c.style).extend(c.controller);
+                    var item = Component(c).extend(c.controller);
                     item.createIn(this.get('list'));
                     item.setText(replaceValue(i));
                     coll.add(item)
