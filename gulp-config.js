@@ -5,13 +5,13 @@
  Author: mcattaneo
 
  //////////////////////////////////////////////////////////////////////////////
- //       Copyright (c) 2016 - The Workshop  All rights reserved.
+ //       Copyright (c) 2016.
  //////////////////////////////////////////////////////////////////////////////
  */
 
 module.exports = (function () {
 
-    var config = {
+    return {
         files: [
             'js/Array/Array.js',
             'js/String/String.js',
@@ -25,7 +25,5 @@ module.exports = (function () {
         tests: ['js/**/*Spec.js'],
         vendors: ['node_modules/jquery/dist/jquery.js']
     };
-
-    return config;
 
 })();
