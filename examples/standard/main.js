@@ -14,13 +14,14 @@ function exampleStandard(need) {
     var inputController = need('examples/standard/input.js');
     var checkController = need('examples/standard/check.js');
 
-    return function () {
+    return function (config) {
 
         Component.register({
             name: 'input',
             controller: inputController(),
             template: '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error"></span></div>',
-            style: 'span.invalid {color: red;} span{color:green;}'
+            style: 'input {width: toPixel($inputWidth)} span.invalid {color: $warningColor;} span{color:green;}',
+            config: config
         });
         Component.register({
             name: 'check',
@@ -29,8 +30,9 @@ function exampleStandard(need) {
         });
 
         var c = Component({
-            template: '<div><corejs:check data-id="c1" data-on="custom:toggleCheckbox"></corejs:check><input type="submit" data-on="click:submit" /><corejs:input class="input" id="comp1" data-id="c2" ></corejs:input></div>',
-            style: 'div {display:inline-block} input[type=submit] {color: gray; inline-block: block; margin-right: 10px}'
+            template: '<div><corejs:check data-id="c1" data-on="custom:toggleCheckbox"></corejs:check><input type="submit" value="{{submitButtonText}}" data-on="click:submit" /><corejs:input class="input" id="comp1" data-id="c2" ></corejs:input></div>',
+            style: 'div {display:inline-block} input[type=submit] {color: gray; inline-block: block; margin-right: 10px}',
+            config: config
         });
 
         c.toggleCheckbox = function (e) {

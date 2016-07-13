@@ -139,5 +139,4 @@ describe('GLOBAL - COMPONENT', function () {
 
     })
 
-
 });

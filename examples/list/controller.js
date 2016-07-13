@@ -10,29 +10,31 @@
  */
 
 function main(need) {
+    
     var template = need('examples/list/template.html');
 
     var list = need('examples/list/list/controller.js');
     var listStyle = need('examples/list/list/style.scss');
     var listTemplate = need('examples/list/list/template.html');
-    // var listConfig = need('examples/list/list/config.json');
 
     var listItemTemplate = need('examples/list/item/template.html');
     var item = need('examples/list/item/controller.js');
 
-    return function () {
+    return function (config) {
 
         Component.register({
             name: 'list',
             controller: list(),
             template: listTemplate,
-            style: listStyle
+            style: listStyle,
+            config: config
         });
 
         Component.register({
             name: 'listItem',
             controller: item(),
-            template: listItemTemplate
+            template: listItemTemplate,
+            config: config
         });
 
         var c = Component({template: template});

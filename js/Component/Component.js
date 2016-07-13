@@ -11,11 +11,15 @@
 
 var Component = function () {
 
+    var stylesFunctions = {};
+
     var styles = [];
 
     var injectModel = function (toJSON, node, value) {
         var v = toJSON;
-        value.split('/').forEach(function (item) {v = v[item];});
+        value.split('/').forEach(function (item) {
+            v = v[item];
+        });
         node.setInnerText(v);
     };
 
@@ -32,7 +36,7 @@ var Component = function () {
             obj.collect = function () {
                 collection.forEach(function (o) {
                     navigator.send('GET', '/data/' + o.attribute).then(function (data) {
-                       injectModel(data.toJSON(), o.item, o.attribute);
+                        injectModel(data.toJSON(), o.item, o.attribute);
                     });
                 });
             };
@@ -58,7 +62,7 @@ var Component = function () {
         return doc.body.childNodes[0];
     };
 
-    function createListeners(attribute, node, obj) {
+    var createListeners = function (attribute, node, obj) {
         var split = attribute.trim().split(':');
         var actions = split[0].split(',');
         var listener = split[1];
@@ -67,7 +71,7 @@ var Component = function () {
                 obj[listener].call(obj, event);
             });
         })
-    }
+    };
 
     var createItems = function (attribute, node, obj) {
         obj.items.add(node, attribute);
@@ -163,19 +167,27 @@ var Component = function () {
         if (match) {
             match.forEach(function (string) {
                 string = string.replace('$', '');
-                style = style.replace(new RegExp('\\$'+ string, 'g'), config[string] || '');
+                style = style.replace(new RegExp('\\$' + string, 'g'), config[string] || '');
             })
         }
+        Object.keys(stylesFunctions).forEach(function (fname) {
+            match = style.match(new RegExp(fname + '\\((.*)\\)')) || [];
+            if (match[1]) {
+                style = style.replace(match[0], stylesFunctions[fname](match[1]));
+            }
+        });
+
         return style;
     };
 
     var parseTemplate = function (template, config) {
         var match = template.match(/\{\{\w*\}\}/g);
-        if (match) {
+        while (match) {
             match.forEach(function (string) {
                 string = string.replace('{{', '').replace('}}', '');
-                template = template.replace(new RegExp('\\{\\{'+ string + '\\}\\}', 'g'), config[string] || '');
-            })
+                template = template.replace(new RegExp('\\{\\{' + string + '\\}\\}', 'g'), config[string] || '');
+            });
+            match = template.match(/\{\{\w*\}\}/g);
         }
         return template;
     };
@@ -239,6 +251,10 @@ var Component = function () {
         return components.filter(function (c) {
             return c.name.toUpperCase() === componentName.toUpperCase();
         })[0];
+    };
+
+    Component.registerStyleFunction = function (name, func) {
+        stylesFunctions[name] = func;
     };
 
     return Component;
