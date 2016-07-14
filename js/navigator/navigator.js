@@ -44,8 +44,8 @@
             pack.resolve(o.toJSON());
         },
         text: function (o, imported, pack) {
-            pack.resolve(o.getResponseText());
             pack.pack = o.getResponseText();
+            pack.resolve(o.getResponseText());
         }
     };
 
