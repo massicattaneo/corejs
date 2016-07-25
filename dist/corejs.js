@@ -6,98 +6,6 @@
  * @author Massimiliano Cattaneo
  */
 
-(function (namespace) {
-    var JSONtoXML = function (json, nodeName) {
-
-        function createNode(name, value) {
-            var child = document.createElement(name);
-            child.innerText = value;
-            return child;
-        }
-
-        function scanArray(array, nodeName, node) {
-            for (var prop = 0; prop < array.length; prop++) {
-                if (typeof array[prop] !== 'object') {
-                    node.appendChild(createNode(nodeName, array[prop]));
-                } else {
-                    node.appendChild(scanNodes(array[prop], nodeName));
-                }
-            }
-        }
-
-        function scanNodes(object, nodeName) {
-            var node = document.createElement(nodeName);
-            for (var prop in object) {
-                if (object[prop] instanceof Array){
-                    scanArray(object[prop], prop, node);
-                } else {
-                    if (typeof object[prop] !== 'object') {
-                        node.appendChild(createNode(prop, object[prop]));
-                    } else {
-                        node.appendChild(scanNodes(object[prop], prop));
-                    }
-                }
-
-            }
-            return node;
-        }
-
-        return scanNodes(json, nodeName);
-    };
-
-    namespace.toXML = JSONtoXML;
-
-})(JSON);
-
-
-var XML = {};
-
-(function (namespace) {
-
-
-    function getNodeValue(node) {
-        var text = node.textContent || node.innerText;
-        var value = isNaN(text) ? text : parseFloat(text);
-        return value;
-    }
-
-    var isEmpty = function (obj) {
-        for (var prop in obj) {
-            if (obj.hasOwnProperty(prop)) {
-                return false;
-            }
-        }
-        return true;
-    };
-
-    function parseNode(children) {
-        var json = {};
-        for (var n = 0; n < children.length; n++) {
-            var node = children[n];
-            var tagName = node.tagName.toLowerCase();
-
-            if (json[tagName] && !(json[tagName] instanceof Array)) {
-                json[tagName] = [json[tagName]];
-            }
-
-            var value = parseNode(node.children) || getNodeValue(node);
-
-            if (json[tagName] instanceof Array) {
-                json[tagName].push(value);
-            } else {
-                json[tagName] = value;
-            }
-        }
-        return (isEmpty(json)) ? null : json;
-    }
-
-    namespace.toJSON = function (container) {
-        return parseNode(container.children);
-    };
-
-})(XML);
-
-
 Array.prototype.fillWithIndexes = function(lastIndex, firstIndex) {
     firstIndex = firstIndex || 0;
     for (var i = 0; i <= lastIndex - firstIndex; i++) {
@@ -183,10 +91,9 @@ String.prototype.toDate = function () {
 
 
 
-
 Object.prototype.extend = function () {
     var self = this;
-    for (var i = 0, j = arguments.length; i < j; i++){
+    for (var i = 0, j = arguments.length; i < j; i++) {
         var obj = arguments[i];
         Object.keys(obj).forEach(function (key) {
             self[key] = obj[key];
@@ -196,8 +103,48 @@ Object.prototype.extend = function () {
 };
 
 Object.prototype.clone = function () {
-    return Object.extend(this);
+    return {}.extend(this);
 };
+
+Object.prototype.toXML = function () {
+
+    function createNode(name, value) {
+        var child = document.createElement(name);
+        child.innerText = value;
+        return child;
+    }
+
+    function scanArray(array, nodeName, node) {
+        for (var prop = 0; prop < array.length; prop++) {
+            if (typeof array[prop] !== 'object') {
+                node.appendChild(createNode(nodeName, array[prop]));
+            } else {
+                node.appendChild(scanNodes(array[prop], nodeName));
+            }
+        }
+    }
+
+    function scanNodes(object, nodeName) {
+        var node = document.createElement(nodeName);
+        for (var prop in object) {
+            if (object.hasOwnProperty(prop)) {
+                if (object[prop] instanceof Array) {
+                    scanArray(object[prop], prop, node);
+                } else {
+                    if (typeof object[prop] !== 'object') {
+                        node.appendChild(createNode(prop, object[prop]));
+                    } else {
+                        node.appendChild(scanNodes(object[prop], prop));
+                    }
+                }
+            }
+        }
+        return node;
+    }
+
+    return scanNodes(this, 'Model');
+};
+
 
 Element.prototype.addClass = function () {
     for (var a = 0; a < arguments.length; a++) {
@@ -294,6 +241,50 @@ Element.prototype.fire = function (action, params) {
         return !this.dispatchEvent(e);
     }
 };
+
+(function () {
+
+    function getNodeValue(node) {
+        var text = node.textContent || node.innerText;
+        var value = isNaN(text) ? text : parseFloat(text);
+        return value;
+    }
+
+    var isEmpty = function (obj) {
+        for (var prop in obj) {
+            if (obj.hasOwnProperty(prop)) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    function parseNode(children) {
+        var json = {};
+        for (var n = 0; n < children.length; n++) {
+            var node = children[n];
+            var tagName = node.tagName.toLowerCase();
+
+            if (json[tagName] && !(json[tagName] instanceof Array)) {
+                json[tagName] = [json[tagName]];
+            }
+
+            var value = parseNode(node.children) || getNodeValue(node);
+
+            if (json[tagName] instanceof Array) {
+                json[tagName].push(value);
+            } else {
+                json[tagName] = value;
+            }
+        }
+        return (isEmpty(json)) ? null : json;
+    }
+
+    Element.prototype.toJSON = function () {
+        return parseNode(this.children);
+    };
+
+})();
 
 
 
@@ -872,7 +863,11 @@ var Component = function () {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
                 var c = Component.get(match[1]);
-                var comp = Component(c).extend(c.controller);
+                var comp = Component({
+                    template: (node.innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
+                    style: (node.innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,
+                    config: c.config
+                }).extend(c.controller);
                 comp.createIn(node, 'before');
                 for (var i = 0; i < node.attributes.length; i++) {
                     var a = node.attributes[i];

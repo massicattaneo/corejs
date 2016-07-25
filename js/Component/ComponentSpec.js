@@ -86,7 +86,7 @@ describe('GLOBAL - COMPONENT', function () {
                 template: '<div><input data-item="input" type="text"><div data-item="error"></div></div>',
                 style: '{color: red}'
             });
-            c = Component({template: '<div><corejs:input data-id="c1"/><corejs:input data-id="c2"/></div>'});
+            c = Component({template: '<div><corejs:input data-id="c1"></corejs:input><corejs:input data-id="c2"></corejs:input></div>'});
             c.createIn(document.body);
         });
 
@@ -104,6 +104,29 @@ describe('GLOBAL - COMPONENT', function () {
         it('should add a same class only once', function () {
             expect(document.head.children.length).toEqual(3);
         })
+
+    });
+
+    describe('On passing a configuration to the registered component', function () {
+
+        var c;
+
+        beforeEach(function () {
+            Component.register({
+                name: 'input1',
+                template: '<div><input data-item="input" type="text"><div data-item="error" id="{{id}}"></div></div>',
+                style: '{color: $color}'
+            });
+            c = Component({
+                template: '<div><corejs:input1 data-id="c1"><id>{{mainId}}</id><color>{{mainColor}}</color></corejs:input1>', 
+                config: {mainColor: 'red', mainId: 'id1'}
+            });
+            c.createIn(document.body);
+        });
+
+        it('should add it to the template', function () {
+            expect(c.get('c1').get('error').id).toEqual('id1');
+        });
 
     });
 

@@ -13,7 +13,6 @@ module.exports = (function () {
 
     return {
         files: [
-            'js/JSON/JSON.js',
             'js/XML/XML.js',
             'js/Array/Array.js',
             'js/String/String.js',

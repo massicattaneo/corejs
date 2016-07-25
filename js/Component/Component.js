@@ -98,7 +98,11 @@ var Component = function () {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
                 var c = Component.get(match[1]);
-                var comp = Component(c).extend(c.controller);
+                var comp = Component({
+                    template: (node.innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
+                    style: (node.innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,
+                    config: c.config
+                }).extend(c.controller);
                 comp.createIn(node, 'before');
                 for (var i = 0; i < node.attributes.length; i++) {
                     var a = node.attributes[i];

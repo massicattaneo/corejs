@@ -60,7 +60,8 @@ Element.prototype.addListener = function (action, callback) {
     if (this.addEventListener) {
         this.addEventListener(action, callback);
     } else {
-        this.attachEvent('on' + action, callback);//cover:false
+        /* istanbul ignore next */
+        this.attachEvent('on' + action, callback);
     }
 };
 
@@ -69,6 +70,7 @@ Element.prototype.removeListener = function (action, callback) {
     if (this.removeEventListener) {
         this.removeEventListener(action, callback);
     } else {
+        /* istanbul ignore next */
         this.detachEvent('on' + action, callback);
     }
 };
@@ -93,6 +95,7 @@ Element.prototype.setInnerText = function (text) {
 };
 
 Element.prototype.fire = function (action, params) {
+    /* istanbul ignore if */
     if (document.action) {
         var evt = document.createEventObject();
         evt.data = params;
@@ -105,6 +108,51 @@ Element.prototype.fire = function (action, params) {
         return !this.dispatchEvent(e);
     }
 };
+
+/** toJSON */
+(function () {
+
+    function getNodeValue(node) {
+        var text = node.textContent || node.innerText;
+        var value = isNaN(text) ? text : parseFloat(text);
+        return value;
+    }
+
+    var isEmpty = function (obj) {
+        for (var prop in obj) {
+            if (obj.hasOwnProperty(prop)) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    function parseNode(children) {
+        var json = {};
+        for (var n = 0; n < children.length; n++) {
+            var node = children[n];
+            var tagName = node.tagName.toLowerCase();
+
+            if (json[tagName] && !(json[tagName] instanceof Array)) {
+                json[tagName] = [json[tagName]];
+            }
+
+            var value = parseNode(node.children) || getNodeValue(node);
+
+            if (json[tagName] instanceof Array) {
+                json[tagName].push(value);
+            } else {
+                json[tagName] = value;
+            }
+        }
+        return (isEmpty(json)) ? null : json;
+    }
+
+    Element.prototype.toJSON = function () {
+        return parseNode(this.children);
+    };
+
+})();
 
 //
 // if (!Event.prototype.stopPropagation) {
