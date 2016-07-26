@@ -1029,10 +1029,10 @@ var Component = function () {
                 position === 'before' && parent.parentNode.insertBefore(node, parent);
                 position === 'after' && parent.parentNode.insertBefore(node, parent.nextSibling);
             }
-            node && parseNode(node, obj);
             if (style) {
                 node.addClass(appendStyle(style));
             }
+            node && parseNode(node, obj);
             obj.init && obj.init();
             dataProxy.collect();
         };
