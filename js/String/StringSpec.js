@@ -143,6 +143,43 @@ describe("PROTOTYPE - STRING", function () {
     it('isDate', function () {
         expect('2015-11-15'.isDate()).toEqual(true);
         expect('2015/11/15'.isDate()).toEqual(true);
-    })
+    });
+
+    /** converting different notations */
+    describe('toCamelCase', function () {
+
+        it('from spaced string', function () {
+            expect('Ciao sono MARCO    qui va tutto Bene'.toCamelCase()).toEqual('ciaoSonoMarcoQuiVaTuttoBene');
+        });
+
+        it('from dashed string', function () {
+            expect('tutto-sembra------DIVISO-perfetto'.toCamelCase()).toEqual('tuttoSembraDivisoPerfetto');
+        });
+
+    });
+
+    describe('toKebabCase', function () {
+
+        it('from spaced string', function () {
+            expect('Ciao sono MARCO    qui va tutto Bene'.toKebabCase()).toEqual('ciao-sono-marco-qui-va-tutto-bene');
+        });
+
+        it('from camel case', function () {
+            expect('tuttoSembraDivisoPerfetto'.toKebabCase()).toEqual('tutto-sembra-diviso-perfetto');
+        });
+
+    });
+
+    describe('toSnakeCase', function () {
+
+        it('from spaced string', function () {
+            expect('Ciao sono MARCO    qui va tutto Bene'.toSnakeCase()).toEqual('ciao_sono_marco_qui_va_tutto_bene');
+        });
+
+        it('from camel case', function () {
+            expect('tuttoSembraDivisoPerfetto'.toSnakeCase()).toEqual('tutto_sembra_diviso_perfetto');
+        });
+
+    });
 
 });

@@ -97,7 +97,7 @@ var Component = function () {
         if (node.tagName) {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
-                var c = Component.get(match[1]);
+                var c = Component.get(match[1].toLowerCase().toCamelCase());
                 var comp = Component({
                     template: (node.innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
                     style: (node.innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,
@@ -253,7 +253,7 @@ var Component = function () {
 
     Component.get = function (componentName) {
         return components.filter(function (c) {
-            return c.name.toUpperCase() === componentName.toUpperCase();
+            return c.name === componentName;
         })[0];
     };
 

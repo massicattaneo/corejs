@@ -65,7 +65,7 @@ String.prototype.isTime = function () {
 };
 
 String.prototype.isDate = function () {
-    var separator = this.indexOf('-') !== -1 ?'-' : '/';
+    var separator = this.indexOf('-') !== -1 ? '-' : '/';
     var d = this.split(separator);
     if (d.join("-").length < 10) return false;
 
@@ -88,6 +88,42 @@ String.prototype.toDate = function () {
     var array = this.split(this.match(/\D/));
     return new Date(parseInt(array[0], 10), parseInt(array[1], 10) - 1, parseInt(array[2], 10));
 };
+
+(function (proto) {
+
+    proto.toCamelCase = function () {
+        var self = this;
+        self = self.replaceAt(0,1,self.charAt(0).toLowerCase());
+        var a = self.match(/([^\s|-]*)/g);
+        return a.reduce(function (p, c, i) {
+            return p + c.capitalize();
+        });
+    };
+
+    var convert = function (self, char) {
+        if (self.match(/\s/)) {
+            var a = self.match(/([^\s]*)/g);
+            return a.reduce(function (p, c) {
+                return p.toLowerCase() + (c ? char + c.toLowerCase() : '');
+            });
+        } else {
+            return convert(self
+                .replace(/([A-Z])/g, ' $1')
+                .replace(/^./, function(str){ return str.toUpperCase(); }), char);
+        }
+    };
+
+    proto.toKebabCase = function () {
+        return convert(this, '-');
+    };
+
+    proto.toSnakeCase = function () {
+        return convert(this, '_');
+    };
+
+})(String.prototype);
+
+
 
 
 
@@ -862,7 +898,7 @@ var Component = function () {
         if (node.tagName) {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
-                var c = Component.get(match[1]);
+                var c = Component.get(match[1].toLowerCase().toCamelCase());
                 var comp = Component({
                     template: (node.innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
                     style: (node.innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,
@@ -1015,7 +1051,7 @@ var Component = function () {
 
     Component.get = function (componentName) {
         return components.filter(function (c) {
-            return c.name.toUpperCase() === componentName.toUpperCase();
+            return c.name === componentName;
         })[0];
     };
 

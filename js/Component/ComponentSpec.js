@@ -113,12 +113,12 @@ describe('GLOBAL - COMPONENT', function () {
 
         beforeEach(function () {
             Component.register({
-                name: 'input1',
+                name: 'newInput',
                 template: '<div><input data-item="input" type="text"><div data-item="error" id="{{id}}"></div></div>',
                 style: '{color: $color}'
             });
             c = Component({
-                template: '<div><corejs:input1 data-id="c1"><id>{{mainId}}</id><color>{{mainColor}}</color></corejs:input1>', 
+                template: '<div><corejs:new-input data-id="c1"><id>{{mainId}}</id><color>{{mainColor}}</color></corejs:new-input>',
                 config: {mainColor: 'red', mainId: 'id1'}
             });
             c.createIn(document.body);
