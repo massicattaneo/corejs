@@ -93,7 +93,7 @@ String.prototype.toDate = function () {
 
     proto.toCamelCase = function () {
         var self = this;
-        self = self.replaceAt(0,1,self.charAt(0).toLowerCase());
+        self = self.toLowerCase();
         var a = self.match(/([^\s|-]*)/g);
         return a.reduce(function (p, c, i) {
             return p + c.capitalize();
@@ -299,7 +299,7 @@ Element.prototype.fire = function (action, params) {
         var json = {};
         for (var n = 0; n < children.length; n++) {
             var node = children[n];
-            var tagName = node.tagName.toLowerCase();
+            var tagName = node.tagName.toCamelCase();
 
             if (json[tagName] && !(json[tagName] instanceof Array)) {
                 json[tagName] = [json[tagName]];
@@ -898,7 +898,7 @@ var Component = function () {
         if (node.tagName) {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
-                var c = Component.get(match[1].toLowerCase().toCamelCase());
+                var c = Component.get(match[1].toCamelCase());
                 var comp = Component({
                     template: (node.innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
                     style: (node.innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,

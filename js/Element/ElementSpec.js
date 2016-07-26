@@ -134,8 +134,8 @@ describe("HTML node", function () {
         var container = document.createElement('div');
 
         it("should return a relative json", function () {
-            container.innerHTML = '<string>string</string><number>1</number>';
-            expect(container.toJSON()).toEqual({string: 'string', number: 1});
+            container.innerHTML = '<first-string>string</first-string><number>1</number>';
+            expect(container.toJSON()).toEqual({firstString: 'string', number: 1});
         });
 
         it("should return also nested objects", function () {

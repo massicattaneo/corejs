@@ -97,7 +97,7 @@ var Component = function () {
         if (node.tagName) {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
-                var c = Component.get(match[1].toLowerCase().toCamelCase());
+                var c = Component.get(match[1].toCamelCase());
                 var comp = Component({
                     template: (node.innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
                     style: (node.innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,

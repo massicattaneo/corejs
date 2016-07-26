@@ -85,7 +85,7 @@ String.prototype.toDate = function () {
 
     proto.toCamelCase = function () {
         var self = this;
-        self = self.replaceAt(0,1,self.charAt(0).toLowerCase());
+        self = self.toLowerCase();
         var a = self.match(/([^\s|-]*)/g);
         return a.reduce(function (p, c, i) {
             return p + c.capitalize();

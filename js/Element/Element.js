@@ -131,7 +131,7 @@ Element.prototype.fire = function (action, params) {
         var json = {};
         for (var n = 0; n < children.length; n++) {
             var node = children[n];
-            var tagName = node.tagName.toLowerCase();
+            var tagName = node.tagName.toCamelCase();
 
             if (json[tagName] && !(json[tagName] instanceof Array)) {
                 json[tagName] = [json[tagName]];
