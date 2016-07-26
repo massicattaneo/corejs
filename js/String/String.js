@@ -85,11 +85,15 @@ String.prototype.toDate = function () {
 
     proto.toCamelCase = function () {
         var self = this;
-        self = self.toLowerCase();
-        var a = self.match(/([^\s|-]*)/g);
-        return a.reduce(function (p, c, i) {
-            return p + c.capitalize();
-        });
+        if (self.match(/\s|-|_/)) {
+            self = self.toLowerCase();
+            var a = self.match(/([^\s|_|-]*)/g);
+            return a.reduce(function (p, c) {
+                return p + c.capitalize();
+            });
+        } else {
+            return self;
+        }
     };
 
     var convert = function (self, char) {
@@ -98,6 +102,12 @@ String.prototype.toDate = function () {
             return a.reduce(function (p, c) {
                 return p.toLowerCase() + (c ? char + c.toLowerCase() : '');
             });
+        } else if (self.match(new RegExp(char))) {
+            return self.toLowerCase();
+        } else if (self.match(/_/)) {
+            return self.toLowerCase().replace(/_/g, '-');
+        } else if (self.match(/-/)) {
+            return self.toLowerCase().replace(/-/g, '_');
         } else {
             return convert(self
                 .replace(/([A-Z])/g, ' $1')

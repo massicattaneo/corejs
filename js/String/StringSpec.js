@@ -148,12 +148,20 @@ describe("PROTOTYPE - STRING", function () {
     /** converting different notations */
     describe('toCamelCase', function () {
 
-        it('from spaced string', function () {
-            expect('Ciao sono MARCO    qui va tutto Bene'.toCamelCase()).toEqual('ciaoSonoMarcoQuiVaTuttoBene');
+        it('from camel case string', function () {
+            expect('Tutto sembra DIVISO perfetto'.toCamelCase()).toEqual('tuttoSembraDivisoPerfetto');
         });
 
-        it('from dashed string', function () {
+        it('from spaced string', function () {
+            expect('Tutto sembra DIVISO perfetto'.toCamelCase()).toEqual('tuttoSembraDivisoPerfetto');
+        });
+
+        it('from kebab string', function () {
             expect('tutto-sembra------DIVISO-perfetto'.toCamelCase()).toEqual('tuttoSembraDivisoPerfetto');
+        });
+
+        it('from snake string', function () {
+            expect('tutto_sembra___DIVISO_perfetto'.toCamelCase()).toEqual('tuttoSembraDivisoPerfetto');
         });
 
     });
@@ -161,11 +169,19 @@ describe("PROTOTYPE - STRING", function () {
     describe('toKebabCase', function () {
 
         it('from spaced string', function () {
-            expect('Ciao sono MARCO    qui va tutto Bene'.toKebabCase()).toEqual('ciao-sono-marco-qui-va-tutto-bene');
+            expect('Tutto sembra DIVISO perfetto'.toKebabCase()).toEqual('tutto-sembra-diviso-perfetto');
         });
 
         it('from camel case', function () {
             expect('tuttoSembraDivisoPerfetto'.toKebabCase()).toEqual('tutto-sembra-diviso-perfetto');
+        });
+
+        it('from kebab string', function () {
+            expect('tutto-sembra-DIVISO-perfetto'.toKebabCase()).toEqual('tutto-sembra-diviso-perfetto');
+        });
+
+        it('from snake string', function () {
+            expect('tutto_sembra_DIVISO_perfetto'.toKebabCase()).toEqual('tutto-sembra-diviso-perfetto');
         });
 
     });
@@ -173,11 +189,19 @@ describe("PROTOTYPE - STRING", function () {
     describe('toSnakeCase', function () {
 
         it('from spaced string', function () {
-            expect('Ciao sono MARCO    qui va tutto Bene'.toSnakeCase()).toEqual('ciao_sono_marco_qui_va_tutto_bene');
+            expect('Tutto sembra DIVISO perfetto'.toSnakeCase()).toEqual('tutto_sembra_diviso_perfetto');
         });
 
         it('from camel case', function () {
             expect('tuttoSembraDivisoPerfetto'.toSnakeCase()).toEqual('tutto_sembra_diviso_perfetto');
+        });
+
+        it('from kebab string', function () {
+            expect('tutto-sembra-DIVISO-perfetto'.toSnakeCase()).toEqual('tutto_sembra_diviso_perfetto');
+        });
+
+        it('from snake string', function () {
+            expect('tutto_sembra_DIVISO_perfetto'.toSnakeCase()).toEqual('tutto_sembra_diviso_perfetto');
         });
 
     });
