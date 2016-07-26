@@ -91,6 +91,8 @@ String.prototype.toDate = function () {
             return a.reduce(function (p, c) {
                 return p + c.capitalize();
             });
+        } else if (!self.match(/[a-z]/)) {
+            return self.toLowerCase();
         } else {
             return self;
         }

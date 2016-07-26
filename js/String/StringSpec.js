@@ -151,6 +151,7 @@ describe("PROTOTYPE - STRING", function () {
         it('from camel case string', function () {
             expect('tuttoSembraDivisoPerfetto'.toCamelCase()).toEqual('tuttoSembraDivisoPerfetto');
             expect('tutto'.toCamelCase()).toEqual('tutto');
+            expect('TUTTO'.toCamelCase()).toEqual('tutto');
         });
 
         it('from spaced string', function () {
