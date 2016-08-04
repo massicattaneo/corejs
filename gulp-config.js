@@ -24,6 +24,7 @@ module.exports = (function () {
             'js/Component/Component.js'
         ],
         tests: ['js/**/*Spec.js'],
+        mocks: ['mocks/userAgentStrings.js'],
         vendors: ['node_modules/jquery/dist/jquery.js']
     };
 

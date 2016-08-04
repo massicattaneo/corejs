@@ -9,17 +9,6 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-// Object.extend = function () {
-//     var ret = {};
-//     for (var i = 0, j = arguments.length; i < j; i++){
-//         var obj = arguments[i];
-//         Object.keys(obj).forEach(function (key) {
-//             ret[key] = obj[key];
-//         });
-//     }
-//     return ret;
-// };
-
 Object.prototype.extend = function () {
     var self = this;
     for (var i = 0, j = arguments.length; i < j; i++) {

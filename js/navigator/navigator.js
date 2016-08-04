@@ -11,7 +11,7 @@
 
 (function (obj) {
 
-    /** PACKAGES **/
+    /** PACKAGES AND IMPORT FILES **/
     var packages = Collection();
     var imports = function (url) {
         return packages.get(url) || createPackage(url)
@@ -113,10 +113,28 @@
 
     var getHttpObject = function () {
         if (window.ActiveXObject) {
-            return new ActiveXObject('MSXML2.XMLHTTP.3.0'); //coverage:exclude
+            /* istanbul ignore next */
+            return new ActiveXObject('MSXML2.XMLHTTP.3.0');
         } else {
             return new XMLHttpRequest();
         }
     };
+
+    function getScreenOrientation() {
+        return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
+    }
+
+    /** deviceManager **/
+    obj.deviceManager = function (params) {
+        var ua = params.userAgent;
+        var ret = {};
+        ret.deviceType = 'desktop';
+        ret.os = 'windows';
+        ret.osVersion = '7';
+        ret.browserName = 'chrome';
+        ret.browserVersion = '49.0';
+        ret.getScreenOrientation = getScreenOrientation;
+        return ret;
+    }
 
 })(navigator);

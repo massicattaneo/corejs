@@ -21,7 +21,7 @@ gulp.task('ut', function (done) {
         action: 'run',
         singleRun: false,
         autoWatch: true,
-        files: files.concat(config.vendors).concat(config.files),
+        files: files.concat(config.vendors).concat(config.files).concat(config.mocks),
         reporters: ['mocha', 'coverage'],
         preprocessors: preprocessors,
         coverageReporter: {
