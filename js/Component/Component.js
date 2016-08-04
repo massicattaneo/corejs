@@ -154,7 +154,13 @@ var Component = function () {
                 var m1 = rule.concat("}").match(/.*\{.*\}/);
                 m1 && m1.forEach(function (r) {
                     var m = r.trim().match(/(.*)\{(.*)\}/);
-                    m && sheet.addRule((cssSelector + ' ') + m[1], m[2]);
+                    var selector;
+                    if (m[1].match('.&')) {
+                        selector = m[1].replace(/\.&/g, cssSelector)
+                    } else {
+                        selector = (cssSelector + ' ') + m[1];
+                    }
+                    m && sheet.addRule(selector, m[2]);
                 });
 
             });

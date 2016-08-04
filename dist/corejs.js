@@ -138,7 +138,6 @@ String.prototype.toDate = function () {
 
 
 
-
 Object.prototype.extend = function () {
     var self = this;
     for (var i = 0, j = arguments.length; i < j; i++) {
@@ -814,11 +813,27 @@ var Need = function () {
 
     var getHttpObject = function () {
         if (window.ActiveXObject) {
-            return new ActiveXObject('MSXML2.XMLHTTP.3.0'); 
+            return new ActiveXObject('MSXML2.XMLHTTP.3.0');
         } else {
             return new XMLHttpRequest();
         }
     };
+
+    function getScreenOrientation() {
+        return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
+    }
+
+    obj.deviceManager = function (params) {
+        var ua = params.userAgent;
+        var ret = {};
+        ret.deviceType = 'desktop';
+        ret.os = 'windows';
+        ret.osVersion = '7';
+        ret.browserName = 'chrome';
+        ret.browserVersion = '49.0';
+        ret.getScreenOrientation = getScreenOrientation;
+        return ret;
+    }
 
 })(navigator);
 
@@ -964,7 +979,13 @@ var Component = function () {
                 var m1 = rule.concat("}").match(/.*\{.*\}/);
                 m1 && m1.forEach(function (r) {
                     var m = r.trim().match(/(.*)\{(.*)\}/);
-                    m && sheet.addRule((cssSelector + ' ') + m[1], m[2]);
+                    var selector;
+                    if (m[1].match('.&')) {
+                        selector = m[1].replace(/\.&/g, cssSelector)
+                    } else {
+                        selector = (cssSelector + ' ') + m[1];
+                    }
+                    m && sheet.addRule(selector, m[2]);
                 });
 
             });

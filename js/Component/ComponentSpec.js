@@ -60,6 +60,16 @@ describe('GLOBAL - COMPONENT', function () {
             expect(document.styleSheets[0].rules[0].cssText).toEqual(".CJS0 span { color: red; }");
         });
 
+        it('should add the class in the placeholder site ".&" if present', function () {
+            var test = Component({
+                template: '<div><span>CIAO</span></div>',
+                style: '.mobile .& span {color: red;} .mobile.& li {color: white}'
+            });
+            test.createIn(document.body);
+            expect(document.styleSheets[0].rules[0].cssText).toEqual(".mobile .CJS1 span { color: red; }");
+            expect(document.styleSheets[0].rules[1].cssText).toEqual(".mobile.CJS1 li { color: white; }");
+        })
+
     });
 
     describe('On passing a configuration', function () {
@@ -71,7 +81,7 @@ describe('GLOBAL - COMPONENT', function () {
                 config: {color: "#000000", background: "#AAAAAA", text: "HELLO!", width: 120}
             });
             test.createIn(document.body);
-            expect(document.styleSheets[0].rules[0].cssText).toEqual(".CJS1 span { color: rgb(0, 0, 0); background-color: rgb(170, 170, 170); }");
+            expect(document.styleSheets[0].rules[0].cssText).toEqual(".CJS2 span { color: rgb(0, 0, 0); background-color: rgb(170, 170, 170); }");
             expect(document.getElementById('text').innerText).toEqual("HELLO!");
         });
 
