@@ -201,7 +201,9 @@ describe('Navigator', function () {
         describe('On having a Window7 machine', function () {
 
             it('should get the information of chrome browser', function () {
-                var dm = navigator.deviceManager(mocks.userAgentsStrings.windows7.Chrome);
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.windows7.Chrome
+                });
                 checkDevice(dm, {
                     deviceType: 'desktop',
                     os: 'windows',
@@ -215,6 +217,90 @@ describe('Navigator', function () {
                 expect(dm.getScreenOrientation()).toEqual('portrait');
                 window.innerWidth = originalScreenSize.width;
                 window.innerHeight = originalScreenSize.height;
+            });
+
+            it('should get the information of firefox browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.windows7.Firefox
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'windows',
+                    osVersion: '7',
+                    browserName: 'firefox',
+                    browserVersion: '45.0',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+            it('should get the information of safari browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.windows7.Safari
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'windows',
+                    osVersion: '7',
+                    browserName: 'safari',
+                    browserVersion: '5.1',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+            it('should get the information of ie11 browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.windows7.IE11
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'windows',
+                    osVersion: '7',
+                    browserName: 'ie',
+                    browserVersion: '11',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+            it('should get the information of ie10 browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.windows7.IE10
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'windows',
+                    osVersion: '7',
+                    browserName: 'ie',
+                    browserVersion: '10',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+            it('should get the information of ie9 browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.windows7.IE9
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'windows',
+                    osVersion: '7',
+                    browserName: 'ie',
+                    browserVersion: '9',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+            it('should get the information of ie8 browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.windows7.IE8
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'windows',
+                    osVersion: '7',
+                    browserName: 'ie',
+                    browserVersion: '8',
+                    screenOrientation: 'landscape'
+                });
             });
 
         })

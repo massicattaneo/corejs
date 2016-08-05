@@ -110,7 +110,6 @@
             return {response: response}.extend(abstract);
         }
     }();
-
     var getHttpObject = function () {
         if (window.ActiveXObject) {
             /* istanbul ignore next */
@@ -120,19 +119,47 @@
         }
     };
 
-    function getScreenOrientation() {
-        return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
-    }
 
     /** deviceManager **/
+    var getScreenOrientation = function () {
+        return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
+    };
+    var getBrowserInfo = function (ua) {
+        console.log(ua);
+        if (ua.match(/(Chrome)\/(\d*\.\d*)/)) {
+            return (ua.match(/(Chrome)\/(\d*\.\d*)/));
+        } else if (ua.match(/(Firefox)\/(\d*\.\d*)/)) {
+            return (ua.match(/(Firefox)\/(\d*\.\d*)/));
+        } else if (ua.match(/(Safari)\/(\d*\.\d*)/)) {
+            var newVar = (ua.match(/(Version)\/(\d*\.\d*)/));
+            newVar[1] = 'Safari';
+            return newVar;
+        } else if (ua.match(/Trident\/(\d)/)) {
+            var match = Number(ua.match(/Trident\/(\d)/)[1]) + 4;
+            return ['', 'IE', match.toString()];
+        }
+        return ['','',''];
+    };
+    var getOsInfo = function (ua) {
+        var ret = ['',''];
+        if (ua.match(/WOW64/)) {
+            ret[0] = 'windows';
+            if (ua.match(/Windows NT 6/)) {
+                ret[1] = '7';
+            }
+        }
+        return ret;
+    };
     obj.deviceManager = function (params) {
         var ua = params.userAgent;
         var ret = {};
         ret.deviceType = 'desktop';
-        ret.os = 'windows';
-        ret.osVersion = '7';
-        ret.browserName = 'chrome';
-        ret.browserVersion = '49.0';
+        var osInfo = getOsInfo(ua);
+        ret.os = osInfo[0];
+        ret.osVersion = osInfo[1];
+        var browserInfo = getBrowserInfo(ua);
+        ret.browserName = browserInfo[1].toLowerCase();
+        ret.browserVersion = browserInfo[2];
         ret.getScreenOrientation = getScreenOrientation;
         return ret;
     }

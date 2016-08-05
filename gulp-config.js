@@ -13,13 +13,13 @@ module.exports = (function () {
 
     return {
         files: [
-            'js/XML/XML.js',
             'js/Array/Array.js',
             'js/String/String.js',
             'js/Object/Object.js',
             'js/Element/Element.js',
             'js/Collection/Collection.js',
             'js/Need/Need.js',
+            'js/Bus/Bus.js',
             'js/navigator/navigator.js',
             'js/Component/Component.js'
         ],
