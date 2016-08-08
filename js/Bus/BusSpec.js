@@ -11,12 +11,12 @@
 
 describe('Bus', function () {
 
-    it('should have fire and listen methods', function () {
+    it('should have fire and on methods', function () {
         expect(Bus.fire).toBeDefined();
-        expect(Bus.listen).toBeDefined();
+        expect(Bus.on).toBeDefined();
     });
 
-    describe('On listening on an event', function () {
+    describe('On using the bus', function () {
 
         var fired = false;
         var callback = function (p) {
@@ -24,14 +24,18 @@ describe('Bus', function () {
         };
 
         beforeEach(function () {
-            Bus.listen('test', callback)
+            Bus.on('test', callback)
         });
 
         afterEach(function () {
-            Bus.remove('test', callback);
+            Bus.clear();
         });
 
-        it('should fire the callback when called', function () {
+        it('should "on" a callback', function () {
+            Bus.on('test', function () {});
+        });
+
+        it('should "fire" the callback when called', function () {
             expect(fired).toEqual(false);
             Bus.fire('test');
             expect(fired).toEqual(true);
@@ -39,41 +43,49 @@ describe('Bus', function () {
             expect(fired).toEqual('value');
         });
 
-        it('should have the method to remove the callback', function () {
+        it('should "off" the callback', function () {
             fired = false;
-            Bus.remove('test', callback);
+            Bus.off('test', callback);
             Bus.fire('test');
             expect(fired).toEqual(false);
-        })
-
-    });
-
-
-
-    describe('On setting a priority', function () {
-
-        var fired = false;
-
-        beforeEach(function () {
-
-            Bus.listen('test', function () {
-                fired = 2;
-            }, 2);
-
-            Bus.listen('test', function () {
-                fired = 1;
-            }, 1);
-
-            Bus.listen('test', function () {
-                fired = 3;
-            }, 2);
         });
 
-        it('should respect the order', function () {
+        it('should execute "once" a callback', function () {
+            Bus.clear();
+            Bus.once('test', callback);
+            expect(fired).toEqual(false);
             Bus.fire('test');
-            expect(fired).toEqual(3);
-        })
+            expect(fired).toEqual(true);
+            Bus.fire('test', 'value');
+            expect(fired).toEqual(true);
+        });
 
-    })
+        describe('On setting a priority', function () {
+
+            var fired = false;
+
+            beforeEach(function () {
+                Bus.clear();
+                Bus.on('test', function () {
+                    fired = 2;
+                }, 2);
+
+                Bus.on('test', function () {
+                    fired = 1;
+                }, 1);
+
+                Bus.on('test', function () {
+                    fired = 3;
+                }, 2);
+            });
+
+            it('should respect the order', function () {
+                Bus.fire('test');
+                expect(fired).toEqual(3);
+            });
+
+        });
+
+    });
 
 });
