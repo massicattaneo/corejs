@@ -125,8 +125,9 @@
         return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
     };
     var getBrowserInfo = function (ua) {
-        console.log(ua);
-        if (ua.match(/(Chrome)\/(\d*\.\d*)/)) {
+        if (ua.match(/(OPR)[^\d]\d*.\d*/)) {
+            return ['', 'opera', ua.match(/OPR[^\d](\d*.\d*)/)[1]]
+        }else if (ua.match(/(Chrome)\/(\d*\.\d*)/)) {
             return (ua.match(/(Chrome)\/(\d*\.\d*)/));
         } else if (ua.match(/(Firefox)\/(\d*\.\d*)/)) {
             return (ua.match(/(Firefox)\/(\d*\.\d*)/));
@@ -147,6 +148,11 @@
             if (ua.match(/Windows NT 6/)) {
                 ret[1] = '7';
             }
+        } else if (ua.match(/Macintosh/)) {
+            ret[0] = 'Macintosh';
+            ret[1] = ua.match(/Mac OS X (\d*[^\d]\d*)/)[1].replace('_', '.');
+        } else if (ua.match(/Linux/)) {
+            ret = ['Linux', 'UNKNOWN']
         }
         return ret;
     };

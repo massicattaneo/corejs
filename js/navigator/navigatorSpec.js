@@ -193,9 +193,10 @@ describe('Navigator', function () {
         expect(dm.browserName).toEqual(c.browserName);
         expect(dm.browserVersion).toEqual(c.browserVersion);
         expect(dm.getScreenOrientation()).toEqual(c.screenOrientation);
-    }
+    };
 
     describe('Device Manager', function () {
+
         var originalScreenSize = {width: window.innerWidth, height: window.innerHeight};
 
         describe('On having a Window7 machine', function () {
@@ -303,7 +304,113 @@ describe('Navigator', function () {
                 });
             });
 
-        })
+        });
+
+        describe('On having a Mac OSX 10 machine', function () {
+
+            it('should get the information of chrome browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.MacOSx10.Chrome
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'Macintosh',
+                    osVersion: '10.11',
+                    browserName: 'chrome',
+                    browserVersion: '49.0',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+            it('should get the information of firefox browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.MacOSx10.Firefox
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'Macintosh',
+                    osVersion: '10.11',
+                    browserName: 'firefox',
+                    browserVersion: '44.0',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+            it('should get the information of safari browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.MacOSx10.Safari
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'Macintosh',
+                    osVersion: '10.11',
+                    browserName: 'safari',
+                    browserVersion: '9.0',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+            it('should get the information of opera browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.MacOSx10.Opera
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'Macintosh',
+                    osVersion: '10.11',
+                    browserName: 'opera',
+                    browserVersion: '26.0',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+        });
+
+        describe('On having a Ubuntu Linux machine', function () {
+
+            it('should get the information of chrome browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.Ubuntu15.Chrome
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'Linux',
+                    osVersion: 'UNKNOWN',
+                    browserName: 'chrome',
+                    browserVersion: '49.0',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+            it('should get the information of firefox browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.Ubuntu15.Firefox
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'Linux',
+                    osVersion: 'UNKNOWN',
+                    browserName: 'firefox',
+                    browserVersion: '45.0',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+            it('should get the information of opera browser', function () {
+                var dm = navigator.deviceManager({
+                    userAgent: mocks.userAgentsStrings.Ubuntu15.Opera
+                });
+                checkDevice(dm, {
+                    deviceType: 'desktop',
+                    os: 'Linux',
+                    osVersion: 'UNKNOWN',
+                    browserName: 'opera',
+                    browserVersion: '36.0',
+                    screenOrientation: 'landscape'
+                });
+            });
+
+        });
 
     });
 
