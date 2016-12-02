@@ -11,6 +11,7 @@ Basic Javascript Framework:
 - Promises
 - Dependecy Injection
 - Http requests
+- Bus
 
 UNIT TEST
 ---------

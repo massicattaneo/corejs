@@ -289,6 +289,12 @@ Element.prototype.fire = function (action, params) {
     }
 };
 
+Element.create = function (markup) {
+    var doc = document.implementation.createHTMLDocument("");
+    doc.body.innerHTML = markup;
+    return doc.body.childNodes[0];
+};
+
 (function () {
 
     function getNodeValue(node) {
@@ -710,6 +716,58 @@ var Need = function () {
 }();
 
 
+
+var Bus = function () {
+
+    var events = [];
+    var obj = {};
+
+    obj.on = function (eventName, callback, priority) {
+        events.push({
+            eventName: eventName,
+            callback: callback,
+            priority: priority || 1000
+        })
+    };
+
+    obj.off = function (eventName, callback) {
+        var filter = events.filter(function (e) {
+            return e.eventName === eventName && e.callback === callback;
+        })[0];
+        events.splice(events.indexOf(filter), 1);
+    };
+
+    obj.once = function (eventName, callback, priority) {
+        events.push({
+            eventName: eventName,
+            callback: function () {
+                callback();
+                obj.off(eventName, callback);
+            },
+            priority: priority || 1000
+        })
+    };
+
+    obj.fire = function (eventName, param) {
+        events.filter(function (e) {
+            return e.eventName === eventName;
+        }).sort(function (a, b) {
+            return a.priority - b.priority;
+        }).forEach(function (e) {
+            e.callback(param);
+        });
+    };
+
+    obj.clear = function () {
+        events.length = 0;
+    };
+
+    return obj;
+
+}();
+
+
+
 (function (obj) {
 
     var packages = Collection();
@@ -810,7 +868,6 @@ var Need = function () {
             return {response: response}.extend(abstract);
         }
     }();
-
     var getHttpObject = function () {
         if (window.ActiveXObject) {
             return new ActiveXObject('MSXML2.XMLHTTP.3.0');
@@ -819,18 +876,52 @@ var Need = function () {
         }
     };
 
-    function getScreenOrientation() {
-        return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
-    }
 
+    var getScreenOrientation = function () {
+        return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
+    };
+    var getBrowserInfo = function (ua) {
+        if (ua.match(/(OPR)[^\d]\d*.\d*/)) {
+            return ['', 'opera', ua.match(/OPR[^\d](\d*.\d*)/)[1]]
+        }else if (ua.match(/(Chrome)\/(\d*\.\d*)/)) {
+            return (ua.match(/(Chrome)\/(\d*\.\d*)/));
+        } else if (ua.match(/(Firefox)\/(\d*\.\d*)/)) {
+            return (ua.match(/(Firefox)\/(\d*\.\d*)/));
+        } else if (ua.match(/(Safari)\/(\d*\.\d*)/)) {
+            var newVar = (ua.match(/(Version)\/(\d*\.\d*)/));
+            newVar[1] = 'Safari';
+            return newVar;
+        } else if (ua.match(/Trident\/(\d)/)) {
+            var match = Number(ua.match(/Trident\/(\d)/)[1]) + 4;
+            return ['', 'IE', match.toString()];
+        }
+        return ['','',''];
+    };
+    var getOsInfo = function (ua) {
+        var ret = ['',''];
+        if (ua.match(/WOW64/)) {
+            ret[0] = 'windows';
+            if (ua.match(/Windows NT 6/)) {
+                ret[1] = '7';
+            }
+        } else if (ua.match(/Macintosh/)) {
+            ret[0] = 'Macintosh';
+            ret[1] = ua.match(/Mac OS X (\d*[^\d]\d*)/)[1].replace('_', '.');
+        } else if (ua.match(/Linux/)) {
+            ret = ['Linux', 'UNKNOWN']
+        }
+        return ret;
+    };
     obj.deviceManager = function (params) {
         var ua = params.userAgent;
         var ret = {};
         ret.deviceType = 'desktop';
-        ret.os = 'windows';
-        ret.osVersion = '7';
-        ret.browserName = 'chrome';
-        ret.browserVersion = '49.0';
+        var osInfo = getOsInfo(ua);
+        ret.os = osInfo[0];
+        ret.osVersion = osInfo[1];
+        var browserInfo = getBrowserInfo(ua);
+        ret.browserName = browserInfo[1].toLowerCase();
+        ret.browserVersion = browserInfo[2];
         ret.getScreenOrientation = getScreenOrientation;
         return ret;
     }
@@ -884,12 +975,6 @@ var Component = function () {
 
             return obj;
         }());
-
-    var createNode = function (markup) {
-        var doc = document.implementation.createHTMLDocument("");
-        doc.body.innerHTML = markup;
-        return doc.body.childNodes[0];
-    };
 
     var createListeners = function (attribute, node, obj) {
         var split = attribute.trim().split(':');
@@ -959,6 +1044,7 @@ var Component = function () {
     };
 
     var appendStyle = function (style) {
+        style = style.replace(/\n/g, '');
         var existingStyle = styles.filter(function (s) {
             return s.style === style;
         });
@@ -1033,7 +1119,7 @@ var Component = function () {
         var style = parseStyle(p.style || '', config);
         var template = parseTemplate(p.template || '', config);
 
-        var node = createNode(template);
+        var node = Element.create(template);
 
         var obj = {
             items: Collection(),

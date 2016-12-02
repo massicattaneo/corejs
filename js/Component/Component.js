@@ -56,12 +56,6 @@ var Component = function () {
             return obj;
         }());
 
-    var createNode = function (markup) {
-        var doc = document.implementation.createHTMLDocument("");
-        doc.body.innerHTML = markup;
-        return doc.body.childNodes[0];
-    };
-
     var createListeners = function (attribute, node, obj) {
         var split = attribute.trim().split(':');
         var actions = split[0].split(',');
@@ -131,6 +125,7 @@ var Component = function () {
     };
 
     var appendStyle = function (style) {
+        style = style.replace(/\n/g, '');
         var existingStyle = styles.filter(function (s) {
             return s.style === style;
         });
@@ -208,7 +203,7 @@ var Component = function () {
         var style = parseStyle(p.style || '', config);
         var template = parseTemplate(p.template || '', config);
 
-        var node = createNode(template);
+        var node = Element.create(template);
 
         var obj = {
             items: Collection(),

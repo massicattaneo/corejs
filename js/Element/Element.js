@@ -109,6 +109,12 @@ Element.prototype.fire = function (action, params) {
     }
 };
 
+Element.create = function (markup) {
+    var doc = document.implementation.createHTMLDocument("");
+    doc.body.innerHTML = markup;
+    return doc.body.childNodes[0];
+};
+
 /** toJSON */
 (function () {
 
