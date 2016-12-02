@@ -294,6 +294,11 @@ Element.create = function (markup) {
     doc.body.innerHTML = markup;
     return doc.body.childNodes[0];
 };
+Element.prototype.getValue = function () {
+    if (this.getAttribute('type') === 'checkbox') {
+        return this.checked;
+    }
+};
 
 (function () {
 
