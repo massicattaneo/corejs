@@ -8,57 +8,61 @@
  //       Copyright (c) 2016.
  //////////////////////////////////////////////////////////////////////////////
  */
+var corejs = corejs || {};
+(function (corejs) {
 
-Object.prototype.extend = function () {
-    var self = this;
-    for (var i = 0, j = arguments.length; i < j; i++) {
-        var obj = arguments[i];
-        Object.keys(obj).forEach(function (key) {
-            self[key] = obj[key];
-        });
-    }
-    return this;
-};
-
-Object.prototype.clone = function () {
-    return {}.extend(this);
-};
-
-Object.prototype.toXML = function () {
-
-    function createNode(name, value) {
-        var child = document.createElement(name);
-        child.innerText = value;
-        return child;
-    }
-
-    function scanArray(array, nodeName, node) {
-        for (var prop = 0; prop < array.length; prop++) {
-            if (typeof array[prop] !== 'object') {
-                node.appendChild(createNode(nodeName, array[prop]));
-            } else {
-                node.appendChild(scanNodes(array[prop], nodeName));
-            }
+    corejs.extend = function () {
+        var self = arguments[0];
+        for (var i = 0, j = arguments.length; i < j; i++) {
+            var obj = arguments[i];
+            Object.keys(obj).forEach(function (key) {
+                self[key] = obj[key];
+            });
         }
-    }
+        return self;
+    };
 
-    function scanNodes(object, nodeName) {
-        var node = document.createElement(nodeName);
-        for (var prop in object) {
-            if (object.hasOwnProperty(prop)) {
-                if (object[prop] instanceof Array) {
-                    scanArray(object[prop], prop, node);
+    corejs.clone = function (obj) {
+        return corejs.extend({}, obj);
+    };
+
+    corejs.toXML = function (o) {
+
+        function createNode(name, value) {
+            var child = document.createElement(name);
+            child.innerText = value;
+            return child;
+        }
+
+        function scanArray(array, nodeName, node) {
+            for (var prop = 0; prop < array.length; prop++) {
+                if (typeof array[prop] !== 'object') {
+                    node.appendChild(createNode(nodeName, array[prop]));
                 } else {
-                    if (typeof object[prop] !== 'object') {
-                        node.appendChild(createNode(prop, object[prop]));
-                    } else {
-                        node.appendChild(scanNodes(object[prop], prop));
-                    }
+                    node.appendChild(scanNodes(array[prop], nodeName));
                 }
             }
         }
-        return node;
-    }
 
-    return scanNodes(this, 'Model');
-};
+        function scanNodes(object, nodeName) {
+            var node = document.createElement(nodeName);
+            for (var prop in object) {
+                if (object.hasOwnProperty(prop)) {
+                    if (object[prop] instanceof Array) {
+                        scanArray(object[prop], prop, node);
+                    } else {
+                        if (typeof object[prop] !== 'object') {
+                            node.appendChild(createNode(prop, object[prop]));
+                        } else {
+                            node.appendChild(scanNodes(object[prop], prop));
+                        }
+                    }
+                }
+            }
+            return node;
+        }
+
+        return scanNodes(o, 'Model');
+    };
+
+})(corejs);

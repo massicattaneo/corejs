@@ -183,7 +183,7 @@ var Collection = function () {
 
     return function (ClassType) {
         var obj = {};
-        obj.extend(proto);
+        corejs.extend(obj, proto);
         obj.initValues();
         if (Array.isArray(ClassType)) {
             ClassType.forEach(function (item) {

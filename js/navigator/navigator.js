@@ -107,7 +107,7 @@
         };
 
         return function (response) {
-            return {response: response}.extend(abstract);
+            return corejs.extend({response: response}, abstract);
         }
     }();
     var getHttpObject = function () {

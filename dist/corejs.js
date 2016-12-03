@@ -137,60 +137,64 @@ String.prototype.toDate = function () {
 
 
 
+var corejs = corejs || {};
+(function (corejs) {
 
-Object.prototype.extend = function () {
-    var self = this;
-    for (var i = 0, j = arguments.length; i < j; i++) {
-        var obj = arguments[i];
-        Object.keys(obj).forEach(function (key) {
-            self[key] = obj[key];
-        });
-    }
-    return this;
-};
-
-Object.prototype.clone = function () {
-    return {}.extend(this);
-};
-
-Object.prototype.toXML = function () {
-
-    function createNode(name, value) {
-        var child = document.createElement(name);
-        child.innerText = value;
-        return child;
-    }
-
-    function scanArray(array, nodeName, node) {
-        for (var prop = 0; prop < array.length; prop++) {
-            if (typeof array[prop] !== 'object') {
-                node.appendChild(createNode(nodeName, array[prop]));
-            } else {
-                node.appendChild(scanNodes(array[prop], nodeName));
-            }
+    corejs.extend = function () {
+        var self = arguments[0];
+        for (var i = 0, j = arguments.length; i < j; i++) {
+            var obj = arguments[i];
+            Object.keys(obj).forEach(function (key) {
+                self[key] = obj[key];
+            });
         }
-    }
+        return self;
+    };
 
-    function scanNodes(object, nodeName) {
-        var node = document.createElement(nodeName);
-        for (var prop in object) {
-            if (object.hasOwnProperty(prop)) {
-                if (object[prop] instanceof Array) {
-                    scanArray(object[prop], prop, node);
+    corejs.clone = function (obj) {
+        return corejs.extend({}, obj);
+    };
+
+    corejs.toXML = function (o) {
+
+        function createNode(name, value) {
+            var child = document.createElement(name);
+            child.innerText = value;
+            return child;
+        }
+
+        function scanArray(array, nodeName, node) {
+            for (var prop = 0; prop < array.length; prop++) {
+                if (typeof array[prop] !== 'object') {
+                    node.appendChild(createNode(nodeName, array[prop]));
                 } else {
-                    if (typeof object[prop] !== 'object') {
-                        node.appendChild(createNode(prop, object[prop]));
-                    } else {
-                        node.appendChild(scanNodes(object[prop], prop));
-                    }
+                    node.appendChild(scanNodes(array[prop], nodeName));
                 }
             }
         }
-        return node;
-    }
 
-    return scanNodes(this, 'Model');
-};
+        function scanNodes(object, nodeName) {
+            var node = document.createElement(nodeName);
+            for (var prop in object) {
+                if (object.hasOwnProperty(prop)) {
+                    if (object[prop] instanceof Array) {
+                        scanArray(object[prop], prop, node);
+                    } else {
+                        if (typeof object[prop] !== 'object') {
+                            node.appendChild(createNode(prop, object[prop]));
+                        } else {
+                            node.appendChild(scanNodes(object[prop], prop));
+                        }
+                    }
+                }
+            }
+            return node;
+        }
+
+        return scanNodes(o, 'Model');
+    };
+
+})(corejs);
 
 
 Element.prototype.addClass = function () {
@@ -520,7 +524,7 @@ var Collection = function () {
 
     return function (ClassType) {
         var obj = {};
-        obj.extend(proto);
+        corejs.extend(obj, proto);
         obj.initValues();
         if (Array.isArray(ClassType)) {
             ClassType.forEach(function (item) {
@@ -870,7 +874,7 @@ var Bus = function () {
         };
 
         return function (response) {
-            return {response: response}.extend(abstract);
+            return corejs.extend({response: response}, abstract);
         }
     }();
     var getHttpObject = function () {
@@ -1016,11 +1020,11 @@ var Component = function () {
             var match = node.tagName.match(/COREJS:(.*)/);
             if (match) {
                 var c = Component.get(match[1].toCamelCase());
-                var comp = Component({
+                var comp = corejs.extend(Component({
                     template: (node.innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
                     style: (node.innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,
                     config: c.config
-                }).extend(c.controller);
+                }), c.controller);
                 comp.createIn(node, 'before');
                 for (var i = 0; i < node.attributes.length; i++) {
                     var a = node.attributes[i];
