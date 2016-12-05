@@ -155,12 +155,21 @@ var Component = function () {
                     } else {
                         selector = (cssSelector + ' ') + m[1];
                     }
-                    m && sheet.addRule(selector, m[2]);
+                    m && addCSSRule(sheet, selector, m[2], 0);
                 });
 
             });
 
             styles.push({className: className, style: style});
+        }
+
+        function addCSSRule(sheet, selector, rules, index) {
+            if("insertRule" in sheet) {
+                sheet.insertRule(selector + "{" + rules + "}", index);
+            }
+            else if("addRule" in sheet) {
+                sheet.addRule(selector, rules, index);
+            }
         }
 
         return className;

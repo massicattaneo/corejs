@@ -26,6 +26,17 @@ var corejs = corejs || {};
         return corejs.extend({}, obj);
     };
 
+    corejs.removeAllChild = function (element) {
+        var fc = element.firstChild;
+
+        while ( fc ) {
+            element.removeChild( fc );
+            fc = element.firstChild;
+        }
+        return this;
+    };
+
+
     corejs.toXML = function (o) {
 
         function createNode(name, value) {

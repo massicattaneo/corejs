@@ -17,6 +17,7 @@ module.exports = (function () {
             'js/String/String.js',
             'js/Object/Object.js',
             'js/Element/Element.js',
+            'js/Date/Date.js',
             'js/Collection/Collection.js',
             'js/Need/Need.js',
             'js/Bus/Bus.js',

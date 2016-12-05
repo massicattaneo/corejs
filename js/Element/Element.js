@@ -119,6 +119,11 @@ Element.prototype.getValue = function () {
         return this.checked;
     }
 };
+Element.create = function (markup) {
+    var div = document.createElement('div');
+    div.innerHTML = markup;
+    return div.children[0];
+};
 
 /** toJSON */
 (function () {

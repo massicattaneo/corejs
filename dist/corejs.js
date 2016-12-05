@@ -155,6 +155,17 @@ var corejs = corejs || {};
         return corejs.extend({}, obj);
     };
 
+    corejs.removeAllChild = function (element) {
+        var fc = element.firstChild;
+
+        while ( fc ) {
+            element.removeChild( fc );
+            fc = element.firstChild;
+        }
+        return this;
+    };
+
+
     corejs.toXML = function (o) {
 
         function createNode(name, value) {
@@ -303,6 +314,11 @@ Element.prototype.getValue = function () {
         return this.checked;
     }
 };
+Element.create = function (markup) {
+    var div = document.createElement('div');
+    div.innerHTML = markup;
+    return div.children[0];
+};
 
 (function () {
 
@@ -348,6 +364,30 @@ Element.prototype.getValue = function () {
 
 })();
 
+
+
+(function () {
+    var dayNames = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+    var monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+
+    Date.prototype.toFormatString = function (pattern) {
+        pattern = pattern.replace(/dddd/g, this.getDayName());
+        pattern = pattern.replace(/ddd/g, this.getShortDayName());
+        pattern = pattern.replace(/dd/g, this.getDate().toString().padLeft(2));
+        pattern = pattern.replace(/mmmm/g, this.getMonthName());
+        pattern = pattern.replace(/mmm/g, this.getShortMonthName());
+        pattern = pattern.replace(/mm/g, (this.getMonth() + 1).toString().padLeft(2));
+        pattern = pattern.replace(/yyyy/g, this.getFullYear().toString());
+        pattern = pattern.replace(/yy/g, this.getFullYear().toString().substr(2, 2));
+        return pattern;
+    };
+
+    Date.prototype.getMonthName = function () {return monthNames[this.getMonth()];};
+    Date.prototype.getShortMonthName = function () { return monthNames[this.getMonth()].substr(0,3); };
+    Date.prototype.getDayName = function () { return dayNames[this.getDay()]; };
+    Date.prototype.getShortDayName = function () { return dayNames[this.getDay()].substr(0,3); };
+
+})();
 
 
 var Collection = function () {
@@ -1080,12 +1120,21 @@ var Component = function () {
                     } else {
                         selector = (cssSelector + ' ') + m[1];
                     }
-                    m && sheet.addRule(selector, m[2]);
+                    m && addCSSRule(sheet, selector, m[2], 0);
                 });
 
             });
 
             styles.push({className: className, style: style});
+        }
+
+        function addCSSRule(sheet, selector, rules, index) {
+            if("insertRule" in sheet) {
+                sheet.insertRule(selector + "{" + rules + "}", index);
+            }
+            else if("addRule" in sheet) {
+                sheet.addRule(selector, rules, index);
+            }
         }
 
         return className;

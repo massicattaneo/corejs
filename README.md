@@ -7,9 +7,10 @@ Basic Javascript Framework:
 - Array extensions
 - Object extensions
 - HTML Element extensions
+- Date extensions
 - Collections
 - Promises
-- Dependecy Injection
+- Dependency Injection
 - Http requests
 - Bus
 
@@ -21,7 +22,7 @@ npm run ut
 
 Or to run tests in a single folder
 ```
-npm run ut -- --test=<fodler-name>
+npm run ut -- --test=<folder-name>
 ```
 
 BUILD
