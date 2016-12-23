@@ -13,16 +13,16 @@ module.exports = (function () {
 
     return {
         files: [
+            'js/Core/Core.js',
             'js/Array/Array.js',
             'js/String/String.js',
             'js/Object/Object.js',
-            'js/Element/Element.js',
+            'js/Node/Node.js',
             'js/Date/Date.js',
-            'js/Collection/Collection.js',
             'js/Need/Need.js',
-            'js/Bus/Bus.js',
-            'js/navigator/navigator.js',
-            'js/Component/Component.js'
+            //'js/Bus/Bus.js',
+            //'js/navigator/navigator.js',
+            //'js/Component/Component.js'
         ],
         tests: ['js/**/*Spec.js'],
         mocks: ['mocks/userAgentStrings.js'],

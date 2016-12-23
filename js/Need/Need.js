@@ -9,7 +9,7 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-var Need = function () {
+cjs.Need = function () {
     /** CONSTANTS **/
     var c = {
         WAIT: 0, DONE: 1, FAIL: 2
@@ -19,15 +19,17 @@ var Need = function () {
     var finalize = function (props, status, data) {
         props.returnData[status] = data;
         props.status = status;
-        props.collection.filter(status).forEach(function (action) {
-            action(data, props.id);
+        props.collection.filter(function (o) {
+            return o.status === status;
+        }).forEach(function (o) {
+            o.action(data, props.id);
         });
     };
     var attach = function (props, status, action) {
         if (props.status === status) {
             action(props.returnData[status], props.id);
         } else {
-            props.collection.add(action, status);
+            props.collection.push({action: action, status: status});
         }
     };
     var createSingleNeed = function () {
@@ -36,7 +38,7 @@ var Need = function () {
             returnData: [],
             status: c.WAIT,
             id: -1,
-            collection: Collection()
+            collection: []
         };
 
         m.resolve = function (data) {
@@ -98,12 +100,12 @@ var Need = function () {
             count: 0,
             counter: 0,
             status: c.WAIT,
-            collection: Collection()
+            collection: []
         };
 
         m.add = function (promise) {
             promise.setId(p.counter++);
-            p.collection.add(promise);
+            p.collection.push(promise);
             promise.then(function (data, id) {
                 m.itemOnDone(data, id);
             });
@@ -115,7 +117,7 @@ var Need = function () {
         m.itemOnDone = function (data, id) {
             p.count += 1;
             p.args[id] = data;
-            if (p.count === p.collection.size()) {
+            if (p.count === p.collection.length) {
                 p.status = c.DONE;
                 p.done.forEach(function (func) {
                     func.apply(this, getData(p));
@@ -134,7 +136,7 @@ var Need = function () {
             callAction(c.FAIL, action, p);
         };
         m.get = function (index) {
-            return p.collection.get(index);
+            return p.collection[index];
         };
         m.status = function () {
             return p.status;

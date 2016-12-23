@@ -1,13 +1,13 @@
 describe('GLOBAL - NEED', function () {
 
     it('should exist a function Promise', function () {
-        expect(Need).toBeDefined();
+        expect(cjs.Need).toBeDefined();
     });
 
     describe('On creating a need', function () {
         var p;
         beforeEach(function () {
-            p = Need();
+            p = cjs.Need();
         });
 
         it("should return an object", function () {
@@ -122,7 +122,7 @@ describe('GLOBAL - NEED', function () {
     describe('On creating a multi need - passing an array', function () {
         var ps, p1, p2;
         beforeEach(function () {
-            p1 = Need(), p2 = Need(), ps = Need([p1, p2]);
+            p1 = cjs.Need(), p2 = cjs.Need(), ps = cjs.Need([p1, p2]);
         });
 
         it("should call then when all promises are done ", function () {
@@ -162,7 +162,7 @@ describe('GLOBAL - NEED', function () {
 
         it('should work with a lot of promises', function () {
             var done = false;
-            var pros = Need([Need(), Need(), Need(), Need(), Need(), Need()]);
+            var pros = cjs.Need([cjs.Need(), cjs.Need(), cjs.Need(), cjs.Need(), cjs.Need(), cjs.Need()]);
             pros.then(function () {
                 done = true;
             });
@@ -179,8 +179,8 @@ describe('GLOBAL - NEED', function () {
 
         it('should work with a lot of promises resolving and failing', function () {
             var done = false;
-            var newp = Need();
-            var pros = Need([newp, Need(), Need(), Need(), Need(), Need()]);
+            var newp = cjs.Need();
+            var pros = cjs.Need([newp, cjs.Need(), cjs.Need(), cjs.Need(), cjs.Need(), cjs.Need()]);
             expect(done).toBeFalsy();
             pros.then(function () {
                 done = true;
@@ -196,8 +196,8 @@ describe('GLOBAL - NEED', function () {
         });
 
         it("should work also with promise just resolved", function () {
-            var _prs = Need([]), done = false,
-                _p1 = Need(), _p2 = Need();
+            var _prs = cjs.Need([]), done = false,
+                _p1 = cjs.Need(), _p2 = cjs.Need();
 
             _p1.resolve();
             _prs.add(_p1);
@@ -230,12 +230,12 @@ describe('GLOBAL - NEED', function () {
 
         var queueArray, queue, actions = {}, needs = {};
         beforeEach(function () {
-            actions['a1'] = function () {return needs['a1'] = Need()};
-            actions['a2'] = function () {return needs['a2'] = Need()};
+            actions['a1'] = function () {return needs['a1'] = cjs.Need()};
+            actions['a2'] = function () {return needs['a2'] = cjs.Need()};
             spyOn(actions, 'a1').and.callThrough();
             spyOn(actions, 'a2').and.callThrough();
             queueArray = [actions['a1'], actions['a2']];
-            queue = Need(queueArray);
+            queue = cjs.Need(queueArray);
         });
 
         it('should have the method start', function () {
@@ -300,7 +300,7 @@ describe('GLOBAL - NEED', function () {
 
                 beforeEach(function () {
                     actions['a3'] = function () {
-                        return needs['a3'] = Need();
+                        return needs['a3'] = cjs.Need();
                     };
                     queue.push(actions['a3']);
                     needs['a1'].resolve(2);

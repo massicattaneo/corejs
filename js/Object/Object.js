@@ -8,10 +8,11 @@
  //       Copyright (c) 2016.
  //////////////////////////////////////////////////////////////////////////////
  */
-var corejs = corejs || {};
-(function (corejs) {
+(function () {
 
-    corejs.extend = function () {
+    cjs.Object = {};
+
+    cjs.Object.extend = function () {
         var self = arguments[0];
         for (var i = 0, j = arguments.length; i < j; i++) {
             var obj = arguments[i];
@@ -22,22 +23,11 @@ var corejs = corejs || {};
         return self;
     };
 
-    corejs.clone = function (obj) {
-        return corejs.extend({}, obj);
+    cjs.Object.clone = function (obj) {
+        return cjs.Object.extend({}, obj);
     };
 
-    corejs.removeAllChild = function (element) {
-        var fc = element.firstChild;
-
-        while ( fc ) {
-            element.removeChild( fc );
-            fc = element.firstChild;
-        }
-        return this;
-    };
-
-
-    corejs.toXML = function (o) {
+    cjs.Object.toXML = function (o) {
 
         function createNode(name, value) {
             var child = document.createElement(name);
@@ -76,4 +66,4 @@ var corejs = corejs || {};
         return scanNodes(o, 'Model');
     };
 
-})(corejs);
+})(cjs);

@@ -9,14 +9,17 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-Array.prototype.fillWithIndexes = function(lastIndex, firstIndex) {
-    firstIndex = firstIndex || 0;
-    for (var i = 0; i <= lastIndex - firstIndex; i++) {
-        this[i] = i + firstIndex;
-    }
-    return this;
-};
-
-Array.prototype.clone = function() {
-    return this.slice(0);
-};
+(function () {
+    cjs.Array = {};
+    cjs.Array.clone = function (array) {
+        return array.slice(0);
+    };
+    cjs.Array.createWithIndexes = function(lastIndex, firstIndex) {
+        var array = [];
+        firstIndex = firstIndex || 0;
+        for (var i = 0; i <= lastIndex - firstIndex; i++) {
+            array[i] = i + firstIndex;
+        }
+        return array;
+    };
+})();
