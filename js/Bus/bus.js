@@ -10,7 +10,7 @@
  */
 
 
-var Bus = function () {
+cjs.bus = function () {
 
     var events = [];
     var obj = {};

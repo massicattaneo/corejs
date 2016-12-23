@@ -9,11 +9,11 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-describe('Bus', function () {
+describe('cjs.bus', function () {
 
     it('should have fire and on methods', function () {
-        expect(Bus.fire).toBeDefined();
-        expect(Bus.on).toBeDefined();
+        expect(cjs.bus.fire).toBeDefined();
+        expect(cjs.bus.on).toBeDefined();
     });
 
     describe('On using the bus', function () {
@@ -24,39 +24,39 @@ describe('Bus', function () {
         };
 
         beforeEach(function () {
-            Bus.on('test', callback)
+            cjs.bus.on('test', callback)
         });
 
         afterEach(function () {
-            Bus.clear();
+            cjs.bus.clear();
         });
 
         it('should "on" a callback', function () {
-            Bus.on('test', function () {});
+            cjs.bus.on('test', function () {});
         });
 
         it('should "fire" the callback when called', function () {
             expect(fired).toEqual(false);
-            Bus.fire('test');
+            cjs.bus.fire('test');
             expect(fired).toEqual(true);
-            Bus.fire('test', 'value');
+            cjs.bus.fire('test', 'value');
             expect(fired).toEqual('value');
         });
 
         it('should "off" the callback', function () {
             fired = false;
-            Bus.off('test', callback);
-            Bus.fire('test');
+            cjs.bus.off('test', callback);
+            cjs.bus.fire('test');
             expect(fired).toEqual(false);
         });
 
         it('should execute "once" a callback', function () {
-            Bus.clear();
-            Bus.once('test', callback);
+            cjs.bus.clear();
+            cjs.bus.once('test', callback);
             expect(fired).toEqual(false);
-            Bus.fire('test');
+            cjs.bus.fire('test');
             expect(fired).toEqual(true);
-            Bus.fire('test', 'value');
+            cjs.bus.fire('test', 'value');
             expect(fired).toEqual(true);
         });
 
@@ -65,22 +65,22 @@ describe('Bus', function () {
             var fired = false;
 
             beforeEach(function () {
-                Bus.clear();
-                Bus.on('test', function () {
+                cjs.bus.clear();
+                cjs.bus.on('test', function () {
                     fired = 2;
                 }, 2);
 
-                Bus.on('test', function () {
+                cjs.bus.on('test', function () {
                     fired = 1;
                 }, 1);
 
-                Bus.on('test', function () {
+                cjs.bus.on('test', function () {
                     fired = 3;
                 }, 2);
             });
 
             it('should respect the order', function () {
-                Bus.fire('test');
+                cjs.bus.fire('test');
                 expect(fired).toEqual(3);
             });
 

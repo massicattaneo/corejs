@@ -184,6 +184,7 @@ cjs.Need = function () {
     };
 
     return function Need(param) {
+
         if (param === undefined) {
             return createSingleNeed();
         } else if (Array.isArray(param)) {

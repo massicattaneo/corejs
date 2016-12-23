@@ -20,8 +20,8 @@ module.exports = (function () {
             'js/Node/Node.js',
             'js/Date/Date.js',
             'js/Need/Need.js',
-            //'js/Bus/Bus.js',
-            //'js/navigator/navigator.js',
+            'js/Bus/bus.js',
+            'js/navigator/navigator.js',
             //'js/Component/Component.js'
         ],
         tests: ['js/**/*Spec.js'],

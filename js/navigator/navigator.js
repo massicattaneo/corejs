@@ -9,10 +9,13 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
+cjs.navigator = {};
+
 (function (obj) {
 
     /** PACKAGES AND IMPORT FILES **/
-    var packages = Collection();
+    var packages = new (cjs.CollectionOf(Object).create())();
+
     var imports = function (url) {
         return packages.get(url) || createPackage(url)
     };
@@ -23,7 +26,7 @@
     var importer = {
         js: function (o, imported, pack) {
             eval('imported = ' + o.response.response);
-            var needs = Need([]), total = 0;
+            var needs = cjs.Need([]), total = 0;
             var importer = function (url) {
                 total++;
                 needs.add(imports(url));
@@ -50,7 +53,7 @@
     };
 
     var createPackage = function (url) {
-        var pack = Need(), imported;
+        var pack = cjs.Need(), imported;
         packages.add(pack, url);
         obj.get(url).then(function (o) {
             var ext = url.substr(url.lastIndexOf('.') +1);
@@ -62,7 +65,7 @@
 
     obj.send = function (method, url, options) {
         options = options || {};
-        var promise = Need();
+        var promise = cjs.Need();
         var request = getHttpObject();
         request.open(method, url, 1);
         request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
@@ -107,7 +110,7 @@
         };
 
         return function (response) {
-            return corejs.extend({response: response}, abstract);
+            return cjs.Object.extend({response: response}, abstract);
         }
     }();
     var getHttpObject = function () {
@@ -170,4 +173,4 @@
         return ret;
     }
 
-})(navigator);
+})(cjs.navigator);

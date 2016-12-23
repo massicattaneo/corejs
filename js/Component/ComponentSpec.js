@@ -1,4 +1,4 @@
-describe('GLOBAL - COMPONENT', function () {
+xdescribe('GLOBAL - COMPONENT', function () {
     var server;
 
     beforeEach(function () {
