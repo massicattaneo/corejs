@@ -1192,7 +1192,7 @@ cjs.Component = function () {
 
     var parseNodeComponent = function (node, obj) {
         if (node.getTagName()) {
-            var match = node.getTagName().match(/COREJS:(.*)/);
+            var match = node.getTagName().match(/CJS:(.*)/);
             if (match) {
                 var c = Component.get(match[1].toCamelCase());
                 var comp = cjs.Object.extend(Component({

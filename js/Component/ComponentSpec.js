@@ -96,7 +96,7 @@ describe('GLOBAL - COMPONENT', function () {
                 template: '<div><input data-item="input" type="text"><div data-item="error"></div></div>',
                 style: '{color: red}'
             });
-            c = cjs.Component({template: '<div><corejs:input data-id="c1"></corejs:input><corejs:input data-id="c2"></corejs:input></div>'});
+            c = cjs.Component({template: '<div><cjs:input data-id="c1"></cjs:input><cjs:input data-id="c2"></cjs:input></div>'});
             c.createIn(document.body);
         });
 
@@ -128,7 +128,7 @@ describe('GLOBAL - COMPONENT', function () {
                 style: '{color: $color}'
             });
             c = cjs.Component({
-                template: '<div><corejs:new-input data-id="c1"><id>{{mainId}}</id><color>{{mainColor}}</color></corejs:new-input>',
+                template: '<div><cjs:new-input data-id="c1"><id>{{mainId}}</id><color>{{mainColor}}</color></cjs:new-input>',
                 config: {mainColor: 'red', mainId: 'id1'}
             });
             c.createIn(document.body);
@@ -148,7 +148,7 @@ describe('GLOBAL - COMPONENT', function () {
                 name: 'bind',
                 template: '<div><span data-bind="app/name"></span><span data-bind="app/version"></span></div>'
             });
-            c = cjs.Component({template: '<div id="bind"><corejs:bind data-id="c1"/></div>'});
+            c = cjs.Component({template: '<div id="bind"><cjs:bind data-id="c1"/></div>'});
             c.createIn(document.body);
         });
 
