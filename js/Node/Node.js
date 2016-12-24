@@ -126,6 +126,9 @@
         var div = document.createElement('div');
         div.innerHTML = markup;
         return div.children[0];
+        //var doc = document.implementation.createHTMLDocument("");
+        //doc.body.innerHTML = markup;
+        //return doc.body.childNodes[0];
     }
 
     /** toJSON */
@@ -169,15 +172,7 @@
         return parseNode(this.children);
     }
 
-    function applyFunction(elements, callback, args) {
-        var result;
-        elements.forEach(function (e) {
-            result = callback.apply(e, args);
-        });
-        return result;
-    }
-
-    var Nodes = function Nodes(elements) {
+    function Node(element) {
         var obj = {};
 
         [addClass, clearClass, removeClass, hasClass, toggleClass,
@@ -185,27 +180,51 @@
             fire, getValue, toJSON, removeAllChildren]
             .forEach(function (func) {
                 obj[func.name] = function () {
-                    var result = applyFunction(elements, func, arguments);
-                    return result !== undefined ? result : obj;
+                    return func.apply(element, arguments) || obj;
                 }
             });
 
-        obj.get = function (index) {
-            return elements[index];
+        obj.get = function () {
+            return element;
+        };
+
+        obj.getAttribute = function(attrName) {
+            if (!(element && element.getAttribute)) return null;
+            return element.getAttribute(attrName)
+        };
+
+        obj.getTagName = function() {
+            return element.tagName
+        };
+
+        obj.attributes = function () {
+            return element.attributes;
+        };
+
+        obj.setAttribute = function (name, value) {
+            return element.setAttribute(name, value);
+        };
+
+        obj.children = function() {
+            if (!(element && element.childNodes)) return [];
+            var nodes = Array.prototype.slice.call(element.childNodes);
+            return nodes.map(function(e) {
+                return Node(e)
+            })
         };
 
         return obj;
-    };
+    }
 
     cjs.Node = function (node) {
         if (typeof node === 'object') {
-            return Nodes([getTarget(node)]);
+            return Node(getTarget(node));
         }
         if (node.indexOf('#') === -1) {
-            return Nodes([create(node)]);
+            return Node(create(node));
         }
-        var elements = [document.getElementById(node.replace('#', ''))];
-        return Nodes(elements);
+        var e = document.getElementById(node.replace('#', ''));
+        return Node(e);
     };
 
 //

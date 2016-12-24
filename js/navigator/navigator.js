@@ -14,7 +14,7 @@ cjs.navigator = {};
 (function (obj) {
 
     /** PACKAGES AND IMPORT FILES **/
-    var packages = new (cjs.CollectionOf(Object).create())();
+    var packages = cjs.Collection();
 
     var imports = function (url) {
         return packages.get(url) || createPackage(url)

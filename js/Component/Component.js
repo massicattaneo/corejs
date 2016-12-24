@@ -35,20 +35,20 @@ var Component = function () {
 
             obj.collect = function () {
                 collection.forEach(function (o) {
-                    navigator.send('GET', '/data/' + o.attribute).then(function (data) {
+                    cjs.navigator.send('GET', '/data/' + o.attribute).then(function (data) {
                         injectModel(data.toJSON(), o.item, o.attribute);
                     });
                 });
             };
 
             obj.save = function (item) {
-                var elem = this.get(item);
-                return navigator.send('POST', '/data/' + elem.attribute);
+                var elem = obj.get(item);
+                return cjs.navigator.send('POST', '/data/' + elem.attribute);
             };
 
             obj.get = function (item) {
                 var elem = collection.filter(function (o) {
-                    return o.item === item;
+                    return o.item.get() === item.get();
                 });
                 return elem ? elem[0] : null;
             };
@@ -77,36 +77,34 @@ var Component = function () {
     };
 
     var attach = function (node, obj, attrName) {
-        if (node.getAttribute) {
-            var attribute = node.getAttribute(attrName);
-            if (attribute) {
-                attrName === 'data-on' && createListeners(attribute, node, obj);
-                attrName === 'data-item' && createItems(attribute, node, obj);
-                attrName === 'data-bind' && createBindings(attribute, node, obj);
-            }
+        var attribute = node.getAttribute(attrName);
+        if (attribute) {
+            attrName === 'data-on' && createListeners(attribute, node, obj);
+            attrName === 'data-item' && createItems(attribute, node, obj);
+            attrName === 'data-bind' && createBindings(attribute, node, obj);
         }
     };
 
     var parseNodeComponent = function (node, obj) {
-        if (node.tagName) {
-            var match = node.tagName.match(/COREJS:(.*)/);
+        if (node.getTagName()) {
+            var match = node.getTagName().match(/COREJS:(.*)/);
             if (match) {
                 var c = Component.get(match[1].toCamelCase());
-                var comp = corejs.extend(Component({
-                    template: (node.innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
-                    style: (node.innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,
+                var comp = cjs.Object.extend(Component({
+                    template: (node.get().innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
+                    style: (node.get().innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,
                     config: c.config
                 }), c.controller);
-                comp.createIn(node, 'before');
-                for (var i = 0; i < node.attributes.length; i++) {
-                    var a = node.attributes[i];
+                comp.createIn(node.get(), 'before');
+                for (var i = 0; i < node.attributes().length; i++) {
+                    var a = node.attributes()[i];
                     if (a.name !== 'class') {
                         comp.node.setAttribute(a.name, a.value);
                     }
                 }
-                comp.node.addClass(node.className);
+                comp.node.addClass(node.get().className);
                 obj.items.add(comp, node.getAttribute('data-id'));
-                node.parentNode.removeChild(node);
+                node.get().parentNode.removeChild(node.get());
                 return comp.node;
             }
         }
@@ -114,8 +112,7 @@ var Component = function () {
     };
 
     var parseNode = function (node, obj) {
-        var nodes = Array.prototype.slice.call(node.childNodes);
-        nodes.forEach(function (n) {
+        node.children().forEach(function (n) {
             parseNode(n, obj);
         });
         node = parseNodeComponent(node, obj) || node;
@@ -212,10 +209,10 @@ var Component = function () {
         var style = parseStyle(p.style || '', config);
         var template = parseTemplate(p.template || '', config);
 
-        var node = Element.create(template);
+        var node = cjs.Node(template);
 
         var obj = {
-            items: Collection(),
+            items: cjs.Collection(),
             template: template,
             style: style,
             config: config,
@@ -224,10 +221,10 @@ var Component = function () {
 
         obj.createIn = function (parent, position) {
             if (!position) {
-                parent.appendChild(node);
+                parent.appendChild(node.get(0));
             } else {
-                position === 'before' && parent.parentNode.insertBefore(node, parent);
-                position === 'after' && parent.parentNode.insertBefore(node, parent.nextSibling);
+                position === 'before' && parent.parentNode.insertBefore(node.get(), parent);
+                position === 'after' && parent.parentNode.insertBefore(node.get(), parent.nextSibling);
             }
             if (style) {
                 node.addClass(appendStyle(style));
@@ -243,14 +240,15 @@ var Component = function () {
 
         obj.save = function () {
             var needs = [];
+
             (function saveNode(n) {
                 if (dataProxy.get(n)) {
                     needs.push(dataProxy.save(n))
                 }
-                Array.prototype.slice.call(n.childNodes).forEach(saveNode);
-            })(obj.node);
+                n.children().forEach(saveNode);
+            })(node);
 
-            return Need(needs);
+            return cjs.Need(needs);
         };
 
         return obj;

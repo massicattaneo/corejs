@@ -237,4 +237,8 @@ function cjs() {}
         }
     };
 
+    _c.Collection = function (a) {
+        return new (cjs.CollectionOf(Object).create())(a)
+    }
+
 })(cjs);

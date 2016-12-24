@@ -22,7 +22,7 @@ module.exports = (function () {
             'js/Need/Need.js',
             'js/Bus/bus.js',
             'js/navigator/navigator.js',
-            //'js/Component/Component.js'
+            'js/Component/Component.js'
         ],
         tests: ['js/**/*Spec.js'],
         mocks: ['mocks/userAgentStrings.js'],

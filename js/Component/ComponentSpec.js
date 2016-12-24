@@ -1,4 +1,4 @@
-xdescribe('GLOBAL - COMPONENT', function () {
+describe('GLOBAL - COMPONENT', function () {
     var server;
 
     beforeEach(function () {
@@ -34,7 +34,7 @@ xdescribe('GLOBAL - COMPONENT', function () {
             spyOn(test, 'click1');
             spyOn(test, 'click2');
 
-            $('#button1').click();
+            cjs.Node('#button1').fire('click');
             expect(test.click1).toHaveBeenCalled();
             expect(test.click2).not.toHaveBeenCalled();
             $('#button2').click();
@@ -135,7 +135,7 @@ xdescribe('GLOBAL - COMPONENT', function () {
         });
 
         it('should add it to the template', function () {
-            expect(c.get('c1').get('error').id).toEqual('id1');
+            expect(c.get('c1').get('error').get().id).toEqual('id1');
         });
 
     });
