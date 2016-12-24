@@ -20,7 +20,7 @@ var Component = function () {
         value.split('/').forEach(function (item) {
             v = v[item];
         });
-        node.setInnerText(v);
+        node.setText(v);
     };
 
     var components = [],
@@ -102,7 +102,7 @@ var Component = function () {
                         comp.node.setAttribute(a.name, a.value);
                     }
                 }
-                comp.node.addClass(node.get().className);
+                comp.node.addStyle(node.get().className);
                 obj.items.add(comp, node.getAttribute('data-id'));
                 node.get().parentNode.removeChild(node.get());
                 return comp.node;
@@ -227,7 +227,7 @@ var Component = function () {
                 position === 'after' && parent.parentNode.insertBefore(node.get(), parent.nextSibling);
             }
             if (style) {
-                node.addClass(appendStyle(style));
+                node.addStyle(appendStyle(style));
             }
             node && parseNode(node, obj);
             obj.init && obj.init();

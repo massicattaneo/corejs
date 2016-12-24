@@ -1,22 +1,268 @@
 /**
  * corejs - Javascript Framework
- * @version v1.0.0
+ * @version v1.1.0
  * @link https://github.com/massicattaneo/corejs#readme
  * @license ISC
  * @author Massimiliano Cattaneo
  */
+function cjs() {}
 
-Array.prototype.fillWithIndexes = function(lastIndex, firstIndex) {
-    firstIndex = firstIndex || 0;
-    for (var i = 0; i <= lastIndex - firstIndex; i++) {
-        this[i] = i + firstIndex;
+(function(_c) {
+
+    _c.create = function(object) {
+        return extendClass(new cjs(), object || {});
+    };
+
+    _c.extend = function(ParentClass) {
+        return {
+            create: function(object) {
+                return extendClass(new ParentClass(), object || {});
+            },
+            CollectionOf: function(cjs) {
+                return {
+                    create: function(object) {
+                        var Func = extendClass(new ParentClass(), createCollectionProto(cjs));
+                        return extendClass(new Func(), object || {});
+                    }
+                };
+            }
+        };
+    };
+
+    var extendClass = function (parentProto, childProto) {
+        var _class = ExtendedClass(childProto.constructor, parentProto.constructor);
+        _class.prototype = parentProto;
+        for (var prop in childProto) {
+            _class.prototype[prop] = ExtendedClass(childProto[prop], parentProto[prop]);
+        }
+        return _class;
+    };
+
+    _c.CollectionOf = function (cjs) {
+        return {
+            create: function(object) {
+                return extendClass(createCollectionProto(cjs), object || {});
+            }
+        };
+    };
+
+    var sortTogether = function(array1, array2, versus) {
+        var merged = [];
+        array1.each(function (index) {
+            merged.push({a1: array1[index], a2: array2[index]});
+        });
+        merged.sort(function (o1, o2) {
+            if (!versus) {
+                return ((o1.a1 < o2.a1) ? -1 : ((o1.a1 === o2.a1) ? 0 : 1));
+            } else {
+                return ((o1.a1 > o2.a1) ? -1 : ((o1.a1 === o2.a1) ? 0 : 1));
+            }
+        });
+        merged.each(function (index, item) {
+            array1[index] = item.a1;
+            array2[index] = item.a2;
+        });
+    };
+
+    var swapArray = function(array, from, to){
+        var removed = array.splice(to, 1, array[from]);
+        array[from] = removed[0];
+    };
+
+    var createCollectionProto = function (ClassType) {
+        var proto = {
+            VERSUS: {
+                ascending: 0,
+                descending: 1
+            },
+            constructor: function(array) {
+                this.initValues();
+                typeof array === 'array' && array.each(function (index, item) {
+                    item && this.add(item);
+                }, this);
+            },
+            initValues: function () {
+                this.items = [];
+                this.keys = [];
+                this.__counterId = 0;
+            },
+            size: function() {
+                return this.items.length;
+            },
+            isEmpty: function() {
+                return this.size() === 0;
+            },
+            add: function (item, key) {
+                var keyHere = (typeof key === 'undefined') ? this.__counterId++ : key;
+                this.keys.push(keyHere);
+                this.items.push(item);
+                return keyHere;
+            },
+            sortByItem: function(versus) {
+                sortTogether(this.items, this.keys, versus);
+            },
+            sortByKey: function(versus) {
+                sortTogether(this.keys, this.items, versus);
+            },
+            sortBy: function(itemName, versus) {
+                var items1 = [], items2 = [];
+                this.each(function (i, k, o) {
+                    items1.push(o[itemName]);
+                    items2.push(o[itemName]);
+                });
+                sortTogether(items1, this.keys, versus);
+                sortTogether(items2, this.items, versus);
+            },
+            newItem: function (key) {
+                var newItem = new ClassType();
+                this.add(newItem, key);
+                return newItem;
+            },
+            get: function (key) {
+                return this.items[this.keys.indexOf(key)];
+            },
+            getAt: function (index) {
+                return this.items[index];
+            },
+            getKeyAt: function (index) {
+                return this.keys[index];
+            },
+            set: function (key, newValue) {
+                var index = this.keys.indexOf(key);
+                this.items[index] = newValue;
+                return index;
+            },
+            setAt: function (index, newValue) {
+                this.items[index] = newValue;
+                return this.keys[index];
+            },
+            setKey: function (oldKey, newKey) {
+                var index = this.keys.indexOf(oldKey);
+                this.keys[index] = newKey;
+                return index;
+            },
+            getLast: function (key) {
+                return this.items[this.keys.lastIndexOf(key)];
+            },
+            swap: function (index1, index2) {
+                swapArray(this.items, index1, index2);
+                swapArray(this.keys, index1, index2);
+            },
+            getCollection: function (attribute, value) {
+                var coll = new (cjs.CollectionOf(ClassType).create())();
+                this.each(function(index, key, object) {
+                    if (object[attribute] === value) {
+                        coll.add(object, key);
+                    }
+                });
+                return coll;
+            },
+            indexOf: function (item) {
+                return this.items.indexOf(item);
+            },
+            addCollection: function(collection) {
+                var self=this;
+                collection.each(function(index,key,object) {
+                    self.add(object,key);
+                });
+            },
+            remove: function (key) {
+                var removed;
+                var index = 0;
+                do {
+                    index = this.keys.indexOf(key);
+                    if (index !== -1) {
+                        this.keys.splice(index,1);
+                        removed = this.items.splice(index,1);
+                    }
+                } while (index !== -1);
+                return removed[0] || null;
+            },
+            removeAt: function (index) {
+                this.keys.splice(index,1);
+                return this.items.splice(index,1)[0];
+            },
+            removeItem: function (item) {
+                var index = this.indexOf(item);
+                var key = this.keys[index];
+                return this.remove(key);
+            },
+            filter: function(key) {
+                var coll = new (cjs.CollectionOf(ClassType).create())();
+                this.each(function(i, k, object) {
+                    if (typeof key === 'undefined' || k === key) {
+                        coll.add(object, key);
+                    }
+                });
+                return coll;
+            },
+            clone: function () {
+                return this.filter();
+            },
+            each: function(callback, thisArg) {
+                for (var index = 0; index < this.items.length; index++) {
+                    callback.call(thisArg || this, parseInt(index, 10), this.keys[index], this.items[index]);
+                }
+            },
+            clear: function() {
+                this.items = [];
+                this.keys = [];
+            },
+            toArray: function() {
+                var array = [];
+                this.each(function(index,key,value) {
+                    array.push(value);
+                });
+                return array;
+            },
+            toJSON: function() {
+                var toJSON = {};
+                this.each(function(index, key, value) {
+                    toJSON[key] = value;
+                });
+                return toJSON;
+            }
+        };
+        return proto;
+    };
+
+    function isNotNative(constructor) {
+        return constructor && constructor.toString().indexOf('native code') === -1;
     }
-    return this;
-};
 
-Array.prototype.clone = function() {
-    return this.slice(0);
-};
+    var ExtendedClass = function (childConstructor, parentConstructor) {
+        if (typeof childConstructor === 'function') {
+            return function () {
+                this.parent = parentConstructor;
+                return (isNotNative(childConstructor)) ? childConstructor.apply(this, arguments) : parentConstructor.apply(this, arguments);
+            };
+        } else {
+            return childConstructor;
+        }
+    };
+
+    _c.Collection = function (a) {
+        return new (cjs.CollectionOf(Object).create())(a)
+    }
+
+})(cjs);
+
+
+(function () {
+    cjs.Array = {};
+    cjs.Array.clone = function (array) {
+        return array.slice(0);
+    };
+    cjs.Array.createWithIndexes = function(lastIndex, firstIndex) {
+        var array = [];
+        firstIndex = firstIndex || 0;
+        for (var i = 0; i <= lastIndex - firstIndex; i++) {
+            array[i] = i + firstIndex;
+        }
+        return array;
+    };
+})();
+
 
 String.prototype.replaceAt = function (start, length, string) {
     return this.substr(0, start) + string + this.substr(start + length);
@@ -137,10 +383,11 @@ String.prototype.toDate = function () {
 
 
 
-var corejs = corejs || {};
-(function (corejs) {
+(function () {
 
-    corejs.extend = function () {
+    cjs.Object = {};
+
+    cjs.Object.extend = function () {
         var self = arguments[0];
         for (var i = 0, j = arguments.length; i < j; i++) {
             var obj = arguments[i];
@@ -151,22 +398,11 @@ var corejs = corejs || {};
         return self;
     };
 
-    corejs.clone = function (obj) {
-        return corejs.extend({}, obj);
+    cjs.Object.clone = function (obj) {
+        return cjs.Object.extend({}, obj);
     };
 
-    corejs.removeAllChild = function (element) {
-        var fc = element.firstChild;
-
-        while ( fc ) {
-            element.removeChild( fc );
-            fc = element.firstChild;
-        }
-        return this;
-    };
-
-
-    corejs.toXML = function (o) {
+    cjs.Object.toXML = function (o) {
 
         function createNode(name, value) {
             var child = document.createElement(name);
@@ -205,122 +441,123 @@ var corejs = corejs || {};
         return scanNodes(o, 'Model');
     };
 
-})(corejs);
+})(cjs);
 
-
-Element.prototype.addClass = function () {
-    for (var a = 0; a < arguments.length; a++) {
-        var className = arguments[a].trim();
-        if (this.className) {
-            if (!this.className.match(className)) {
-                this.className += ' ' + className;
-            }
-        } else {
-            this.className = className;
-        }
-    }
-    return this;
-};
-
-Element.prototype.clearClass = function () {
-    this.className = "";
-    return this;
-};
-
-Element.prototype.removeClass = function () {
-    for (var a = 0; a < arguments.length; a++) {
-        var className = arguments[a].trim();
-        if (this.className.match(className)) {
-            this.className = this.className.replace(className, '').replace(/\s\s/g, ' ').trim();
-        }
-    }
-    return this;
-};
-
-Element.prototype.hasClass = function (className) {
-    return this.className.match(className);
-};
-
-Element.prototype.toggleClass = function (className) {
-    if (this.hasClass(className)) {
-        this.removeClass(className);
-    } else {
-        this.addClass(className);
-    }
-    return this;
-};
-
-Element.prototype.addListener = function (action, callback) {
-    this._listeners = this._listeners || [];
-    this._listeners.push({
-        action: action,
-        callback: callback
-    });
-    if (this.addEventListener) {
-        this.addEventListener(action, callback);
-    } else {
-        this.attachEvent('on' + action, callback);
-    }
-};
-
-Element.prototype.removeListener = function (action, callback) {
-    if (this.removeEventListener) {
-        this.removeEventListener(action, callback);
-    } else {
-        this.detachEvent('on' + action, callback);
-    }
-};
-
-Element.prototype.resetListeners = function () {
-    if (this._listeners) {
-        this._listeners.forEach(function (listener) {
-            this.removeListener(listener.action, listener.callback)
-        }, this);
-    }
-};
-
-Event.prototype.getTarget = function () {
-    var event = this || window.event;
-    return event.target || event.srcElement;
-};
-
-Element.prototype.setInnerText = function (text) {
-    this.textContent = text;
-    this.innerText = text;
-    return this;
-};
-
-Element.prototype.fire = function (action, params) {
-    if (document.action) {
-        var evt = document.createEventObject();
-        evt.data = params;
-        return this.fireEvent('on' + action, evt)
-    }
-    else {
-        var e = document.createEvent("HTMLEvents");
-        e.initEvent(action, true, true);
-        e.data = params;
-        return !this.dispatchEvent(e);
-    }
-};
-
-Element.create = function (markup) {
-    var doc = document.implementation.createHTMLDocument("");
-    doc.body.innerHTML = markup;
-    return doc.body.childNodes[0];
-};
-Element.prototype.getValue = function () {
-    if (this.getAttribute('type') === 'checkbox') {
-        return this.checked;
-    }
-};
-Element.create = function (markup) {
-    var div = document.createElement('div');
-    div.innerHTML = markup;
-    return div.children[0];
-};
 
 (function () {
+    function addStyle() {
+        for (var a = 0; a < arguments.length; a++) {
+            var className = arguments[a].trim();
+            if (this.className) {
+                if (!this.className.match(className)) {
+                    this.className += ' ' + className;
+                }
+            } else {
+                this.className = className;
+            }
+        }
+    }
+
+    function clearStyles() {
+        this.className = "";
+    }
+
+    function removeStyle() {
+        for (var a = 0; a < arguments.length; a++) {
+            var className = arguments[a].trim();
+            if (this.className.match(className)) {
+                this.className = this.className.replace(className, '').replace(/\s\s/g, ' ').trim();
+            }
+        }
+    }
+
+    function hasStyle(className) {
+        return this.className.match(className) !== null;
+    }
+
+    function toggleStyle(className) {
+        if (hasStyle.call(this, className)) {
+            removeStyle.call(this, className);
+        } else {
+            addStyle.call(this, className);
+        }
+    }
+
+    function addListener(action, callback) {
+        this._listeners = this._listeners || [];
+        this._listeners.push({
+            action: action,
+            callback: callback
+        });
+        if (this.addEventListener) {
+            this.addEventListener(action, callback);
+        } else {
+            this.attachEvent('on' + action, callback);
+        }
+    }
+
+    function removeListener(action, callback) {
+        if (this.removeEventListener) {
+            this.removeEventListener(action, callback);
+        } else {
+            this.detachEvent('on' + action, callback);
+        }
+    }
+
+    function clearListeners() {
+        if (this._listeners) {
+            this._listeners.forEach(function (listener) {
+                removeListener.call(this, listener.action, listener.callback)
+            }, this);
+        }
+    }
+
+    function removeAllChildren() {
+        var fc = this.firstChild;
+        while (fc) {
+            this.removeChild( fc );
+            fc = this.firstChild;
+        }
+        return this;
+    }
+
+    function getTarget(selector) {
+        var event = selector || window.event;
+        return event.target || event.srcElement;
+    }
+
+    function setText(text) {
+        this.textContent = text;
+        this.innerText = text;
+        return this;
+    }
+
+    function fire(action, params) {
+        if (document.action) {
+            var evt = document.createEventObject();
+            evt.data = params;
+            return this.fireEvent('on' + action, evt)
+        }
+        else {
+            var e = document.createEvent("HTMLEvents");
+            e.initEvent(action, true, true);
+            e.data = params;
+            return !this.dispatchEvent(e);
+        }
+    }
+
+    function getValue() {
+        if (this.getAttribute('type') === 'checkbox') {
+            return this.checked;
+        }
+        return this.innerText
+    }
+
+    function create(markup) {
+        var div = document.createElement('div');
+        div.innerHTML = markup;
+        return div.children[0];
+    }
 
     function getNodeValue(node) {
         var text = node.textContent || node.innerText;
@@ -358,231 +595,125 @@ Element.create = function (markup) {
         return (isEmpty(json)) ? null : json;
     }
 
-    Element.prototype.toJSON = function () {
+    function toJSON() {
         return parseNode(this.children);
-    };
+    }
 
-})();
-
-
-
-(function () {
-    var dayNames = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
-    var monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
-
-    Date.prototype.toFormatString = function (pattern) {
-        pattern = pattern.replace(/dddd/g, this.getDayName());
-        pattern = pattern.replace(/ddd/g, this.getShortDayName());
-        pattern = pattern.replace(/dd/g, this.getDate().toString().padLeft(2));
-        pattern = pattern.replace(/mmmm/g, this.getMonthName());
-        pattern = pattern.replace(/mmm/g, this.getShortMonthName());
-        pattern = pattern.replace(/mm/g, (this.getMonth() + 1).toString().padLeft(2));
-        pattern = pattern.replace(/yyyy/g, this.getFullYear().toString());
-        pattern = pattern.replace(/yy/g, this.getFullYear().toString().substr(2, 2));
-        return pattern;
-    };
-
-    Date.prototype.getMonthName = function () {return monthNames[this.getMonth()];};
-    Date.prototype.getShortMonthName = function () { return monthNames[this.getMonth()].substr(0,3); };
-    Date.prototype.getDayName = function () { return dayNames[this.getDay()]; };
-    Date.prototype.getShortDayName = function () { return dayNames[this.getDay()].substr(0,3); };
-
-})();
-
-
-var Collection = function () {
-
-    var sortTogether = function(array1, array2, versus) {
-        var merged = [];
-        array1.forEach(function (item, index) {
-            merged.push({a1: array1[index], a2: array2[index]});
-        });
-        merged.sort(function (o1, o2) {
-            if (!versus) {
-                return ((o1.a1 < o2.a1) ? -1 : ((o1.a1 === o2.a1) ? 0 : 1));
-            } else {
-                return ((o1.a1 > o2.a1) ? -1 : ((o1.a1 === o2.a1) ? 0 : 1));
-            }
-        });
-        merged.forEach(function (item, index) {
-            array1[index] = item.a1;
-            array2[index] = item.a2;
-        });
-    };
-
-    var swapArray = function(array, from, to){
-        var removed = array.splice(to, 1, array[from]);
-        array[from] = removed[0];
-    };
-
-    var proto = {
-        VERSUS: {
-            ascending: 0,
-            descending: 1
-        },
-        initValues: function () {
-            this.items = [];
-            this.keys = [];
-            this.__counterId = 0;
-        },
-        size: function () {
-            return this.items.length;
-        },
-        isEmpty: function () {
-            return this.size() === 0;
-        },
-        add: function (item, key) {
-            var keyHere = (typeof key === 'undefined') ? this.__counterId++ : key;
-            this.keys.push(keyHere);
-            this.items.push(item);
-            return keyHere;
-        },
-        sortByItem: function (versus) {
-            sortTogether(this.items, this.keys, versus);
-        },
-        sortByKey: function (versus) {
-            sortTogether(this.keys, this.items, versus);
-        },
-        sortBy: function (itemName, versus) {
-            var items1 = [], items2 = [];
-            this.forEach(function (o) {
-                items1.push(o[itemName]);
-                items2.push(o[itemName]);
-            });
-            sortTogether(items1, this.keys, versus);
-            sortTogether(items2, this.items, versus);
-        },
-        newItem: function (key) {
-            var newItem = new this.ClassType();
-            this.add(newItem, key);
-            return newItem;
-        },
-        get: function (key) {
-            return this.items[this.keys.indexOf(key)];
-        },
-        getAt: function (index) {
-            return this.items[index];
-        },
-        getKeyAt: function (index) {
-            return this.keys[index];
-        },
-        set: function (key, newValue) {
-            var index = this.keys.indexOf(key);
-            this.items[index] = newValue;
-            return index;
-        },
-        setAt: function (index, newValue) {
-            this.items[index] = newValue;
-            return this.keys[index];
-        },
-        setKey: function (oldKey, newKey) {
-            var index = this.keys.indexOf(oldKey);
-            this.keys[index] = newKey;
-            return index;
-        },
-        getLast: function (key) {
-            return this.items[this.keys.lastIndexOf(key)];
-        },
-        swap: function (index1, index2) {
-            swapArray(this.items, index1, index2);
-            swapArray(this.keys, index1, index2);
-        },
-        getCollection: function (attribute, value) {
-            var coll = Collection();
-            this.forEach(function (object, key) {
-                if (object[attribute] === value) {
-                    coll.add(object, key);
-                }
-            });
-            return coll;
-        },
-        indexOf: function (item) {
-            return this.items.indexOf(item);
-        },
-        addCollection: function (collection) {
-            collection.forEach(function (object, key) {
-                this.add(object, key);
-            }, this);
-        },
-        remove: function (key) {
-            var removed;
-            var index = 0;
-            do {
-                index = this.keys.indexOf(key);
-                if (index !== -1) {
-                    this.keys.splice(index, 1);
-                    removed = this.items.splice(index, 1);
-                }
-            } while (index !== -1);
-            return removed[0] || null;
-        },
-        removeAt: function (index) {
-            this.keys.splice(index, 1);
-            return this.items.splice(index, 1)[0];
-        },
-        removeItem: function (item) {
-            var index = this.indexOf(item);
-            var key = this.keys[index];
-            return this.remove(key);
-        },
-        filter: function (key) {
-            var coll = Collection();
-            this.forEach(function (object, k) {
-                if (typeof key === 'undefined' || k === key) {
-                    coll.add(object, k);
-                }
-            });
-            return coll;
-        },
-        clone: function () {
-            return this.filter();
-        },
-        forEach: function (callback, thisArg) {
-            for (var index = 0; index < this.items.length; index++) {
-                callback.call(thisArg || this, this.items[index], this.keys[index], parseInt(index, 10));
-            }
-        },
-        clear: function () {
-            this.items = [];
-            this.keys = [];
-        },
-        toArray: function () {
-            var array = [];
-            this.forEach(function (value) {
-                array.push(value);
-            });
-            return array;
-        },
-        toJSON: function () {
-            var toJSON = {};
-            this.forEach(function (value, key) {
-                toJSON[key] = value;
-            });
-            return toJSON;
-        }
-    };
-
-    return function (ClassType) {
+    function Node(element) {
         var obj = {};
-        corejs.extend(obj, proto);
-        obj.initValues();
-        if (Array.isArray(ClassType)) {
-            ClassType.forEach(function (item) {
-                obj.add(item);
+
+        [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
+            addListener, removeListener, clearListeners,
+            setText, getValue,
+            fire,
+            toJSON,
+            removeAllChildren]
+            .forEach(function (func) {
+                obj[func.name] = function () {
+                    var apply = func.apply(element, arguments);
+                    return apply === undefined ? obj : apply;
+                }
             });
-        } else {
-            obj.ClassType = ClassType;
-        }
+
+        obj.get = function () {
+            return element;
+        };
+
+        obj.getAttribute = function(attrName) {
+            if (!(element && element.getAttribute)) return null;
+            return element.getAttribute(attrName)
+        };
+
+        obj.getTagName = function() {
+            return element.tagName
+        };
+
+        obj.attributes = function () {
+            return element.attributes;
+        };
+
+        obj.setAttribute = function (name, value) {
+            return element.setAttribute(name, value);
+        };
+
+        obj.children = function() {
+            if (!(element && element.childNodes)) return [];
+            var nodes = Array.prototype.slice.call(element.childNodes);
+            return nodes.map(function(e) {
+                return Node(e)
+            })
+        };
 
         return obj;
     }
 
-}();
+    cjs.Node = function (node) {
+        if (typeof node === 'object') {
+            return Node(getTarget(node));
+        }
+        if (node.indexOf('#') === -1) {
+            return Node(create(node));
+        }
+        var e = document.getElementById(node.replace('#', ''));
+        return Node(e);
+    };
 
 
 
+})()
 
-var Need = function () {
+
+(function () {
+
+    var dayNames = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
+    var monthNames = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+
+    cjs.Date = cjs.create({
+        constructor: function (a) {
+            this._date = a ? new Date(a) : new Date();
+        },
+        getMonthName: function () {
+            return cjs.Date.getMothName(this._date.getMonth());
+        },
+        getShortMonthName: function () {
+            return monthNames[this._date.getMonth()].substr(0,3);
+        },
+        getDayName: function () {
+            return cjs.Date.getDayName(this._date.getDay());
+        },
+        getShortDayName: function () {
+            return dayNames[this._date.getDay()].substr(0,3)
+        },
+        format: function (pattern) {
+            pattern = pattern.replace(/dddd/g, this.getDayName());
+            pattern = pattern.replace(/Dddd/g, this.getDayName().capitalize());
+            pattern = pattern.replace(/ddd/g, this.getShortDayName());
+            pattern = pattern.replace(/Ddd/g, this.getShortDayName().capitalize());
+            pattern = pattern.replace(/dd/g, this._date.getDate().toString().padLeft(2, 0));
+            pattern = pattern.replace(/mmmm/g, this.getMonthName());
+            pattern = pattern.replace(/Mmmm/g, this.getMonthName().capitalize());
+            pattern = pattern.replace(/mmm/g, this.getShortMonthName());
+            pattern = pattern.replace(/Mmm/g, this.getShortMonthName().capitalize());
+            pattern = pattern.replace(/mm/g, (this._date.getMonth() + 1).toString().padLeft(2, 0));
+            pattern = pattern.replace(/yyyy/g, this._date.getFullYear().toString());
+            pattern = pattern.replace(/yy/g, this._date.getFullYear().toString().substr(2, 2));
+            pattern = pattern.replace(/TT/g, this._date.getHours().toString().padLeft(2,0));
+            pattern = pattern.replace(/tt/g, this._date.getMinutes().toString().padLeft(2, 0));
+            return pattern;
+        }
+    });
+
+    cjs.Date.getDayName = function (day) {
+        return dayNames[day]
+    };
+    cjs.Date.getMothName = function (day) {
+        return monthNames[day]
+    };
+
+})();
+
+
+cjs.Need = function () {
     var c = {
         WAIT: 0, DONE: 1, FAIL: 2
     };
@@ -590,15 +721,17 @@ var Need = function () {
     var finalize = function (props, status, data) {
         props.returnData[status] = data;
         props.status = status;
-        props.collection.filter(status).forEach(function (action) {
-            action(data, props.id);
+        props.collection.filter(function (o) {
+            return o.status === status;
+        }).forEach(function (o) {
+            o.action(data, props.id);
         });
     };
     var attach = function (props, status, action) {
         if (props.status === status) {
             action(props.returnData[status], props.id);
         } else {
-            props.collection.add(action, status);
+            props.collection.push({action: action, status: status});
         }
     };
     var createSingleNeed = function () {
@@ -607,7 +740,7 @@ var Need = function () {
             returnData: [],
             status: c.WAIT,
             id: -1,
-            collection: Collection()
+            collection: []
         };
 
         m.resolve = function (data) {
@@ -668,12 +801,12 @@ var Need = function () {
             count: 0,
             counter: 0,
             status: c.WAIT,
-            collection: Collection()
+            collection: []
         };
 
         m.add = function (promise) {
             promise.setId(p.counter++);
-            p.collection.add(promise);
+            p.collection.push(promise);
             promise.then(function (data, id) {
                 m.itemOnDone(data, id);
             });
@@ -685,7 +818,7 @@ var Need = function () {
         m.itemOnDone = function (data, id) {
             p.count += 1;
             p.args[id] = data;
-            if (p.count === p.collection.size()) {
+            if (p.count === p.collection.length) {
                 p.status = c.DONE;
                 p.done.forEach(function (func) {
                     func.apply(this, getData(p));
@@ -704,7 +837,7 @@ var Need = function () {
             callAction(c.FAIL, action, p);
         };
         m.get = function (index) {
-            return p.collection.get(index);
+            return p.collection[index];
         };
         m.status = function () {
             return p.status;
@@ -751,6 +884,7 @@ var Need = function () {
     };
 
     return function Need(param) {
+
         if (param === undefined) {
             return createSingleNeed();
         } else if (Array.isArray(param)) {
@@ -766,7 +900,7 @@ var Need = function () {
 
 
 
-var Bus = function () {
+cjs.bus = function () {
 
     var events = [];
     var obj = {};
@@ -817,9 +951,12 @@ var Bus = function () {
 
 
 
+cjs.navigator = {};
+
 (function (obj) {
 
-    var packages = Collection();
+    var packages = cjs.Collection();
+
     var imports = function (url) {
         return packages.get(url) || createPackage(url)
     };
@@ -830,7 +967,7 @@ var Bus = function () {
     var importer = {
         js: function (o, imported, pack) {
             eval('imported = ' + o.response.response);
-            var needs = Need([]), total = 0;
+            var needs = cjs.Need([]), total = 0;
             var importer = function (url) {
                 total++;
                 needs.add(imports(url));
@@ -857,7 +994,7 @@ var Bus = function () {
     };
 
     var createPackage = function (url) {
-        var pack = Need(), imported;
+        var pack = cjs.Need(), imported;
         packages.add(pack, url);
         obj.get(url).then(function (o) {
             var ext = url.substr(url.lastIndexOf('.') +1);
@@ -869,7 +1006,7 @@ var Bus = function () {
 
     obj.send = function (method, url, options) {
         options = options || {};
-        var promise = Need();
+        var promise = cjs.Need();
         var request = getHttpObject();
         request.open(method, url, 1);
         request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
@@ -914,7 +1051,7 @@ var Bus = function () {
         };
 
         return function (response) {
-            return corejs.extend({response: response}, abstract);
+            return cjs.Object.extend({response: response}, abstract);
         }
     }();
     var getHttpObject = function () {
@@ -975,7 +1112,7 @@ var Bus = function () {
         return ret;
     }
 
-})(navigator);
+})(cjs.navigator);
 
 
 var Component = function () {
@@ -989,7 +1126,7 @@ var Component = function () {
         value.split('/').forEach(function (item) {
             v = v[item];
         });
-        node.setInnerText(v);
+        node.setText(v);
     };
 
     var components = [],
@@ -1004,20 +1141,20 @@ var Component = function () {
 
             obj.collect = function () {
                 collection.forEach(function (o) {
-                    navigator.send('GET', '/data/' + o.attribute).then(function (data) {
+                    cjs.navigator.send('GET', '/data/' + o.attribute).then(function (data) {
                         injectModel(data.toJSON(), o.item, o.attribute);
                     });
                 });
             };
 
             obj.save = function (item) {
-                var elem = this.get(item);
-                return navigator.send('POST', '/data/' + elem.attribute);
+                var elem = obj.get(item);
+                return cjs.navigator.send('POST', '/data/' + elem.attribute);
             };
 
             obj.get = function (item) {
                 var elem = collection.filter(function (o) {
-                    return o.item === item;
+                    return o.item.get() === item.get();
                 });
                 return elem ? elem[0] : null;
             };
@@ -1045,36 +1182,34 @@ var Component = function () {
     };
 
     var attach = function (node, obj, attrName) {
-        if (node.getAttribute) {
-            var attribute = node.getAttribute(attrName);
-            if (attribute) {
-                attrName === 'data-on' && createListeners(attribute, node, obj);
-                attrName === 'data-item' && createItems(attribute, node, obj);
-                attrName === 'data-bind' && createBindings(attribute, node, obj);
-            }
+        var attribute = node.getAttribute(attrName);
+        if (attribute) {
+            attrName === 'data-on' && createListeners(attribute, node, obj);
+            attrName === 'data-item' && createItems(attribute, node, obj);
+            attrName === 'data-bind' && createBindings(attribute, node, obj);
         }
     };
 
     var parseNodeComponent = function (node, obj) {
-        if (node.tagName) {
-            var match = node.tagName.match(/COREJS:(.*)/);
+        if (node.getTagName()) {
+            var match = node.getTagName().match(/COREJS:(.*)/);
             if (match) {
                 var c = Component.get(match[1].toCamelCase());
-                var comp = corejs.extend(Component({
-                    template: (node.innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
-                    style: (node.innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,
+                var comp = cjs.Object.extend(Component({
+                    template: (node.get().innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
+                    style: (node.get().innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,
                     config: c.config
                 }), c.controller);
-                comp.createIn(node, 'before');
-                for (var i = 0; i < node.attributes.length; i++) {
-                    var a = node.attributes[i];
+                comp.createIn(node.get(), 'before');
+                for (var i = 0; i < node.attributes().length; i++) {
+                    var a = node.attributes()[i];
                     if (a.name !== 'class') {
                         comp.node.setAttribute(a.name, a.value);
                     }
                 }
-                comp.node.addClass(node.className);
+                comp.node.addStyle(node.get().className);
                 obj.items.add(comp, node.getAttribute('data-id'));
-                node.parentNode.removeChild(node);
+                node.get().parentNode.removeChild(node.get());
                 return comp.node;
             }
         }
@@ -1082,8 +1217,7 @@ var Component = function () {
     };
 
     var parseNode = function (node, obj) {
-        var nodes = Array.prototype.slice.call(node.childNodes);
-        nodes.forEach(function (n) {
+        node.children().forEach(function (n) {
             parseNode(n, obj);
         });
         node = parseNodeComponent(node, obj) || node;
@@ -1177,10 +1311,10 @@ var Component = function () {
         var style = parseStyle(p.style || '', config);
         var template = parseTemplate(p.template || '', config);
 
-        var node = Element.create(template);
+        var node = cjs.Node(template);
 
         var obj = {
-            items: Collection(),
+            items: cjs.Collection(),
             template: template,
             style: style,
             config: config,
@@ -1189,13 +1323,13 @@ var Component = function () {
 
         obj.createIn = function (parent, position) {
             if (!position) {
-                parent.appendChild(node);
+                parent.appendChild(node.get(0));
             } else {
-                position === 'before' && parent.parentNode.insertBefore(node, parent);
-                position === 'after' && parent.parentNode.insertBefore(node, parent.nextSibling);
+                position === 'before' && parent.parentNode.insertBefore(node.get(), parent);
+                position === 'after' && parent.parentNode.insertBefore(node.get(), parent.nextSibling);
             }
             if (style) {
-                node.addClass(appendStyle(style));
+                node.addStyle(appendStyle(style));
             }
             node && parseNode(node, obj);
             obj.init && obj.init();
@@ -1208,14 +1342,15 @@ var Component = function () {
 
         obj.save = function () {
             var needs = [];
+
             (function saveNode(n) {
                 if (dataProxy.get(n)) {
                     needs.push(dataProxy.save(n))
                 }
-                Array.prototype.slice.call(n.childNodes).forEach(saveNode);
-            })(obj.node);
+                n.children().forEach(saveNode);
+            })(node);
 
-            return Need(needs);
+            return cjs.Need(needs);
         };
 
         return obj;

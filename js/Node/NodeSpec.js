@@ -1,78 +1,78 @@
 describe("HTML node", function () {
 
-    it("should have the addClass method", function () {
+    it("should have the addStyle method", function () {
         var htmlNode = document.createElement("div");
         htmlNode.id = 'id';
         document.body.appendChild(htmlNode);
         var node = cjs.Node('#id');
-        node.addClass('first');
+        node.addStyle('first');
         expect(document.getElementById('id').className).toEqual('first');
-        node.addClass('second');
+        node.addStyle('second');
         expect(document.getElementById('id').className).toEqual('first second');
-        node.addClass('first');
+        node.addStyle('first');
         expect(document.getElementById('id').className).toEqual('first second');
-        node.addClass('third', ' fourth     ');
+        node.addStyle('third', ' fourth     ');
         expect(document.getElementById('id').className).toEqual('first second third fourth');
-        node.addClass('  first', 'fifth');
+        node.addStyle('  first', 'fifth');
         expect(document.getElementById('id').className).toEqual('first second third fourth fifth');
         document.body.removeChild(htmlNode);
     });
 
-    it("should have the clearClass method", function () {
+    it("should have the clearStyles method", function () {
         var htmlNode = document.createElement("div");
         htmlNode.id = 'id';
         document.body.appendChild(htmlNode);
         var node = cjs.Node('#id');
-        node.addClass('first');
+        node.addStyle('first');
         document.body.appendChild(htmlNode);
         expect(document.getElementById('id').className).toEqual('first');
-        node.clearClass();
+        node.clearStyles();
         expect(document.getElementById('id').className).toEqual('');
-        node.addClass('first second');
+        node.addStyle('first second');
         expect(document.getElementById('id').className).toEqual('first second');
-        node.clearClass();
+        node.clearStyles();
         expect(document.getElementById('id').className).toEqual('');
         document.body.removeChild(htmlNode);
     });
 
-    it("should have the removeClass method", function () {
+    it("should have the removeStyle method", function () {
         var htmlNode = document.createElement("div");
         htmlNode.id = 'id';
         document.body.appendChild(htmlNode);
         var node = cjs.Node('#id');
-        node.addClass('first', 'second');
+        node.addStyle('first', 'second');
         document.body.appendChild(htmlNode);
         expect(document.getElementById('id').className).toEqual('first second');
-        node.removeClass('first');
-        node.removeClass('first');
+        node.removeStyle('first');
+        node.removeStyle('first');
         expect(document.getElementById('id').className).toEqual('second');
-        node.removeClass('second');
+        node.removeStyle('second');
         expect(document.getElementById('id').className).toEqual('');
-        node.addClass('first', 'second', 'third');
-        node.removeClass('first', 'third     ');
+        node.addStyle('first', 'second', 'third');
+        node.removeStyle('first', 'third     ');
         expect(document.getElementById('id').className).toEqual('second');
     });
 
-    it("should have the hasClass method", function () {
+    it("should have the hasStyle method", function () {
         var htmlNode = document.createElement("div");
         htmlNode.id = 'id';
         document.body.appendChild(htmlNode);
         var node = cjs.Node('#id');
-        node.addClass('first', 'second');
-        expect(node.hasClass('first')).toBeTruthy();
-        expect(node.hasClass('third')).toBeFalsy();
+        node.addStyle('first', 'second');
+        expect(node.hasStyle('first')).toBeTruthy();
+        expect(node.hasStyle('third')).toBeFalsy();
     });
 
-    it("should have the toggleClass method", function () {
+    it("should have the toggleStyle method", function () {
         var htmlNode = document.createElement("div");
         htmlNode.id = 'id';
         document.body.appendChild(htmlNode);
         var node = cjs.Node('#id');
-        node.removeClass('first');
-        node.toggleClass('first');
-        expect(node.hasClass('first')).toBeTruthy();
-        node.toggleClass('first');
-        expect(node.hasClass('first')).toBeFalsy();
+        node.removeStyle('first');
+        node.toggleStyle('first');
+        expect(node.hasStyle('first')).toBeTruthy();
+        node.toggleStyle('first');
+        expect(node.hasStyle('first')).toBeFalsy();
     });
 
     it("should have the addListener method", function () {
@@ -130,12 +130,12 @@ describe("HTML node", function () {
         expect(x.get(0)).toBe(button);
     });
 
-    it("should have the setInnerText method", function () {
+    it("should have the setText method", function () {
         var htmlNode = document.createElement("div");
         htmlNode.id = 'id';
         document.body.appendChild(htmlNode);
         var span = cjs.Node('#id');
-        span.setInnerText('ciao');
+        span.setText('ciao');
         expect(span.get(0).innerText).toBe('ciao');
         expect(span.get(0).textContent).toBe('ciao');
         expect(span.getValue()).toBe('ciao');

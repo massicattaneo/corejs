@@ -39,7 +39,7 @@ function controllerInput() {
             this.get('error')
                 .clearClass()
                 .addClass(check.class)
-                .setInnerText(replaceLocalization(check.message));
+                .setText(replaceLocalization(check.message));
             return check.isValid && enabled;
         };
         obj.disable = function () {

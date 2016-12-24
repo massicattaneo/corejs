@@ -10,7 +10,7 @@
  */
 
 (function () {
-    function addClass() {
+    function addStyle() {
         for (var a = 0; a < arguments.length; a++) {
             var className = arguments[a].trim();
             if (this.className) {
@@ -23,11 +23,11 @@
         }
     }
 
-    function clearClass() {
+    function clearStyles() {
         this.className = "";
     }
 
-    function removeClass() {
+    function removeStyle() {
         for (var a = 0; a < arguments.length; a++) {
             var className = arguments[a].trim();
             if (this.className.match(className)) {
@@ -36,15 +36,15 @@
         }
     }
 
-    function hasClass(className) {
+    function hasStyle(className) {
         return this.className.match(className) !== null;
     }
 
-    function toggleClass(className) {
-        if (hasClass.call(this, className)) {
-            removeClass.call(this, className);
+    function toggleStyle(className) {
+        if (hasStyle.call(this, className)) {
+            removeStyle.call(this, className);
         } else {
-            addClass.call(this, className);
+            addStyle.call(this, className);
         }
     }
 
@@ -94,7 +94,7 @@
         return event.target || event.srcElement;
     }
 
-    function setInnerText(text) {
+    function setText(text) {
         this.textContent = text;
         this.innerText = text;
         return this;
@@ -175,12 +175,16 @@
     function Node(element) {
         var obj = {};
 
-        [addClass, clearClass, removeClass, hasClass, toggleClass,
-            addListener, removeListener, clearListeners, setInnerText,
-            fire, getValue, toJSON, removeAllChildren]
+        [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
+            addListener, removeListener, clearListeners,
+            setText, getValue,
+            fire,
+            toJSON,
+            removeAllChildren]
             .forEach(function (func) {
                 obj[func.name] = function () {
-                    return func.apply(element, arguments) || obj;
+                    var apply = func.apply(element, arguments);
+                    return apply === undefined ? obj : apply;
                 }
             });
 
