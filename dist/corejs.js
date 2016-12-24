@@ -1115,7 +1115,7 @@ cjs.navigator = {};
 })(cjs.navigator);
 
 
-var Component = function () {
+cjs.Component = function () {
 
     var stylesFunctions = {};
 

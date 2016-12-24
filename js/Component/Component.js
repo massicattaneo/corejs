@@ -9,7 +9,7 @@
  //////////////////////////////////////////////////////////////////////////////
  */
 
-var Component = function () {
+cjs.Component = function () {
 
     var stylesFunctions = {};
 

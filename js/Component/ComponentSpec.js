@@ -18,13 +18,13 @@ describe('GLOBAL - COMPONENT', function () {
     });
 
     it('should exist a function Component', function () {
-        expect(Component('')).toBeDefined();
+        expect(cjs.Component('')).toBeDefined();
     });
 
     describe('On passing a HTML template', function () {
 
         it('should attach listeners', function () {
-            var test = Component({
+            var test = cjs.Component({
                 template: '<div><button id="button1" data-on="click:click1"></button><button id="button2" data-on="click:click2"></button></div>'
             });
             test.createIn(document.body);
@@ -42,7 +42,7 @@ describe('GLOBAL - COMPONENT', function () {
         });
 
         it('should create items', function () {
-            var test = Component({template: '<input type="text" data-item="input" />'});
+            var test = cjs.Component({template: '<input type="text" data-item="input" />'});
             test.createIn(document.body);
             expect(test.get('input')).toBeDefined();
         })
@@ -52,7 +52,7 @@ describe('GLOBAL - COMPONENT', function () {
     describe('On passing a style', function () {
 
         it('should add it to the document', function () {
-            var test = Component({
+            var test = cjs.Component({
                 template: '<div><span>CIAO</span></div>',
                 style: 'span {color: red}'
             });
@@ -61,7 +61,7 @@ describe('GLOBAL - COMPONENT', function () {
         });
 
         it('should add the class in the placeholder site ".&" if present', function () {
-            var test = Component({
+            var test = cjs.Component({
                 template: '<div><span>CIAO</span></div>',
                 style: '.mobile .& span {color: red;} .mobile.& li {color: white}'
             });
@@ -75,7 +75,7 @@ describe('GLOBAL - COMPONENT', function () {
     describe('On passing a configuration', function () {
 
         it('should parse the style and the template', function () {
-            var test = Component({
+            var test = cjs.Component({
                 template: '<div><span id="text">{{text}}</span></div>',
                 style: 'span {color: $color; background-color: $background; width: $width}',
                 config: {color: "#000000", background: "#AAAAAA", text: "HELLO!", width: 120}
@@ -91,12 +91,12 @@ describe('GLOBAL - COMPONENT', function () {
         var c;
 
         beforeEach(function () {
-            Component.register({
+            cjs.Component.register({
                 name: 'input',
                 template: '<div><input data-item="input" type="text"><div data-item="error"></div></div>',
                 style: '{color: red}'
             });
-            c = Component({template: '<div><corejs:input data-id="c1"></corejs:input><corejs:input data-id="c2"></corejs:input></div>'});
+            c = cjs.Component({template: '<div><corejs:input data-id="c1"></corejs:input><corejs:input data-id="c2"></corejs:input></div>'});
             c.createIn(document.body);
         });
 
@@ -122,12 +122,12 @@ describe('GLOBAL - COMPONENT', function () {
         var c;
 
         beforeEach(function () {
-            Component.register({
+            cjs.Component.register({
                 name: 'newInput',
                 template: '<div><input data-item="input" type="text"><div data-item="error" id="{{id}}"></div></div>',
                 style: '{color: $color}'
             });
-            c = Component({
+            c = cjs.Component({
                 template: '<div><corejs:new-input data-id="c1"><id>{{mainId}}</id><color>{{mainColor}}</color></corejs:new-input>',
                 config: {mainColor: 'red', mainId: 'id1'}
             });
@@ -144,11 +144,11 @@ describe('GLOBAL - COMPONENT', function () {
         var c;
 
         beforeEach(function () {
-            Component.register({
+            cjs.Component.register({
                 name: 'bind',
                 template: '<div><span data-bind="app/name"></span><span data-bind="app/version"></span></div>'
             });
-            c = Component({template: '<div id="bind"><corejs:bind data-id="c1"/></div>'});
+            c = cjs.Component({template: '<div id="bind"><corejs:bind data-id="c1"/></div>'});
             c.createIn(document.body);
         });
 
