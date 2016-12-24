@@ -660,7 +660,7 @@ String.prototype.toDate = function () {
 
 
 
-})()
+})();
 
 
 (function () {
