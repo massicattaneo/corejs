@@ -126,6 +126,22 @@
         return this.innerText
     }
 
+    function runAnimation(name, time) {
+        var onEnds = 'animationend animationend webkitAnimationEnd oanimationend MSAnimationEnd'.split(' ');
+        var n = cjs.Need();
+        var callback = function () {n.resolve()};
+        onEnds.forEach(function (action) {
+            addListener.call(this, action, callback)
+        });
+        n.done(function () {
+            onEnds.forEach(function (action) {
+                removeListener.call(this, action, callback)
+            });
+        });
+        this.style.animation = name + ' ' + time + 'ms';
+        return n;
+    }
+
     function create(markup) {
         var div = document.createElement('div');
         div.innerHTML = markup;
@@ -182,6 +198,7 @@
         [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
             addListener, removeListener, clearListeners,
             setValue, getValue,
+            runAnimation,
             fire,
             toJSON,
             removeAllChildren]

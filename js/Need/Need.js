@@ -47,17 +47,17 @@ cjs.Need = function () {
             }
         };
 
-        m.fail = function (error) {
+        m.reject = function (error) {
             finalize(p, c.FAIL, error);
             return m;
         };
 
-        m.then = function (action) {
+        m.done = function (action) {
             attach(p, c.DONE, action);
             return m;
         };
 
-        m.onFail = function (action) {
+        m.fail = function (action) {
             attach(p, c.FAIL, action);
         };
 
@@ -85,16 +85,33 @@ cjs.Need = function () {
             if (status === c.DONE) {
                 p.done.push(callback);
             } else {
-                p.fail = callback;
+                p.reject = callback;
             }
         }
     };
+
+    function itemOnDone(p, data, id) {
+        p.count += 1;
+        p.args[id] = data;
+        if (p.count === p.collection.length) {
+            p.status = c.DONE;
+            p.done.forEach(function (func) {
+                func.apply(this, getData(p));
+            });
+        }
+    }
+
+    function itemOnFail(p, error) {
+        p.errors.push(error);
+        p.status = c.FAIL;
+        p.reject.apply(this, getData(p));
+    }
+
     var createMultiNeed = function (array) {
         var m = {};
         var p = {
             done: [],
-            fail: function () {
-            },
+            reject: function () {},
             args: [],
             errors: [],
             count: 0,
@@ -106,33 +123,18 @@ cjs.Need = function () {
         m.add = function (promise) {
             promise.setId(p.counter++);
             p.collection.push(promise);
-            promise.then(function (data, id) {
-                m.itemOnDone(data, id);
+            promise.done(function (data, id) {
+                itemOnDone.call(this,p, data, id);
             });
-            promise.onFail(function (error) {
-                m.itemOnFail(error);
+            promise.fail(function (error) {
+                itemOnFail.call(this,p, error);
             });
             return this;
         };
-        m.itemOnDone = function (data, id) {
-            p.count += 1;
-            p.args[id] = data;
-            if (p.count === p.collection.length) {
-                p.status = c.DONE;
-                p.done.forEach(function (func) {
-                    func.apply(this, getData(p));
-                });
-            }
-        };
-        m.itemOnFail = function (error) {
-            p.errors.push(error);
-            p.status = c.FAIL;
-            p.fail.apply(this, getData(p));
-        };
-        m.then = function (action) {
+        m.done = function (action) {
             callAction(c.DONE, action, p);
         };
-        m.onFail = function (action) {
+        m.fail = function (action) {
             callAction(c.FAIL, action, p);
         };
         m.get = function (index) {
@@ -162,7 +164,7 @@ cjs.Need = function () {
         var runQueue = function (result) {
             index += 1;
             if (array.length > index) {
-                array[index](queue, result).then(runQueue).onFail(clearQueue);
+                array[index](queue, result).done(runQueue).fail(clearQueue);
             } else {
                 clearQueue();
             }

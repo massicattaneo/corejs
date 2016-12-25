@@ -14,20 +14,20 @@ describe('GLOBAL - NEED', function () {
             expect(p).toBeDefined();
         });
 
-        it("should have resolve, fail, then, status, onFail method", function () {
+        it("should have resolve, fail, then, status, fail method", function () {
             expect(p.resolve).toBeDefined();
+            expect(p.reject).toBeDefined();
+            expect(p.done).toBeDefined();
             expect(p.fail).toBeDefined();
-            expect(p.then).toBeDefined();
-            expect(p.onFail).toBeDefined();
             expect(p.status).toBeDefined();
         });
 
         it("should call then when everything ok", function () {
             var done = false, failed = false;
-            p.then(function (test) {
+            p.done(function (test) {
                 done = test;
             });
-            p.onFail(function () {
+            p.fail(function () {
                 failed = true;
             });
             expect(done).toBeFalsy();
@@ -38,7 +38,7 @@ describe('GLOBAL - NEED', function () {
 
         it("should call then and pass arguments", function () {
             var result = '';
-            p.then(function (string) {
+            p.done(function (string) {
                 result = string
             });
             expect(result).toEqual('');
@@ -49,26 +49,26 @@ describe('GLOBAL - NEED', function () {
         it("should call then when it resolves before assigning the done function", function () {
             var done = false, failed = false;
             p.resolve(true);
-            p.then(function (test) {
+            p.done(function (test) {
                 done = test;
             });
-            p.onFail(function () {
+            p.fail(function () {
                 failed = true
             });
             expect(done).toBeTruthy();
             expect(failed).toBeFalsy();
         });
 
-        it("should call onFail when fails", function () {
+        it("should call fail when fails", function () {
             var done = false, failed = false;
-            p.then(function () {
+            p.done(function () {
                 done = true;
             });
-            p.onFail(function () {
+            p.fail(function () {
                 failed = true
             });
             expect(done).toBeFalsy();
-            p.fail();
+            p.reject();
             p.resolve();
             expect(done).toBeFalsy();
             expect(failed).toBeTruthy();
@@ -76,10 +76,10 @@ describe('GLOBAL - NEED', function () {
 
         it("should call much than one callback - case 1", function () {
             var done1 = false, done2 = false;
-            p.then(function () {
+            p.done(function () {
                 done1 = true;
             });
-            p.then(function () {
+            p.done(function () {
                 done2 = true;
             });
             p.resolve(); //After
@@ -90,10 +90,10 @@ describe('GLOBAL - NEED', function () {
         it("should call much than one callback - case 2", function () {
             var done1 = false, done2 = false;
             p.resolve(); //Before
-            p.then(function () {
+            p.done(function () {
                 done1 = true;
             });
-            p.then(function () {
+            p.done(function () {
                 done2 = true;
             });
             expect(done1).toBeTruthy();
@@ -106,11 +106,11 @@ describe('GLOBAL - NEED', function () {
             p.resolve(2);
             p.resolve(3);
             p.resolve(4);
-            p.then(function (test, id, not) {
+            p.done(function (test, id, not) {
                 done = 1;
                 over = not;
             });
-            p.onFail(function () {
+            p.fail(function () {
                 failed = true
             });
             expect(done).toEqual(1);
@@ -127,7 +127,7 @@ describe('GLOBAL - NEED', function () {
 
         it("should call then when all promises are done ", function () {
             var done = false;
-            ps.then(function () {
+            ps.done(function () {
                 done = true;
             });
             p2.resolve();
@@ -138,7 +138,7 @@ describe('GLOBAL - NEED', function () {
 
         it("should save retrieved data independently on the order resolution", function () {
             var number = 0, over;
-            ps.then(function (s1, s2, s3, s4) {
+            ps.done(function (s1, s2, s3, s4) {
                 number = s1 + s2;
                 over = s3
             });
@@ -151,19 +151,19 @@ describe('GLOBAL - NEED', function () {
         it("should fail immediatly after one fails", function () {
             var fail = false;
             p1.resolve();
-            ps.onFail(function (error) {
+            ps.fail(function (error) {
                 fail = error;
             });
-            ps.then(function () {
+            ps.done(function () {
             });
-            p2.fail('error');
+            p2.reject('error');
             expect(fail).toEqual('error');
         });
 
         it('should work with a lot of promises', function () {
             var done = false;
             var pros = cjs.Need([cjs.Need(), cjs.Need(), cjs.Need(), cjs.Need(), cjs.Need(), cjs.Need()]);
-            pros.then(function () {
+            pros.done(function () {
                 done = true;
             });
             expect(done).toBeFalsy();
@@ -182,13 +182,13 @@ describe('GLOBAL - NEED', function () {
             var newp = cjs.Need();
             var pros = cjs.Need([newp, cjs.Need(), cjs.Need(), cjs.Need(), cjs.Need(), cjs.Need()]);
             expect(done).toBeFalsy();
-            pros.then(function () {
+            pros.done(function () {
                 done = true;
             });
             pros.get(1).resolve();
             pros.get(2).resolve();
             pros.get(5).resolve();
-            newp.fail();
+            newp.reject();
             pros.get(3).resolve();
             pros.get(4).resolve();
             expect(done).toBeFalsy();
@@ -203,7 +203,7 @@ describe('GLOBAL - NEED', function () {
             _prs.add(_p1);
             _prs.add(_p2);
 
-            _prs.then(function () {
+            _prs.done(function () {
                 done = true;
             });
             expect(done).toBeTruthy();
@@ -212,10 +212,10 @@ describe('GLOBAL - NEED', function () {
 
         it("should attach more than one callback", function () {
             var done1 = false, done2 = false;
-            ps.then(function (a) {
+            ps.done(function (a) {
                 done1 = a;
             });
-            ps.then(function (a) {
+            ps.done(function (a) {
                 done2 = a;
             });
             p2.resolve(true);
@@ -283,7 +283,7 @@ describe('GLOBAL - NEED', function () {
             describe('When the a1 fails', function () {
 
                 beforeEach(function () {
-                    needs['a1'].fail();
+                    needs['a1'].reject();
                 });
 
                 it('should clear the queue', function () {

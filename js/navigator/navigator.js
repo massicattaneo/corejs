@@ -36,7 +36,7 @@ cjs.navigator = {};
                 pack.pack = imported();
                 pack.resolve(pack.pack);
             } else {
-                needs.then(function () {
+                needs.done(function () {
                     pack.pack = imported(getPackage);
                     pack.resolve(pack.pack);
                 });
@@ -55,7 +55,7 @@ cjs.navigator = {};
     var createPackage = function (url) {
         var pack = cjs.Need(), imported;
         packages.add(pack, url);
-        obj.get(url).then(function (o) {
+        obj.get(url).done(function (o) {
             var ext = url.substr(url.lastIndexOf('.') +1);
             ext = (ext === 'js' || ext === 'json') ? ext : 'text';
             importer[ext](o, imported, pack);
@@ -76,7 +76,7 @@ cjs.navigator = {};
                 promise.resolve(Response(request));
             }
             else if (request.status !== 200 && request.readyState === 4) {
-                promise.fail(request);
+                promise.reject(request);
             }
         };
         request.send();

@@ -54,7 +54,7 @@ describe('GLOBAL - COMPONENT', function () {
         it('should add it to the document', function () {
             var test = cjs.Component({
                 template: '<div><span>CIAO</span></div>',
-                style: 'span {color: red}'
+                style: '.& span {color: red}'
             });
             test.createIn(document.body);
             expect(document.styleSheets[0].rules[0].cssText).toEqual(".CJS0 span { color: red; }");
@@ -77,7 +77,7 @@ describe('GLOBAL - COMPONENT', function () {
         it('should parse the style and the template', function () {
             var test = cjs.Component({
                 template: '<div><span id="text">{{text}}</span></div>',
-                style: 'span {color: $color; background-color: $background; width: $width}',
+                style: '.& span {color: $color; background-color: $background; width: $width}',
                 config: {color: "#000000", background: "#AAAAAA", text: "HELLO!", width: 120}
             });
             test.createIn(document.body);

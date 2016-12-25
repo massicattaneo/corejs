@@ -37,7 +37,7 @@ cjs.Component = function () {
 
             obj.collect = function () {
                 collection.forEach(function (o) {
-                    cjs.navigator.send('GET', '/data/' + o.attribute).then(function (data) {
+                    cjs.navigator.send('GET', '/data/' + o.attribute).done(function (data) {
                         injectModel(data.toJSON(), o.item, o.attribute);
                     });
                 });
@@ -157,10 +157,10 @@ cjs.Component = function () {
                 m1 && m1.forEach(function (r) {
                     var m = r.trim().match(/(.*)\{(.*)\}/);
                     var selector;
-                    if (m[1].match('.&')) {
+                    if (m[1].match(/\.&/)) {
                         selector = m[1].replace(/\.&/g, cssSelector)
-                    } else {
-                        selector = (cssSelector + ' ') + m[1];
+                    } else if (m[1].match('@keyframes')){
+                        selector = m[1].replace(/-&/g, cssSelector.replace('.', '-'))
                     }
                     m && addCSSRule(sheet, selector, m[2], 0);
                 });
@@ -218,7 +218,7 @@ cjs.Component = function () {
         var config = p.config || {};
         var style = parseStyle(p.style || '', config);
         var template = parseTemplate(p.template || '', config);
-
+        var className = '';
         var node = cjs.Node(template);
 
         var obj = {
@@ -237,7 +237,8 @@ cjs.Component = function () {
                 position === 'after' && parent.parentNode.insertBefore(node.get(), parent.nextSibling);
             }
             if (style) {
-                node.addStyle(appendStyle(style));
+                className = appendStyle(style);
+                node.addStyle(className);
             }
             node && parseNode(node, obj);
             obj.init && obj.init();
@@ -245,7 +246,11 @@ cjs.Component = function () {
         };
 
         obj.get = function (itemName) {
-            return obj.items.get(itemName);
+            return obj.items.get(itemName) || obj.node;
+        };
+
+        obj.runAnimation = function (name, time, item) {
+            return obj.get(item).runAnimation(name + '-' + className, time);
         };
 
         obj.save = function () {

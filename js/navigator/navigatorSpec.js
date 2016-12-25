@@ -14,7 +14,7 @@ describe('Navigator', function () {
         });
 
         it('Should return a Need', function () {
-            expect(cjs.navigator.send('POST', '/url').then).toBeDefined();
+            expect(cjs.navigator.send('POST', '/url').done).toBeDefined();
         });
 
         describe('On receiving a correct response from server', function () {
@@ -87,7 +87,7 @@ describe('Navigator', function () {
         describe('On receiving a response from server', function () {
             var response;
             beforeEach(function () {
-                cjs.navigator.send('POST', '/url').then(function (resp) {
+                cjs.navigator.send('POST', '/url').done(function (resp) {
                     response = resp
                 });
             });
@@ -113,7 +113,7 @@ describe('Navigator', function () {
         describe('On importing a javascript file', function () {
 
             it('should request and parse the file', function (done) {
-                cjs.navigator.import('testA.js').then(function (testA) {
+                cjs.navigator.import('testA.js').done(function (testA) {
                     expect(testA).toEqual('a');
                     done();
                 });
@@ -122,7 +122,7 @@ describe('Navigator', function () {
             });
 
             it('should request and parse the multiple files', function (done) {
-                cjs.navigator.import('import.js').then(function (o) {
+                cjs.navigator.import('import.js').done(function (o) {
                     expect(o()).toEqual('b');
                     done();
                 });
@@ -139,7 +139,7 @@ describe('Navigator', function () {
         describe('On importing a JSON file', function () {
 
             it('should request and parse the file', function (done) {
-                cjs.navigator.import('config.json').then(function (testA) {
+                cjs.navigator.import('config.json').done(function (testA) {
                     expect(testA).toEqual({a: 1, b:2});
                     done();
                 });
@@ -152,7 +152,7 @@ describe('Navigator', function () {
         describe('On importing a PNG/JPG file', function () {
 
             it('should request and parse the file', function (done) {
-                // cjs.navigator.import('image.jpg').then(function (testA) {
+                // cjs.navigator.import('image.jpg').done(function (testA) {
                 //     expect(testA).toEqual({a: 1, b:2});
                 done();
                 // });
@@ -165,7 +165,7 @@ describe('Navigator', function () {
         describe('On importing an HTML/HTML/CSS/SCSS/TEXT file', function () {
 
             it('should request and parse the file html', function (done) {
-                cjs.navigator.import('index.html').then(function (testA) {
+                cjs.navigator.import('index.html').done(function (testA) {
                     expect(testA).toEqual('<div></div>');
                     done();
                 });
@@ -174,7 +174,7 @@ describe('Navigator', function () {
             });
 
             it('should request and parse the file htm', function (done) {
-                cjs.navigator.import('index.htm').then(function (testA) {
+                cjs.navigator.import('index.htm').done(function (testA) {
                     expect(testA).toEqual('<div></div>');
                     done();
                 });

@@ -557,6 +557,22 @@ String.prototype.toDate = function () {
         return this.innerText
     }
 
+    function runAnimation(name, time) {
+        var onEnds = 'animationend animationend webkitAnimationEnd oanimationend MSAnimationEnd'.split(' ');
+        var n = cjs.Need();
+        var callback = function () {n.resolve()};
+        onEnds.forEach(function (action) {
+            addListener.call(this, action, callback)
+        });
+        n.done(function () {
+            onEnds.forEach(function (action) {
+                removeListener.call(this, action, callback)
+            });
+        });
+        this.style.animation = name + ' ' + time + 'ms';
+        return n;
+    }
+
     function create(markup) {
         var div = document.createElement('div');
         div.innerHTML = markup;
@@ -609,6 +625,7 @@ String.prototype.toDate = function () {
         [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
             addListener, removeListener, clearListeners,
             setValue, getValue,
+            runAnimation,
             fire,
             toJSON,
             removeAllChildren]
@@ -753,17 +770,17 @@ cjs.Need = function () {
             }
         };
 
-        m.fail = function (error) {
+        m.reject = function (error) {
             finalize(p, c.FAIL, error);
             return m;
         };
 
-        m.then = function (action) {
+        m.done = function (action) {
             attach(p, c.DONE, action);
             return m;
         };
 
-        m.onFail = function (action) {
+        m.fail = function (action) {
             attach(p, c.FAIL, action);
         };
 
@@ -790,16 +807,33 @@ cjs.Need = function () {
             if (status === c.DONE) {
                 p.done.push(callback);
             } else {
-                p.fail = callback;
+                p.reject = callback;
             }
         }
     };
+
+    function itemOnDone(p, data, id) {
+        p.count += 1;
+        p.args[id] = data;
+        if (p.count === p.collection.length) {
+            p.status = c.DONE;
+            p.done.forEach(function (func) {
+                func.apply(this, getData(p));
+            });
+        }
+    }
+
+    function itemOnFail(p, error) {
+        p.errors.push(error);
+        p.status = c.FAIL;
+        p.reject.apply(this, getData(p));
+    }
+
     var createMultiNeed = function (array) {
         var m = {};
         var p = {
             done: [],
-            fail: function () {
-            },
+            reject: function () {},
             args: [],
             errors: [],
             count: 0,
@@ -811,33 +845,18 @@ cjs.Need = function () {
         m.add = function (promise) {
             promise.setId(p.counter++);
             p.collection.push(promise);
-            promise.then(function (data, id) {
-                m.itemOnDone(data, id);
+            promise.done(function (data, id) {
+                itemOnDone.call(this,p, data, id);
             });
-            promise.onFail(function (error) {
-                m.itemOnFail(error);
+            promise.fail(function (error) {
+                itemOnFail.call(this,p, error);
             });
             return this;
         };
-        m.itemOnDone = function (data, id) {
-            p.count += 1;
-            p.args[id] = data;
-            if (p.count === p.collection.length) {
-                p.status = c.DONE;
-                p.done.forEach(function (func) {
-                    func.apply(this, getData(p));
-                });
-            }
-        };
-        m.itemOnFail = function (error) {
-            p.errors.push(error);
-            p.status = c.FAIL;
-            p.fail.apply(this, getData(p));
-        };
-        m.then = function (action) {
+        m.done = function (action) {
             callAction(c.DONE, action, p);
         };
-        m.onFail = function (action) {
+        m.fail = function (action) {
             callAction(c.FAIL, action, p);
         };
         m.get = function (index) {
@@ -866,7 +885,7 @@ cjs.Need = function () {
         var runQueue = function (result) {
             index += 1;
             if (array.length > index) {
-                array[index](queue, result).then(runQueue).onFail(clearQueue);
+                array[index](queue, result).done(runQueue).fail(clearQueue);
             } else {
                 clearQueue();
             }
@@ -993,7 +1012,7 @@ cjs.navigator = {};
                 pack.pack = imported();
                 pack.resolve(pack.pack);
             } else {
-                needs.then(function () {
+                needs.done(function () {
                     pack.pack = imported(getPackage);
                     pack.resolve(pack.pack);
                 });
@@ -1012,7 +1031,7 @@ cjs.navigator = {};
     var createPackage = function (url) {
         var pack = cjs.Need(), imported;
         packages.add(pack, url);
-        obj.get(url).then(function (o) {
+        obj.get(url).done(function (o) {
             var ext = url.substr(url.lastIndexOf('.') +1);
             ext = (ext === 'js' || ext === 'json') ? ext : 'text';
             importer[ext](o, imported, pack);
@@ -1033,7 +1052,7 @@ cjs.navigator = {};
                 promise.resolve(Response(request));
             }
             else if (request.status !== 200 && request.readyState === 4) {
-                promise.fail(request);
+                promise.reject(request);
             }
         };
         request.send();
@@ -1159,7 +1178,7 @@ cjs.Component = function () {
 
             obj.collect = function () {
                 collection.forEach(function (o) {
-                    cjs.navigator.send('GET', '/data/' + o.attribute).then(function (data) {
+                    cjs.navigator.send('GET', '/data/' + o.attribute).done(function (data) {
                         injectModel(data.toJSON(), o.item, o.attribute);
                     });
                 });
@@ -1275,10 +1294,10 @@ cjs.Component = function () {
                 m1 && m1.forEach(function (r) {
                     var m = r.trim().match(/(.*)\{(.*)\}/);
                     var selector;
-                    if (m[1].match('.&')) {
+                    if (m[1].match(/\.&/)) {
                         selector = m[1].replace(/\.&/g, cssSelector)
-                    } else {
-                        selector = (cssSelector + ' ') + m[1];
+                    } else if (m[1].match('@keyframes')){
+                        selector = m[1].replace(/-&/g, cssSelector.replace('.', '-'))
                     }
                     m && addCSSRule(sheet, selector, m[2], 0);
                 });
@@ -1336,7 +1355,7 @@ cjs.Component = function () {
         var config = p.config || {};
         var style = parseStyle(p.style || '', config);
         var template = parseTemplate(p.template || '', config);
-
+        var className = '';
         var node = cjs.Node(template);
 
         var obj = {
@@ -1355,7 +1374,8 @@ cjs.Component = function () {
                 position === 'after' && parent.parentNode.insertBefore(node.get(), parent.nextSibling);
             }
             if (style) {
-                node.addStyle(appendStyle(style));
+                className = appendStyle(style);
+                node.addStyle(className);
             }
             node && parseNode(node, obj);
             obj.init && obj.init();
@@ -1363,7 +1383,11 @@ cjs.Component = function () {
         };
 
         obj.get = function (itemName) {
-            return obj.items.get(itemName);
+            return obj.items.get(itemName) || obj.node;
+        };
+
+        obj.runAnimation = function (name, time, item) {
+            return obj.get(item).runAnimation(name + '-' + className, time);
         };
 
         obj.save = function () {
