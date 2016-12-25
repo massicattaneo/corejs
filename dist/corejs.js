@@ -1289,8 +1289,26 @@ cjs.Component = function () {
                 return style.sheet;
             }();
 
-            style.split('}').forEach(function (rule) {
-                var m1 = rule.concat("}").match(/.*\{.*\}/);
+            var split = style.split('}');
+            split.splice(split.length-1, 1);
+            split=split.map(function(a) {
+                return a+'}';
+            });
+            var i = 0;
+            while (i!==split.length) {
+                if (split[i].indexOf('@keyframes') !== -1) {
+                    split[i] += split.splice(i+1,1)[0];
+                    if (split[i+1] === '}') {
+                        split[i] += split.splice(i+1,1)[0];
+                        i++;
+                    }
+                } else {
+                    i++
+                }
+            }
+
+            split.forEach(function (rule) {
+                var m1 = rule.match(/.*\{.*\}/);
                 m1 && m1.forEach(function (r) {
                     var m = r.trim().match(/(.*)\{(.*)\}/);
                     var selector;
@@ -1303,7 +1321,6 @@ cjs.Component = function () {
                 });
 
             });
-
             styles.push({className: className, style: style});
         }
 
