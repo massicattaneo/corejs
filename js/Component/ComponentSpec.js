@@ -106,9 +106,8 @@ describe('GLOBAL - COMPONENT', function () {
         });
 
         it('should apply the style only to the scope', function () {
-            expect(window.getComputedStyle(document.body.childNodes[0], null).color).toEqual('rgb(0, 0, 0)');
-            var childNode = document.body.childNodes[0].childNodes[0];
-            // expect(window.getComputedStyle(document.body.childNodes[0].childNodes[0].childNodes[1], null).color).not.toEqual('rgb(0, 0, 0)');
+            var childNode2 = document.body.childNodes[1] || document.body.childNodes[0];
+            expect(window.getComputedStyle(childNode2, null).color).toEqual('rgb(0, 0, 0)');
         });
 
         it('should add a same class only once', function () {
@@ -146,9 +145,29 @@ describe('GLOBAL - COMPONENT', function () {
         beforeEach(function () {
             cjs.Component.register({
                 name: 'bind',
-                template: '<div><span data-bind="app/name"></span><span data-bind="app/version"></span></div>'
+                template: '<div><span id="e" data-item="test" data-bind="test.value"></span></div>'
             });
             c = cjs.Component({template: '<div id="bind"><cjs:bind data-id="c1"/></div>'});
+            c.createIn(document.body);
+        });
+
+        it('should update the value when the bindings bus is fired', function () {
+            expect(c.get('c1').get('test').getValue()).toEqual('');
+            cjs.bus.bindings.fire('test.value', 'nuovo testo');
+            expect(c.get('c1').get('test').getValue()).toEqual('nuovo testo');
+        });
+
+    });
+
+    describe('On having a data-server attribute', function () {
+        var c;
+
+        beforeEach(function () {
+            cjs.Component.register({
+                name: 'server',
+                template: '<div><span data-server="app/name"></span><span data-server="app/version"></span></div>'
+            });
+            c = cjs.Component({template: '<div id="bind"><cjs:server data-id="c1"/></div>'});
             c.createIn(document.body);
         });
 

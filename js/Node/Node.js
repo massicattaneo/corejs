@@ -94,12 +94,6 @@
         return event.target || event.srcElement;
     }
 
-    function setText(text) {
-        this.textContent = text;
-        this.innerText = text;
-        return this;
-    }
-
     function fire(action, params) {
         /* istanbul ignore if */
         if (document.action) {
@@ -113,6 +107,16 @@
             e.data = params;
             return !this.dispatchEvent(e);
         }
+    }
+
+    function setValue(value) {
+        if (this.getAttribute('type') === 'checkbox') {
+            this.checked = value;
+        } else {
+            this.textContent = value;
+            this.innerText = value;
+        }
+        return this;
     }
 
     function getValue() {
@@ -177,7 +181,7 @@
 
         [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
             addListener, removeListener, clearListeners,
-            setText, getValue,
+            setValue, getValue,
             fire,
             toJSON,
             removeAllChildren]

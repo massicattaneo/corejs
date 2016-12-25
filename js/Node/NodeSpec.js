@@ -130,12 +130,12 @@ describe("HTML node", function () {
         expect(x.get(0)).toBe(button);
     });
 
-    it("should have the setText method", function () {
+    it("should have the setValue method", function () {
         var htmlNode = document.createElement("div");
         htmlNode.id = 'id';
         document.body.appendChild(htmlNode);
         var span = cjs.Node('#id');
-        span.setText('ciao');
+        span.setValue('ciao');
         expect(span.get(0).innerText).toBe('ciao');
         expect(span.get(0).textContent).toBe('ciao');
         expect(span.getValue()).toBe('ciao');

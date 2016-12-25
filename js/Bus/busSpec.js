@@ -12,11 +12,12 @@
 describe('cjs.bus', function () {
 
     it('should have fire and on methods', function () {
-        expect(cjs.bus.fire).toBeDefined();
-        expect(cjs.bus.on).toBeDefined();
+        cjs.bus.addBus('test');
+        expect(cjs.bus.test.fire).toBeDefined();
+        expect(cjs.bus.test.on).toBeDefined();
     });
 
-    describe('On using the bus', function () {
+    xdescribe('On using the bus', function () {
 
         var fired = false;
         var callback = function (p) {

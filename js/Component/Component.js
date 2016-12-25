@@ -20,8 +20,10 @@ cjs.Component = function () {
         value.split('/').forEach(function (item) {
             v = v[item];
         });
-        node.setText(v);
+        node.setValue(v);
     };
+
+    cjs.bus.addBus('bindings');
 
     var components = [],
         cssStyleIndex = 0,
@@ -71,9 +73,15 @@ cjs.Component = function () {
         obj.items.add(node, attribute);
     };
 
-    var createBindings = function (attribute, node, obj) {
+    var createServerBindings = function (attribute, node) {
         //attribute: app/name
         dataProxy.add(node, attribute);
+    };
+
+    var createBindings = function (attribute, node) {
+        cjs.bus.bindings.on(attribute, function (value) {
+            node.setValue(value)
+        })
     };
 
     var attach = function (node, obj, attrName) {
@@ -82,6 +90,7 @@ cjs.Component = function () {
             attrName === 'data-on' && createListeners(attribute, node, obj);
             attrName === 'data-item' && createItems(attribute, node, obj);
             attrName === 'data-bind' && createBindings(attribute, node, obj);
+            attrName === 'data-server' && createServerBindings(attribute, node, obj);
         }
     };
 
@@ -119,6 +128,7 @@ cjs.Component = function () {
         attach(node, obj, 'data-on');
         attach(node, obj, 'data-item');
         attach(node, obj, 'data-bind');
+        attach(node, obj, 'data-server');
     };
 
     var appendStyle = function (style) {

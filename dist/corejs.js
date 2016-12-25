@@ -526,12 +526,6 @@ String.prototype.toDate = function () {
         return event.target || event.srcElement;
     }
 
-    function setText(text) {
-        this.textContent = text;
-        this.innerText = text;
-        return this;
-    }
-
     function fire(action, params) {
         if (document.action) {
             var evt = document.createEventObject();
@@ -544,6 +538,16 @@ String.prototype.toDate = function () {
             e.data = params;
             return !this.dispatchEvent(e);
         }
+    }
+
+    function setValue(value) {
+        if (this.getAttribute('type') === 'checkbox') {
+            this.checked = value;
+        } else {
+            this.textContent = value;
+            this.innerText = value;
+        }
+        return this;
     }
 
     function getValue() {
@@ -604,7 +608,7 @@ String.prototype.toDate = function () {
 
         [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
             addListener, removeListener, clearListeners,
-            setText, getValue,
+            setValue, getValue,
             fire,
             toJSON,
             removeAllChildren]
@@ -900,54 +904,66 @@ cjs.Need = function () {
 
 
 
-cjs.bus = function () {
+(function () {
 
-    var events = [];
-    var obj = {};
+    function createBus() {
+        var events = [];
+        var obj = {};
 
-    obj.on = function (eventName, callback, priority) {
-        events.push({
-            eventName: eventName,
-            callback: callback,
-            priority: priority || 1000
-        })
+        obj.on = function (eventName, callback, priority) {
+            events.push({
+                eventName: eventName,
+                callback: callback,
+                priority: priority || 1000
+            })
+        };
+
+        obj.off = function (eventName, callback) {
+            var filter = events.filter(function (e) {
+                return e.eventName === eventName && e.callback === callback;
+            })[0];
+            events.splice(events.indexOf(filter), 1);
+        };
+
+        obj.once = function (eventName, callback, priority) {
+            events.push({
+                eventName: eventName,
+                callback: function () {
+                    callback();
+                    obj.off(eventName, callback);
+                },
+                priority: priority || 1000
+            })
+        };
+
+        obj.fire = function (eventName, param) {
+            events.filter(function (e) {
+                return e.eventName === eventName;
+            }).sort(function (a, b) {
+                return a.priority - b.priority;
+            }).forEach(function (e) {
+                e.callback(param);
+            });
+        };
+
+        obj.clear = function () {
+            events.length = 0;
+        };
+
+        return obj;
+    }
+
+    cjs.bus = {};
+
+    cjs.bus.addBus = function (name) {
+        cjs.bus[name] = createBus();
+    };
+    cjs.bus.removeBus = function (name) {
+        cjs.bus[name].clear();
+        delete cjs.bus[name];
     };
 
-    obj.off = function (eventName, callback) {
-        var filter = events.filter(function (e) {
-            return e.eventName === eventName && e.callback === callback;
-        })[0];
-        events.splice(events.indexOf(filter), 1);
-    };
-
-    obj.once = function (eventName, callback, priority) {
-        events.push({
-            eventName: eventName,
-            callback: function () {
-                callback();
-                obj.off(eventName, callback);
-            },
-            priority: priority || 1000
-        })
-    };
-
-    obj.fire = function (eventName, param) {
-        events.filter(function (e) {
-            return e.eventName === eventName;
-        }).sort(function (a, b) {
-            return a.priority - b.priority;
-        }).forEach(function (e) {
-            e.callback(param);
-        });
-    };
-
-    obj.clear = function () {
-        events.length = 0;
-    };
-
-    return obj;
-
-}();
+})();
 
 
 
@@ -1126,8 +1142,10 @@ cjs.Component = function () {
         value.split('/').forEach(function (item) {
             v = v[item];
         });
-        node.setText(v);
+        node.setValue(v);
     };
+
+    cjs.bus.addBus('bindings');
 
     var components = [],
         cssStyleIndex = 0,
@@ -1177,8 +1195,14 @@ cjs.Component = function () {
         obj.items.add(node, attribute);
     };
 
-    var createBindings = function (attribute, node, obj) {
+    var createServerBindings = function (attribute, node) {
         dataProxy.add(node, attribute);
+    };
+
+    var createBindings = function (attribute, node) {
+        cjs.bus.bindings.on(attribute, function (value) {
+            node.setValue(value)
+        })
     };
 
     var attach = function (node, obj, attrName) {
@@ -1187,6 +1211,7 @@ cjs.Component = function () {
             attrName === 'data-on' && createListeners(attribute, node, obj);
             attrName === 'data-item' && createItems(attribute, node, obj);
             attrName === 'data-bind' && createBindings(attribute, node, obj);
+            attrName === 'data-server' && createServerBindings(attribute, node, obj);
         }
     };
 
@@ -1224,6 +1249,7 @@ cjs.Component = function () {
         attach(node, obj, 'data-on');
         attach(node, obj, 'data-item');
         attach(node, obj, 'data-bind');
+        attach(node, obj, 'data-server');
     };
 
     var appendStyle = function (style) {
