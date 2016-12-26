@@ -99,11 +99,12 @@ cjs.Component = function () {
             var match = node.getTagName().match(/CJS:(.*)/);
             if (match) {
                 var c = Component.get(match[1].toCamelCase());
-                var comp = cjs.Object.extend(Component({
-                    template: (node.get().innerHTML) ? parseTemplate(c.template, node.toJSON()) : c.template,
-                    style: (node.get().innerHTML) ? parseStyle(c.style, node.toJSON()) : c.style,
+                var config = node.toJSON();
+                var comp = Component({
+                    template: (node.get().innerHTML) ? parseTemplate(c.template, cjs.Object.extend({}, config, c.config)) : c.template,
+                    style: (node.get().innerHTML) ? parseStyle(c.style, cjs.Object.extend({}, config, c.config)) : c.style,
                     config: c.config
-                }), c.controller);
+                }, c.controller(config));
                 comp.createIn(node.get(), 'before');
                 for (var i = 0; i < node.attributes().length; i++) {
                     var a = node.attributes()[i];
@@ -227,7 +228,7 @@ cjs.Component = function () {
         return template;
     };
 
-    var Component = function (p) {
+    var Component = function (p, obj) {
 
         var config = p.config || {};
         var style = parseStyle(p.style || '', config);
@@ -235,13 +236,12 @@ cjs.Component = function () {
         var className = '';
         var node = cjs.Node(template);
 
-        var obj = {
-            items: cjs.Collection(),
-            template: template,
-            style: style,
-            config: config,
-            node: node
-        };
+        obj = obj || {};
+        obj.items = cjs.Collection();
+        obj.template = template;
+        obj.style = style;
+        obj.config = config;
+        obj.node = node;
 
         obj.createIn = function (parent, position) {
             if (!position) {
@@ -284,7 +284,7 @@ cjs.Component = function () {
     };
 
     Component.register = function (p) {
-        p.controller = p.controller || {};
+        p.controller = p.controller || function () {return {}};
         components.push(p);
     };
 

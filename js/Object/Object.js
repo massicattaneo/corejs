@@ -14,8 +14,8 @@
 
     cjs.Object.extend = function () {
         var self = arguments[0];
-        for (var i = 0, j = arguments.length; i < j; i++) {
-            var obj = arguments[i];
+        for (var i = 1, j = arguments.length; i < j; i++) {
+            var obj = arguments[i] || {};
             Object.keys(obj).forEach(function (key) {
                 self[key] = obj[key];
             });
