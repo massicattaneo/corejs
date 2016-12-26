@@ -1273,6 +1273,7 @@ cjs.Component = function () {
     };
 
     var appendStyle = function (style) {
+        var ruleIndex = 0;
         style = style.replace(/\n/g, '');
         var existingStyle = styles.filter(function (s) {
             return s.style === style;
@@ -1318,7 +1319,7 @@ cjs.Component = function () {
                     } else if (m[1].match('@keyframes')){
                         selector = m[1].replace(/-&/g, cssSelector.replace('.', '-'))
                     }
-                    m && addCSSRule(sheet, selector, m[2], 0);
+                    m && addCSSRule(sheet, selector, m[2], ruleIndex++);
                 });
 
             });

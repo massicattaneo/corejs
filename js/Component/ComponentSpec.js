@@ -66,8 +66,8 @@ describe('GLOBAL - COMPONENT', function () {
                 style: '.mobile .& span {color: red;} .mobile.& li {color: white}'
             });
             test.createIn(document.body);
-            expect(document.styleSheets[0].rules[1].cssText).toEqual(".mobile .CJS1 span { color: red; }");
-            expect(document.styleSheets[0].rules[0].cssText).toEqual(".mobile.CJS1 li { color: white; }");
+            expect(document.styleSheets[0].rules[0].cssText).toEqual(".mobile .CJS1 span { color: red; }");
+            expect(document.styleSheets[0].rules[1].cssText).toEqual(".mobile.CJS1 li { color: white; }");
         })
 
     });
