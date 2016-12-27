@@ -84,13 +84,16 @@ cjs.Component = function () {
         })
     };
 
+    var reservedAttributes = ['data-on', 'data-item', 'data-bind', 'data-server'];
+
     var attach = function (node, obj, attrName) {
         var attribute = node.getAttribute(attrName);
-        if (attribute) {
+        if (attribute && reservedAttributes.indexOf(attrName) !== -1) {
             attrName === 'data-on' && createListeners(attribute, node, obj);
             attrName === 'data-item' && createItems(attribute, node, obj);
             attrName === 'data-bind' && createBindings(attribute, node, obj);
             attrName === 'data-server' && createServerBindings(attribute, node, obj);
+            node.setAttribute(attrName);
         }
     };
 
@@ -126,10 +129,9 @@ cjs.Component = function () {
             parseNode(n, obj);
         });
         node = parseNodeComponent(node, obj) || node;
-        attach(node, obj, 'data-on');
-        attach(node, obj, 'data-item');
-        attach(node, obj, 'data-bind');
-        attach(node, obj, 'data-server');
+        reservedAttributes.forEach(function (attrName) {
+            attach(node, obj, attrName);
+        });
     };
 
     var appendStyle = function (style) {

@@ -129,7 +129,11 @@
     function runAnimation(name, time) {
         var onEnds = 'animationend animationend webkitAnimationEnd oanimationend MSAnimationEnd'.split(' ');
         var n = cjs.Need();
-        var callback = function () {n.resolve()};
+        var self = this;
+        var callback = function () {
+            self.style.animation = '';
+            n.resolve()
+        };
         onEnds.forEach(function (action) {
             addListener.call(this, action, callback)
         });
@@ -227,7 +231,11 @@
         };
 
         obj.setAttribute = function (name, value) {
-            return element.setAttribute(name, value);
+            if (value === undefined) {
+                element.removeAttribute(name);
+            } else {
+                return element.setAttribute(name, value);
+            }
         };
 
         obj.children = function() {

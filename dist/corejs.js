@@ -560,7 +560,11 @@ String.prototype.toDate = function () {
     function runAnimation(name, time) {
         var onEnds = 'animationend animationend webkitAnimationEnd oanimationend MSAnimationEnd'.split(' ');
         var n = cjs.Need();
-        var callback = function () {n.resolve()};
+        var self = this;
+        var callback = function () {
+            self.style.animation = '';
+            n.resolve()
+        };
         onEnds.forEach(function (action) {
             addListener.call(this, action, callback)
         });
@@ -654,7 +658,11 @@ String.prototype.toDate = function () {
         };
 
         obj.setAttribute = function (name, value) {
-            return element.setAttribute(name, value);
+            if (value === undefined) {
+                element.removeAttribute(name);
+            } else {
+                return element.setAttribute(name, value);
+            }
         };
 
         obj.children = function() {
@@ -768,6 +776,7 @@ cjs.Need = function () {
             if (p.status === c.WAIT) {
                 finalize(p, c.DONE, data);
             }
+            return m;
         };
 
         m.reject = function (error) {
@@ -782,6 +791,7 @@ cjs.Need = function () {
 
         m.fail = function (action) {
             attach(p, c.FAIL, action);
+            return m;
         };
 
         m.status = function () {
@@ -855,9 +865,11 @@ cjs.Need = function () {
         };
         m.done = function (action) {
             callAction(c.DONE, action, p);
+            return m;
         };
         m.fail = function (action) {
             callAction(c.FAIL, action, p);
+            return m;
         };
         m.get = function (index) {
             return p.collection[index];
@@ -885,7 +897,12 @@ cjs.Need = function () {
         var runQueue = function (result) {
             index += 1;
             if (array.length > index) {
-                array[index](queue, result).done(runQueue).fail(clearQueue);
+                var n = array[index](queue, result);
+                if (n && n.done) {
+                    n.done(runQueue).fail(clearQueue);
+                } else {
+                    clearQueue();
+                }
             } else {
                 clearQueue();
             }
@@ -897,6 +914,7 @@ cjs.Need = function () {
 
         queue.push = function (o) {
             array.push(o);
+            return queue;
         };
 
         queue.isRunning = function () {
@@ -1224,13 +1242,16 @@ cjs.Component = function () {
         })
     };
 
+    var reservedAttributes = ['data-on', 'data-item', 'data-bind', 'data-server'];
+
     var attach = function (node, obj, attrName) {
         var attribute = node.getAttribute(attrName);
-        if (attribute) {
+        if (attribute && reservedAttributes.indexOf(attrName) !== -1) {
             attrName === 'data-on' && createListeners(attribute, node, obj);
             attrName === 'data-item' && createItems(attribute, node, obj);
             attrName === 'data-bind' && createBindings(attribute, node, obj);
             attrName === 'data-server' && createServerBindings(attribute, node, obj);
+            node.setAttribute(attrName);
         }
     };
 
@@ -1266,10 +1287,9 @@ cjs.Component = function () {
             parseNode(n, obj);
         });
         node = parseNodeComponent(node, obj) || node;
-        attach(node, obj, 'data-on');
-        attach(node, obj, 'data-item');
-        attach(node, obj, 'data-bind');
-        attach(node, obj, 'data-server');
+        reservedAttributes.forEach(function (attrName) {
+            attach(node, obj, attrName);
+        });
     };
 
     var appendStyle = function (style) {

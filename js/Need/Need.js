@@ -45,6 +45,7 @@ cjs.Need = function () {
             if (p.status === c.WAIT) {
                 finalize(p, c.DONE, data);
             }
+            return m;
         };
 
         m.reject = function (error) {
@@ -59,6 +60,7 @@ cjs.Need = function () {
 
         m.fail = function (action) {
             attach(p, c.FAIL, action);
+            return m;
         };
 
         m.status = function () {
@@ -133,9 +135,11 @@ cjs.Need = function () {
         };
         m.done = function (action) {
             callAction(c.DONE, action, p);
+            return m;
         };
         m.fail = function (action) {
             callAction(c.FAIL, action, p);
+            return m;
         };
         m.get = function (index) {
             return p.collection[index];
@@ -164,7 +168,12 @@ cjs.Need = function () {
         var runQueue = function (result) {
             index += 1;
             if (array.length > index) {
-                array[index](queue, result).done(runQueue).fail(clearQueue);
+                var n = array[index](queue, result);
+                if (n && n.done) {
+                    n.done(runQueue).fail(clearQueue);
+                } else {
+                    clearQueue();
+                }
             } else {
                 clearQueue();
             }
@@ -176,6 +185,7 @@ cjs.Need = function () {
 
         queue.push = function (o) {
             array.push(o);
+            return queue;
         };
 
         queue.isRunning = function () {
