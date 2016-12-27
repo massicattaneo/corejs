@@ -122,7 +122,6 @@ cjs.navigator = {};
         }
     };
 
-
     /** deviceManager **/
     var getScreenOrientation = function () {
         return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
@@ -171,6 +170,80 @@ cjs.navigator = {};
         ret.browserVersion = browserInfo[2];
         ret.getScreenOrientation = getScreenOrientation;
         return ret;
-    }
+    };
+    obj.screenManager = function () {
+        var obj = {};
+
+        /** TODO be refactored and tested - coming from BJ ...  */
+        function resize(p) {
+            var windowWidth = window.innerWidth;
+            var windowHeight = window.innerHeight;
+            var transform = '';
+            var scale;
+            var isRotated = false;
+            var canvas = p.canvas;
+            var canvasContainer = p.canvasContainer;
+            var htmlContainer = p.htmlContainer;
+            var body = cjs.Node(document.body);
+            var gameRatio = p.width / p.height;
+            var windowRatio = windowWidth / windowHeight;
+
+            var widthRatio = windowWidth / p.width;
+            var heightRatio = windowWidth / p.height;
+
+            if (windowWidth > windowHeight) {
+                scale = (windowRatio > gameRatio) ? windowHeight / p.height : widthRatio;
+                transform = 'scale3d(' + scale + ',' + scale + ',1)';
+                body.removeStyle('portrait');
+            } else {
+                scale = (windowHeight / p.width < heightRatio) ? windowHeight / p.width : heightRatio;
+                transform = 'scale3d(' + scale + ',' + scale + ',1) rotate3d(0,0,1,90deg)';
+                body.addStyle('portrait');
+                isRotated = true;
+            }
+
+            html.addStyle({
+                'transform': transform,
+                'transform-origin': '50% 50% 0',
+                left: -((p.width - windowWidth) / 2) + 'px',
+                top: -((p.height - windowHeight) / 2) + 'px'
+            });
+            canvas.addStyle({
+                width: '100%',
+                height: '100%',
+                top: 0
+            });
+
+            if (windowRatio > gameRatio) {
+                //height should be respected
+                canvas.width = windowWidth / (windowHeight / p.height);
+                canvas.height = p.height;
+
+            } else {
+                //width should be respected
+                canvas.width = p.width;
+                canvas.height = windowHeight / (widthRatio);
+            }
+
+            if (windowWidth > windowHeight) {
+                if (windowRatio > gameRatio) {
+                    canvasContainer.setTransform((windowWidth * (p.height / windowHeight) - p.width) / 2, 0);
+                } else {
+                    canvasContainer.setTransform(0, (windowHeight * (p.width / windowWidth) - p.height) / 2);
+                }
+            } else {
+                if (gameRatio < 1 / windowRatio) {
+                    canvasContainer.setTransform(p.width, (canvas.height - p.width * gameRatio) / 2, gameRatio, gameRatio, 90, 0, 0, 0, 0);
+                } else {
+                    canvasContainer.setTransform(p.width - ((canvas.width / (canvas.height / p.width) - p.height) / 2), 0, canvas.height / p.width, canvas.height / p.width, 90, 0, 0, 0, 0);
+                }
+            }
+        }
+
+        obj.resize = resize;
+
+        return obj;
+
+    };
 
 })(cjs.navigator);

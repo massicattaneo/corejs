@@ -159,13 +159,56 @@ cjs.Need = function () {
     var createQueue = function (array) {
         var queue = {};
         var index = -1;
+        var always;
+        var queuePromise;
 
-        var clearQueue = function () {
-            array.length = 0;
-            index = -1;
+        queue.start = function (param) {
+            queuePromise = createSingleNeed();
+            runQueue(param);
+            return queuePromise;
+        };
+        queue.push = function (o) {
+            Array.prototype.push.apply(array, arguments);
+            return queue;
+        };
+        queue.pushAndRun = function () {
+            if (!queue.isRunning()) {
+                queue.push.apply(queue, arguments);
+                queue.start();
+            } else {
+                queue.push.apply(queue, arguments)
+            }
+            return queue;
+        };
+        queue.length = function () {
+            return array.length;
+        };
+        queue.isRunning = function () {
+            return index !== -1;
+        };
+        queue.concat = function (a) {
+            array = array.concat(a);
+            return queue;
+        };
+        queue.always = function (callback) {
+            always = callback;
+            return queue;
+        };
+        queue.insert = function (item, offset) {
+            array.splice(index+1+(offset ||0), 0, item);
+            return queue;
         };
 
-        var runQueue = function (result) {
+        function clearQueue() {
+            array = [];
+            index = -1;
+            if (always) {
+                always.apply(queue, arguments);
+            }
+            queuePromise.resolve();
+            always = undefined;
+        }
+        function runQueue(result) {
             index += 1;
             if (array.length > index) {
                 var n = array[index](queue, result);
@@ -177,20 +220,7 @@ cjs.Need = function () {
             } else {
                 clearQueue();
             }
-        };
-
-        queue.start = function (param) {
-            runQueue(param);
-        };
-
-        queue.push = function (o) {
-            array.push(o);
-            return queue;
-        };
-
-        queue.isRunning = function () {
-            return index !== -1;
-        };
+        }
 
         return queue;
     };

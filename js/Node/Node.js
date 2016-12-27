@@ -10,7 +10,8 @@
  */
 
 (function () {
-    function addStyle() {
+
+    function addClass() {
         for (var a = 0; a < arguments.length; a++) {
             var className = arguments[a].trim();
             if (this.className) {
@@ -21,6 +22,22 @@
                 this.className = className;
             }
         }
+    }
+
+    function addCss(o) {
+        var e = this;
+        Object.keys(o).forEach(function (k) {
+            e.style[k] = o[k];
+        })
+    }
+
+    function addStyle() {
+        if (typeof arguments[0] === 'object') {
+            addCss.call(this, arguments)
+        } else {
+            addClass(this, arguments)
+        }
+
     }
 
     function clearStyles() {
