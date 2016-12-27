@@ -11,7 +11,7 @@
     "type": "git",
     "url": "git+https://github.com/massicattaneo/corejs.git"
   },
-  "author": "Massimiliano Cattaneo",
+  "author": "Max Cattaneo <massi.cattaneo.it@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/massicattaneo/corejs/issues"
