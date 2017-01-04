@@ -23,7 +23,8 @@ module.exports = (function () {
             'js/Bus/bus.js',
             'js/navigator/navigator.js',
             'js/navigator/cookies.js',
-            'js/Component/Component.js'
+            'js/Component/Component.js',
+            'js/audio/audio.js'
         ],
         tests: ['js/**/*Spec.js'],
         mocks: ['mocks/userAgentStrings.js'],

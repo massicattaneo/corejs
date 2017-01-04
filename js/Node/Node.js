@@ -33,11 +33,10 @@
 
     function addStyle() {
         if (typeof arguments[0] === 'object') {
-            addCss.call(this, arguments)
+            addCss.apply(this, arguments);
         } else {
-            addClass(this, arguments)
+            addClass.apply(this, arguments);
         }
-
     }
 
     function clearStyles() {
@@ -87,6 +86,15 @@
             /* istanbul ignore next */
             this.detachEvent('on' + action, callback);
         }
+    }
+
+    function addOnceListener(action, callback) {
+        var self = this;
+        var once = function () {
+            callback();
+            removeListener.call(self, action, once)
+        };
+        addListener.call(self, action, once);
     }
 
     function clearListeners() {
@@ -139,8 +147,27 @@
     function getValue() {
         if (this.getAttribute('type') === 'checkbox') {
             return this.checked;
+        } else if(this.value !== undefined) {
+            return this.value;
         }
         return this.innerText
+    }
+
+    function getTagName() {
+        return element.tagName
+    }
+
+    function getAttribute(attrName) {
+        if (!(element && element.getAttribute)) return null;
+        return element.getAttribute(attrName)
+    }
+
+    function setAttribute(name, value) {
+        if (value === undefined) {
+            element.removeAttribute(name);
+        } else {
+            element.setAttribute(name, value);
+        }
     }
 
     function runAnimation(name, time) {
@@ -217,8 +244,9 @@
         var obj = {};
 
         [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
-            addListener, removeListener, clearListeners,
+            addListener, addOnceListener, removeListener, clearListeners,
             setValue, getValue,
+            getAttribute, setAttribute, getTagName,
             runAnimation,
             fire,
             toJSON,
@@ -234,25 +262,8 @@
             return element;
         };
 
-        obj.getAttribute = function(attrName) {
-            if (!(element && element.getAttribute)) return null;
-            return element.getAttribute(attrName)
-        };
-
-        obj.getTagName = function() {
-            return element.tagName
-        };
-
         obj.attributes = function () {
             return element.attributes;
-        };
-
-        obj.setAttribute = function (name, value) {
-            if (value === undefined) {
-                element.removeAttribute(name);
-            } else {
-                return element.setAttribute(name, value);
-            }
         };
 
         obj.children = function() {

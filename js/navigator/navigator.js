@@ -94,7 +94,18 @@ cjs.navigator = {};
     obj.delete = function (url, options) {
         return obj.send('DELETE', url, options || {});
     };
-
+    obj.fileLength = function (url) {
+        var promise = cjs.Need();
+        var xhr = new XMLHttpRequest();
+        xhr.open("HEAD", url, true);
+        xhr.onreadystatechange = function () {
+            if (this.readyState === this.DONE) {
+                promise.resolve(parseInt(xhr.getResponseHeader("Content-Length")));
+            }
+        };
+        xhr.send();
+        return promise;
+    };
     obj.import = function (url) {
         return imports(url);
     };
@@ -245,5 +256,134 @@ cjs.navigator = {};
         return obj;
 
     };
+
+    obj.fileLoader = function (p) {
+
+        var loadingSpeed;
+        var imagesLoaded = [];
+        var obj = {};
+
+        function previouslyLoaded(url) {
+            return imagesLoaded.filter(function (o) {
+                return o.url === url;
+            })[0];
+        }
+
+        function getFileSize(image) {
+            var fileLength = obj.fileLength(image.url + '?v=' + p.version || '');
+            fileLength.done(function (size) {
+                image.size = size;
+            });
+            return fileLength;
+        }
+        // function loadFile(url, onProgress) {
+        //     var defer = new $.Deferred();
+        //     var xhr = new XMLHttpRequest();
+        //     var totalLoaded = 0;
+        //     xhr.open('GET', url + '?length', true);
+        //     xhr.responseType = 'document'
+        //     // xhr.setRequestHeader('Content-Length','');
+        //
+        //     xhr.onload = function(data) {
+        //         defer.resolve(data);
+        //     };
+        //     xhr.onprogress = function(evt) {
+        //         if (evt.lengthComputable) {
+        //             onProgress(evt.loaded - totalLoaded, evt.total);
+        //             totalLoaded = evt.loaded;
+        //         }
+        //     };
+        //     xhr.send();
+        //     return defer.promise();
+        // }
+
+        function loadImage(url, onProgress, imageSize) {
+            var defer = cjs.Need(), image = cjs.Need('<img>');
+            var totalRemainingToLoad = imageSize;
+
+            var int = setInterval(function () {
+                var sizeLoaded = loadingSpeed * 1.2;
+                if (totalRemainingToLoad > sizeLoaded) {
+                    totalRemainingToLoad -= sizeLoaded;
+                    onProgress(sizeLoaded)
+                }
+            }, 100);
+
+            image
+                .setAttribute('src', url + '?v=' + p.version || '')
+                .addOnceEventListener('load', function (data) {
+                    clearInterval(int);
+                    onProgress(totalRemainingToLoad);
+                    image = null;
+                    defer.resolve(data);
+                })
+                .addOnceEventListener('error',function (e) {
+                    clearInterval(int);
+                    defer.resolve({});
+                });
+            return defer;
+        }
+        function getFilesLength(images) {
+            var defs = [];
+            images.forEach(function (image) {
+                defs.push(getFileSize(image))
+            });
+            return cjs.Need(defs);
+        }
+        function loadImages(images, onProgress) {
+            var defs = [];
+            var totalSize = 0, totalLoaded = 0;
+            images.forEach(function (image) {
+                image.size = isNaN(image.size) ? 0 : image.size;
+                totalSize += image.size;
+                totalLoaded += image.loaded;
+            });
+
+            images.forEach(function (image) {
+                defs.push(loadImage(image.url, function (loaded) {
+                    image.loaded = loaded;
+                    totalLoaded += loaded;
+                    onProgress(totalLoaded, totalSize);
+                }, image.size))
+            });
+            return cjs.Need(defs);
+        }
+
+        obj.load = function (array, onProgress) {
+            var defer = cjs.Need();
+            var images = [];
+            array.forEach(function (url) {
+                if (!previouslyLoaded(url)) {
+                    images.push({
+                        url: url,
+                        size: 0,
+                        loaded: 0
+                    })
+                }
+            });
+            onProgress = onProgress || function () {};
+            getFilesLength(images)
+                .done(function () {
+                    loadImages(images, onProgress).then(defer.resolve)
+                });
+
+            return defer;
+        };
+
+        obj.calculateSpeed = function (testImageUrl) {
+            var d = cjs.Need();
+            var startTime = new Date().getTime();
+            cjs.Need('<img>')
+                .setAttribute('src', testImageUrl)
+                .addOnceListener('load', function () {
+                    var endTime = new Date().getTime();
+                    loadingSpeed = 505/((endTime - startTime)/1000); // bytes/s
+                    d.resolve();
+                });
+            return d;
+        };
+
+        return obj;
+    }
 
 })(cjs.navigator);

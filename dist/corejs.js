@@ -468,11 +468,10 @@ String.prototype.toDate = function () {
 
     function addStyle() {
         if (typeof arguments[0] === 'object') {
-            addCss.call(this, arguments)
+            addCss.apply(this, arguments);
         } else {
-            addClass(this, arguments)
+            addClass.apply(this, arguments);
         }
-
     }
 
     function clearStyles() {
@@ -519,6 +518,15 @@ String.prototype.toDate = function () {
         } else {
             this.detachEvent('on' + action, callback);
         }
+    }
+
+    function addOnceListener(action, callback) {
+        var self = this;
+        var once = function () {
+            callback();
+            removeListener.call(self, action, once)
+        };
+        addListener.call(self, action, once);
     }
 
     function clearListeners() {
@@ -570,8 +578,27 @@ String.prototype.toDate = function () {
     function getValue() {
         if (this.getAttribute('type') === 'checkbox') {
             return this.checked;
+        } else if(this.value !== undefined) {
+            return this.value;
         }
         return this.innerText
+    }
+
+    function getTagName() {
+        return element.tagName
+    }
+
+    function getAttribute(attrName) {
+        if (!(element && element.getAttribute)) return null;
+        return element.getAttribute(attrName)
+    }
+
+    function setAttribute(name, value) {
+        if (value === undefined) {
+            element.removeAttribute(name);
+        } else {
+            element.setAttribute(name, value);
+        }
     }
 
     function runAnimation(name, time) {
@@ -644,8 +671,9 @@ String.prototype.toDate = function () {
         var obj = {};
 
         [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
-            addListener, removeListener, clearListeners,
+            addListener, addOnceListener, removeListener, clearListeners,
             setValue, getValue,
+            getAttribute, setAttribute, getTagName,
             runAnimation,
             fire,
             toJSON,
@@ -661,25 +689,8 @@ String.prototype.toDate = function () {
             return element;
         };
 
-        obj.getAttribute = function(attrName) {
-            if (!(element && element.getAttribute)) return null;
-            return element.getAttribute(attrName)
-        };
-
-        obj.getTagName = function() {
-            return element.tagName
-        };
-
         obj.attributes = function () {
             return element.attributes;
-        };
-
-        obj.setAttribute = function (name, value) {
-            if (value === undefined) {
-                element.removeAttribute(name);
-            } else {
-                return element.setAttribute(name, value);
-            }
         };
 
         obj.children = function() {
@@ -1135,7 +1146,18 @@ cjs.navigator = {};
     obj.delete = function (url, options) {
         return obj.send('DELETE', url, options || {});
     };
-
+    obj.fileLength = function (url) {
+        var promise = cjs.Need();
+        var xhr = new XMLHttpRequest();
+        xhr.open("HEAD", url, true);
+        xhr.onreadystatechange = function () {
+            if (this.readyState === this.DONE) {
+                promise.resolve(parseInt(xhr.getResponseHeader("Content-Length")));
+            }
+        };
+        xhr.send();
+        return promise;
+    };
     obj.import = function (url) {
         return imports(url);
     };
@@ -1281,6 +1303,115 @@ cjs.navigator = {};
         return obj;
 
     };
+
+    obj.fileLoader = function (p) {
+
+        var loadingSpeed;
+        var imagesLoaded = [];
+        var obj = {};
+
+        function previouslyLoaded(url) {
+            return imagesLoaded.filter(function (o) {
+                return o.url === url;
+            })[0];
+        }
+
+        function getFileSize(image) {
+            var fileLength = obj.fileLength(image.url + '?v=' + p.version || '');
+            fileLength.done(function (size) {
+                image.size = size;
+            });
+            return fileLength;
+        }
+
+        function loadImage(url, onProgress, imageSize) {
+            var defer = cjs.Need(), image = cjs.Need('<img>');
+            var totalRemainingToLoad = imageSize;
+
+            var int = setInterval(function () {
+                var sizeLoaded = loadingSpeed * 1.2;
+                if (totalRemainingToLoad > sizeLoaded) {
+                    totalRemainingToLoad -= sizeLoaded;
+                    onProgress(sizeLoaded)
+                }
+            }, 100);
+
+            image
+                .setAttribute('src', url + '?v=' + p.version || '')
+                .addOnceEventListener('load', function (data) {
+                    clearInterval(int);
+                    onProgress(totalRemainingToLoad);
+                    image = null;
+                    defer.resolve(data);
+                })
+                .addOnceEventListener('error',function (e) {
+                    clearInterval(int);
+                    defer.resolve({});
+                });
+            return defer;
+        }
+        function getFilesLength(images) {
+            var defs = [];
+            images.forEach(function (image) {
+                defs.push(getFileSize(image))
+            });
+            return cjs.Need(defs);
+        }
+        function loadImages(images, onProgress) {
+            var defs = [];
+            var totalSize = 0, totalLoaded = 0;
+            images.forEach(function (image) {
+                image.size = isNaN(image.size) ? 0 : image.size;
+                totalSize += image.size;
+                totalLoaded += image.loaded;
+            });
+
+            images.forEach(function (image) {
+                defs.push(loadImage(image.url, function (loaded) {
+                    image.loaded = loaded;
+                    totalLoaded += loaded;
+                    onProgress(totalLoaded, totalSize);
+                }, image.size))
+            });
+            return cjs.Need(defs);
+        }
+
+        obj.load = function (array, onProgress) {
+            var defer = cjs.Need();
+            var images = [];
+            array.forEach(function (url) {
+                if (!previouslyLoaded(url)) {
+                    images.push({
+                        url: url,
+                        size: 0,
+                        loaded: 0
+                    })
+                }
+            });
+            onProgress = onProgress || function () {};
+            getFilesLength(images)
+                .done(function () {
+                    loadImages(images, onProgress).then(defer.resolve)
+                });
+
+            return defer;
+        };
+
+        obj.calculateSpeed = function (testImageUrl) {
+            var d = cjs.Need();
+            var startTime = new Date().getTime();
+            cjs.Need('<img>')
+                .setAttribute('src', testImageUrl)
+                .addOnceListener('load', function () {
+                    var endTime = new Date().getTime();
+                    loadingSpeed = 505/((endTime - startTime)/1000); 
+                    d.resolve();
+                });
+            return d;
+        };
+
+        return obj;
+    }
 
 })(cjs.navigator);
 
@@ -1579,3 +1710,21 @@ cjs.Component = function () {
     return Component;
 
 }();
+
+
+cjs.Audio = function () {
+    var obj = {};
+
+    var sounds = {name: {url: ''}};
+
+    obj.init = function (sds) {
+        sounds = sds;
+    };
+
+    obj.play = function (type) {
+        var audio = new Audio(sounds[type].url);
+        audio.play();
+    };
+
+    return obj;
+};
