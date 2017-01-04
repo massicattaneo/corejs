@@ -153,16 +153,14 @@
         return this.innerText
     }
 
-    function getTagName() {
-        return element.tagName
-    }
-
     function getAttribute(attrName) {
+        var element = this;
         if (!(element && element.getAttribute)) return null;
         return element.getAttribute(attrName)
     }
 
     function setAttribute(name, value) {
+        var element = this;
         if (value === undefined) {
             element.removeAttribute(name);
         } else {
@@ -246,7 +244,7 @@
         [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
             addListener, addOnceListener, removeListener, clearListeners,
             setValue, getValue,
-            getAttribute, setAttribute, getTagName,
+            getAttribute, setAttribute,
             runAnimation,
             fire,
             toJSON,
@@ -264,6 +262,10 @@
 
         obj.attributes = function () {
             return element.attributes;
+        };
+
+        obj.getTagName = function() {
+            return element.tagName
         };
 
         obj.children = function() {

@@ -584,16 +584,14 @@ String.prototype.toDate = function () {
         return this.innerText
     }
 
-    function getTagName() {
-        return element.tagName
-    }
-
     function getAttribute(attrName) {
+        var element = this;
         if (!(element && element.getAttribute)) return null;
         return element.getAttribute(attrName)
     }
 
     function setAttribute(name, value) {
+        var element = this;
         if (value === undefined) {
             element.removeAttribute(name);
         } else {
@@ -673,7 +671,7 @@ String.prototype.toDate = function () {
         [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
             addListener, addOnceListener, removeListener, clearListeners,
             setValue, getValue,
-            getAttribute, setAttribute, getTagName,
+            getAttribute, setAttribute,
             runAnimation,
             fire,
             toJSON,
@@ -691,6 +689,10 @@ String.prototype.toDate = function () {
 
         obj.attributes = function () {
             return element.attributes;
+        };
+
+        obj.getTagName = function() {
+            return element.tagName
         };
 
         obj.children = function() {
