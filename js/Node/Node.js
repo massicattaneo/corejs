@@ -137,6 +137,8 @@
     function setValue(value) {
         if (this.getAttribute('type') === 'checkbox') {
             this.checked = value;
+        } else if (this.getAttribute('type') === 'text') {
+            this.value = value;
         } else {
             this.textContent = value;
             this.innerText = value;

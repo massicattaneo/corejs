@@ -1408,7 +1408,7 @@ cjs.navigator = {};
                 .setAttribute('src', testImageUrl)
                 .addOnceListener('load', function () {
                     var endTime = new Date().getTime();
-                    loadingSpeed = 505/((endTime - startTime)/1000);
+                    loadingSpeed = 505/((endTime - startTime)/1000); 
                     d.resolve();
                 });
             return d;
@@ -1660,8 +1660,8 @@ cjs.Component = function () {
             if (!position) {
                 parent.appendChild(node.get(0));
             } else {
-                position === 'before' && parent.parentNode.insertBefore(node.get(0), parent);
-                position === 'after' && parent.parentNode.insertBefore(node.get(0), parent.nextSibling);
+                position === 'before' && parent.parentNode.insertBefore(node.get(), parent);
+                position === 'after' && parent.parentNode.insertBefore(node.get(), parent.nextSibling);
             }
             if (style) {
                 className = appendStyle(style);
