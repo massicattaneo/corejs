@@ -1,2 +1,6 @@
-{color: $secondaryColor;}
-li:last-child {color: $primaryColor;}
+.& {
+    color: $secondaryColor;
+}
+.& li:first-child {
+    color: $primaryColor;
+}

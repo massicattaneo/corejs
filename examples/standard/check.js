@@ -12,14 +12,15 @@
 function controllerCheck() {
 
     return function () {
-        return {
-            change: function (e) {
-                e.getTarget().fire('custom', {value: e.getTarget().checked});
-            },
-            init: function () {
-                this.get('checkbox').checked = true;
-            }
+        var obj = {};
+        obj.init = function () {
+            obj.get('checkbox').checked = true;
         };
+        obj.change = function (e) {
+            var node = cjs.Node(e);
+            node.fire('custom', {value: node.getValue()});
+        };
+        return obj;
     }
 
 };

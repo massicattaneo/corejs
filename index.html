@@ -11,14 +11,7 @@
 </head>
 <body>
 
-<script src="js/String/String.js"></script>
-<script src="js/Array/Array.js"></script>
-<script src="js/Object/Object.js"></script>
-<script src="js/Element/Element.js"></script>
-<script src="js/Collection/Collection.js"></script>
-<script src="js/Need/Need.js"></script>
-<script src="js/Component/Component.js"></script>
-<script src="js/navigator/navigator.js"></script>
+<script src="dist/corejs.js"></script>
 
 <h2>CoreJS Examples:</h2>
 <div id="examples">
@@ -26,14 +19,12 @@
     <div id="standard"></div>
     <h3>LIST:</h3>
     <div id="list"></div>
-    <h3>SERVER:</h3>
-    <div id="server"></div>
 </div>
 
 <script>
-    navigator
+    cjs.navigator
         .import('examples/bootstrap.js')
-        .then(function (bootstrap) {
+        .done(function (bootstrap) {
             bootstrap({
                 standard: document.getElementById('standard'),
                 list: document.getElementById('list'),

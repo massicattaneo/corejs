@@ -10,7 +10,7 @@
  */
 
 function main(need) {
-    
+
     var template = need('examples/list/template.html');
 
     var list = need('examples/list/list/controller.js');
@@ -22,22 +22,22 @@ function main(need) {
 
     return function (config) {
 
-        Component.register({
+        cjs.Component.register({
             name: 'list',
-            controller: list(),
+            controller: list,
             template: listTemplate,
             style: listStyle,
             config: config
         });
 
-        Component.register({
+        cjs.Component.register({
             name: 'listItem',
-            controller: item(),
+            controller: item,
             template: listItemTemplate,
             config: config
         });
 
-        var c = Component({template: template});
+        var c = cjs.Component({template: template});
 
         c.addItem = function (value) {
             c.get('list').addItem([value]);

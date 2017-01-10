@@ -35,11 +35,11 @@ function controllerInput() {
         var enabled = true;
 
         obj.check = function () {
-            var check = validate(this.get('input').value, enabled);
+            var check = validate(this.get('input').getValue(), enabled);
             this.get('error')
-                .clearClass()
-                .addClass(check.class)
-                .setText(replaceLocalization(check.message));
+                .clearStyles()
+                .addStyle(check.class)
+                .setValue(replaceLocalization(check.message));
             return check.isValid && enabled;
         };
         obj.disable = function () {
@@ -49,7 +49,7 @@ function controllerInput() {
         };
         obj.enable = function () {
             enabled = true;
-            this.get('input').removeAttribute('disabled');
+            this.get('input').setAttribute('disabled');
             this.check();
         };
 
