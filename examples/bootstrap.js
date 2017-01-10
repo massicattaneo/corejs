@@ -28,7 +28,8 @@ function bootstrap(imports) {
 
         // list.addItem(['Test item']);
 
-        standard.submit = function () {
+        standard.submit = function (e) {
+            e.preventDefault();
             if (standard.isValid()) {
                 list.addItem(standard.getValue());
                 standard.setValue('');

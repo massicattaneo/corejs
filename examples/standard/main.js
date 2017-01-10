@@ -13,6 +13,7 @@ function exampleStandard(need) {
 
     var inputController = need('examples/standard/input.js');
     var inputStyle = need('examples/standard/inputStyle.scss');
+    var mainTemplate = need('examples/standard/mainTemplate.html');
     var checkController = need('examples/standard/check.js');
 
     return function (config) {
@@ -20,7 +21,7 @@ function exampleStandard(need) {
         cjs.Component.register({
             name: 'input',
             controller: inputController,
-            template: '<div><input data-item="input" type="text" data-on="keyup:check" /><span data-item="error"></span></div>',
+            template: '<div><input data-item="input" {{autofocus}} type="text" data-on="keyup:check" /><span data-item="error"></span></div>',
             style: inputStyle,
             config: config
         });
@@ -31,7 +32,7 @@ function exampleStandard(need) {
         });
 
         var c = cjs.Component({
-            template: '<div><cjs:check data-id="c1" data-on="custom:toggleCheckbox"></cjs:check><input type="submit" value="{{submitButtonText}}" data-on="click:submit" /><cjs:input class="input" id="comp1" data-id="c2" ></cjs:input></div>',
+            template: mainTemplate,
             style: 'div {display:inline-block} input[type=submit] {color: gray; inline-block: block; margin-right: 10px}',
             config: config
         });
@@ -54,4 +55,4 @@ function exampleStandard(need) {
 
     }
 
-};
+}
