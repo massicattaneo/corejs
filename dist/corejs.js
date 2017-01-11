@@ -1419,12 +1419,44 @@ cjs.navigator = {};
 
 })(cjs.navigator);
 
+(function () {
+
+    cjs.Db = function () {
+        var obj = {};
+        var proxy;
+
+        obj.ref = function (attr) {
+            if (proxy) {
+                var commentsRef = proxy.ref(attr);
+                commentsRef.on('child_added', function(data) {
+                });
+
+                commentsRef.on('child_changed', function(data) {
+                });
+
+                commentsRef.on('child_removed', function(data) {
+                });
+            }
+        };
+
+        obj.proxyTo = function (p) {
+            proxy = p;
+        };
+
+
+        return obj
+    }
+
+});
+
 
 cjs.Component = function () {
 
     var stylesFunctions = {};
 
     var styles = [];
+
+    var dataBase = cjs.Db();
 
     var injectModel = function (toJSON, node, value) {
         var v = toJSON;
@@ -1448,8 +1480,11 @@ cjs.Component = function () {
 
             obj.collect = function () {
                 collection.forEach(function (o) {
-                    cjs.navigator.send('GET', '/data/' + o.attribute).done(function (data) {
+                    dataBase.get(o.attribute).done(function (data) {
                         injectModel(data.toJSON(), o.item, o.attribute);
+                    })
+                    cjs.navigator.send('GET', '/data/' + o.attribute).done(function (data) {
+
                     });
                 });
             };
@@ -1699,6 +1734,10 @@ cjs.Component = function () {
     Component.register = function (p) {
         p.controller = p.controller || function () {return {}};
         components.push(p);
+    };
+
+    Component.injectDatabaseProxy = function (db) {
+        dataBase.proxyTo(db);
     };
 
     Component.get = function (componentName) {

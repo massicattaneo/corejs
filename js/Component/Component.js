@@ -15,6 +15,8 @@ cjs.Component = function () {
 
     var styles = [];
 
+    var dataBase = cjs.Db();
+
     var injectModel = function (toJSON, node, value) {
         var v = toJSON;
         value.split('/').forEach(function (item) {
@@ -37,8 +39,11 @@ cjs.Component = function () {
 
             obj.collect = function () {
                 collection.forEach(function (o) {
-                    cjs.navigator.send('GET', '/data/' + o.attribute).done(function (data) {
+                    dataBase.get(o.attribute).done(function (data) {
                         injectModel(data.toJSON(), o.item, o.attribute);
+                    })
+                    cjs.navigator.send('GET', '/data/' + o.attribute).done(function (data) {
+
                     });
                 });
             };
@@ -289,6 +294,10 @@ cjs.Component = function () {
     Component.register = function (p) {
         p.controller = p.controller || function () {return {}};
         components.push(p);
+    };
+
+    Component.injectDatabaseProxy = function (db) {
+        dataBase.proxyTo(db);
     };
 
     Component.get = function (componentName) {

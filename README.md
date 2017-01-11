@@ -13,6 +13,12 @@ Basic Javascript Framework:
 - Dependency Injection
 - Http requests
 - Bus
+- Components (html, js, scss, json)*
+
+COMPONENTS
+----------
+
+
 
 UNIT TEST
 ---------
