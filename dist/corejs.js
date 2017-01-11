@@ -1447,7 +1447,7 @@ cjs.navigator = {};
         return obj
     }
 
-});
+})();
 
 
 cjs.Component = function () {
