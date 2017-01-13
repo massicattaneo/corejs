@@ -568,7 +568,7 @@ String.prototype.toDate = function () {
     function setValue(value) {
         if (this.getAttribute('type') === 'checkbox') {
             this.checked = value;
-        } else if (this.getAttribute('type') === 'text') {
+        } else if (['text', 'email', 'tel', ].indexOf(this.getAttribute('type')) !== -1) {
             this.value = value;
         } else {
             this.textContent = value;
@@ -667,6 +667,7 @@ String.prototype.toDate = function () {
         return parseNode(this.children);
     }
 
+    var extensions = {};
     function Node(element) {
         var obj = {};
 
@@ -705,6 +706,8 @@ String.prototype.toDate = function () {
             })
         };
 
+        cjs.Object.extend(obj, extensions);
+
         return obj;
     }
 
@@ -718,6 +721,10 @@ String.prototype.toDate = function () {
         var e = document.getElementById(node.replace('#', ''));
         return Node(e);
     };
+
+    cjs.Node.extend = function (o) {
+        cjs.Object.extend(extensions, o);
+    }
 
 
 
@@ -881,7 +888,8 @@ cjs.Need = function () {
             count: 0,
             counter: 0,
             status: c.WAIT,
-            collection: []
+            collection: [],
+            id: -1
         };
 
         m.add = function (promise) {
@@ -909,6 +917,10 @@ cjs.Need = function () {
         m.status = function () {
             return p.status;
         };
+        m.size = function () {
+            return p.collection.length;
+        };
+        m.setId = function (id) {p.id = id;};
 
         array.forEach(function (promise) {
             m.add(promise);
@@ -1425,18 +1437,10 @@ cjs.navigator = {};
         var obj = {};
         var proxy;
 
-        obj.ref = function (attr) {
-            if (proxy) {
-                var commentsRef = proxy.ref(attr);
-                commentsRef.on('child_added', function(data) {
-                });
-
-                commentsRef.on('child_changed', function(data) {
-                });
-
-                commentsRef.on('child_removed', function(data) {
-                });
-            }
+        obj.on = function (attr, callback) {
+            proxy.ref(attr).on('value', function (data) {
+                callback(data.val())
+            });
         };
 
         obj.proxyTo = function (p) {
@@ -1453,20 +1457,21 @@ cjs.navigator = {};
 cjs.Component = function () {
 
     var stylesFunctions = {};
-
+    var parsingFunctions = {};
     var styles = [];
 
     var dataBase = cjs.Db();
 
-    var injectModel = function (toJSON, node, value) {
-        var v = toJSON;
-        value.split('/').forEach(function (item) {
-            v = v[item];
-        });
-        node.setValue(v);
-    };
-
     cjs.bus.addBus('bindings');
+
+    function dataParser(data, node) {
+        var attribute = node.getAttribute('data-parser');
+        if (attribute && parsingFunctions[attribute]) {
+            parsingFunctions[attribute](data, node)
+        } else if (!attribute && parsingFunctions[attribute]) {
+            console.error('missing parsing function')
+        }
+    }
 
     var components = [],
         cssStyleIndex = 0,
@@ -1479,14 +1484,23 @@ cjs.Component = function () {
             };
 
             obj.collect = function () {
+                var need = cjs.Need([]);
                 collection.forEach(function (o) {
-                    dataBase.get(o.attribute).done(function (data) {
-                        injectModel(data.toJSON(), o.item, o.attribute);
-                    })
-                    cjs.navigator.send('GET', '/data/' + o.attribute).done(function (data) {
-
-                    });
+                    if (!o.item.__isCollect) {
+                        o.item.__isCollect = true;
+                        var n = cjs.Need();
+                        need.add(n);
+                        dataBase.on(o.attribute, function (data) {
+                            dataParser(data, o.item);
+                            o.item.setValue(data);
+                            n.resolve();
+                        });
+                    }
                 });
+                if (need.size() === 0) {
+                    need.add(cjs.Need().resolve())
+                }
+                return need;
             };
 
             obj.save = function (item) {
@@ -1676,6 +1690,7 @@ cjs.Component = function () {
         return template;
     };
 
+    var extensions = {};
     var Component = function (p, obj) {
 
         var config = p.config || {};
@@ -1704,7 +1719,6 @@ cjs.Component = function () {
             }
             node && parseNode(node, obj);
             obj.init && obj.init();
-            dataProxy.collect();
         };
 
         obj.get = function (itemName) {
@@ -1728,7 +1742,21 @@ cjs.Component = function () {
             return cjs.Need(needs);
         };
 
+        obj.toJSON = function () {
+            var a = {};
+            obj.items.each(function (index, key, node) {
+                a[key] = node.getValue();
+            });
+            return a;
+        };
+
+        cjs.Object.extend(obj, extensions);
+
         return obj;
+    };
+
+    Component.extend = function (o) {
+        cjs.Object.extend(extensions, o);
     };
 
     Component.register = function (p) {
@@ -1740,14 +1768,33 @@ cjs.Component = function () {
         dataBase.proxyTo(db);
     };
 
+    Component.collectData = function () {
+        return dataProxy.collect();
+    };
+
     Component.get = function (componentName) {
         return components.filter(function (c) {
             return c.name === componentName;
         })[0];
     };
 
+    Component.create = function (componentName, proto) {
+        var rc = cjs.Component.get(componentName);
+        var config = cjs.Object.extend(proto.config || {}, rc.config);
+        var o = (proto.controller) ? proto.controller(config) : rc.controller(config);
+        return cjs.Component({
+            config: config,
+            template: rc.template,
+            style: rc.style
+        }, o);
+    };
+
     Component.registerStyleFunction = function (name, func) {
         stylesFunctions[name] = func;
+    };
+
+    Component.registerParserFunction = function (name, func) {
+        parsingFunctions[name] = func;
     };
 
     return Component;

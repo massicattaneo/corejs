@@ -119,7 +119,8 @@ cjs.Need = function () {
             count: 0,
             counter: 0,
             status: c.WAIT,
-            collection: []
+            collection: [],
+            id: -1
         };
 
         m.add = function (promise) {
@@ -147,6 +148,10 @@ cjs.Need = function () {
         m.status = function () {
             return p.status;
         };
+        m.size = function () {
+            return p.collection.length;
+        };
+        m.setId = function (id) {p.id = id;};
 
         array.forEach(function (promise) {
             m.add(promise);

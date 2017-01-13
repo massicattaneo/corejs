@@ -137,7 +137,7 @@
     function setValue(value) {
         if (this.getAttribute('type') === 'checkbox') {
             this.checked = value;
-        } else if (this.getAttribute('type') === 'text') {
+        } else if (['text', 'email', 'tel', ].indexOf(this.getAttribute('type')) !== -1) {
             this.value = value;
         } else {
             this.textContent = value;
@@ -240,6 +240,7 @@
         return parseNode(this.children);
     }
 
+    var extensions = {};
     function Node(element) {
         var obj = {};
 
@@ -278,6 +279,8 @@
             })
         };
 
+        cjs.Object.extend(obj, extensions);
+
         return obj;
     }
 
@@ -291,6 +294,10 @@
         var e = document.getElementById(node.replace('#', ''));
         return Node(e);
     };
+
+    cjs.Node.extend = function (o) {
+        cjs.Object.extend(extensions, o);
+    }
 
 //
 // if (!Event.prototype.stopPropagation) {

@@ -14,24 +14,20 @@
         var obj = {};
         var proxy;
 
-        obj.ref = function (attr) {
-            if (proxy) {
-                var commentsRef = proxy.ref(attr);
-                commentsRef.on('child_added', function(data) {
-                    // data.key, data.val()
-                });
-
-                commentsRef.on('child_changed', function(data) {
-                    // data.key, data.val()
-                });
-
-                commentsRef.on('child_removed', function(data) {
-                    // data.key, data.val()
-                });
-            }
-            // else {
-                // cjs.navigator.send('GET', '/data/' + attr)
-            // }
+        obj.on = function (attr, callback) {
+            // var commentsRef = proxy.ref(attr);
+            // commentsRef.on('child_added', function(data) {
+            // });
+            //
+            // commentsRef.on('child_changed', function(data) {
+            // });
+            //
+            // commentsRef.on('child_removed', function(data) {
+            // });
+            // return cjs.Need().resolve(commentsRef)
+            proxy.ref(attr).on('value', function (data) {
+                callback(data.val())
+            });
         };
 
         obj.proxyTo = function (p) {
