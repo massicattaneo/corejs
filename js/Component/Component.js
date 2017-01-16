@@ -45,7 +45,7 @@ cjs.Component = function () {
                         o.item.__isCollect = true;
                         var n = cjs.Need();
                         need.add(n);
-                        dataBase.on(o.attribute, function (data) {
+                        dataBase.onChange(o.attribute, function (data) {
                             dataParser(data, o.item);
                             o.item.setValue(data);
                             n.resolve();
@@ -56,6 +56,14 @@ cjs.Component = function () {
                     need.add(cjs.Need().resolve())
                 }
                 return need;
+            };
+
+            obj.forEach = function (callback) {
+                collection.forEach(callback);
+            };
+
+            obj.off = function (path) {
+                dataBase.off(path);
             };
 
             obj.save = function (item) {
@@ -118,11 +126,12 @@ cjs.Component = function () {
             if (match) {
                 var c = Component.get(match[1].toCamelCase());
                 var config = node.toJSON();
+                var configExt = cjs.Object.extend({}, config, c.config);
                 var comp = Component({
                     template: (node.get().innerHTML) ? parseTemplate(c.template, cjs.Object.extend({}, config, c.config)) : c.template,
-                    style: (node.get().innerHTML) ? parseStyle(c.style, cjs.Object.extend({}, config, c.config)) : c.style,
+                    style: (node.get().innerHTML) ? parseStyle(c.style, configExt) : c.style,
                     config: c.config
-                }, c.controller(config));
+                }, c.controller(configExt));
                 comp.createIn(node.get(), 'before');
                 for (var i = 0; i < node.attributes().length; i++) {
                     var a = node.attributes()[i];
@@ -306,6 +315,25 @@ cjs.Component = function () {
             return a;
         };
 
+        obj.remove = function (id) {
+            obj.node.clearListeners();
+            obj.items.each(function (index, key, item) {
+                var i = item.get ? item.get() : item;
+                i.clearListeners();
+            });
+            dataProxy.forEach(function (o, index) {
+                if (obj.get() === o.item) {
+                    dataProxy.off(o.attribute);
+                }
+                if (obj.items.indexOf(o.item)) {
+                    dataProxy.off(o.attribute);
+                }
+            });
+
+            var parent = obj.node.get().parentNode;
+            parent.removeChild(obj.node.get());
+        };
+
         cjs.Object.extend(obj, extensions);
 
         return obj;
@@ -321,7 +349,7 @@ cjs.Component = function () {
     };
 
     Component.injectDatabaseProxy = function (db) {
-        dataBase.proxyTo(db);
+        dataBase = db;
     };
 
     Component.collectData = function () {

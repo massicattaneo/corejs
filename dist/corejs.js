@@ -534,6 +534,7 @@ String.prototype.toDate = function () {
             this._listeners.forEach(function (listener) {
                 removeListener.call(this, listener.action, listener.callback)
             }, this);
+            this._listeners.length = 0;
         }
     }
 
@@ -1434,19 +1435,39 @@ cjs.navigator = {};
 (function () {
 
     cjs.Db = function () {
-        var obj = {};
-        var proxy;
+        return {
+            onChange: function () {}
+        }
+    };
 
-        obj.on = function (attr, callback) {
-            proxy.ref(attr).on('value', function (data) {
+    cjs.Db.firebaseAdapter = function (db) {
+        var obj = {};
+
+        obj.once = function (path, callback) {
+            db.ref(path).once('value').then(callback);
+        };
+
+        obj.onChange = function (path, callback) {
+            db.ref(path).on('value', function (data) {
                 callback(data.val())
             });
         };
 
-        obj.proxyTo = function (p) {
-            proxy = p;
+        obj.onRemove = function (path, callback) {
+            db.ref(path).on('child_removed', callback);
         };
 
+        obj.get = function (path) {
+            return db.ref().child(path);
+        };
+
+        obj.remove = function (path) {
+            db.ref(path).remove();
+        };
+
+        obj.off = function (path) {
+            db.ref(path).off();
+        };
 
         return obj
     }
@@ -1490,7 +1511,7 @@ cjs.Component = function () {
                         o.item.__isCollect = true;
                         var n = cjs.Need();
                         need.add(n);
-                        dataBase.on(o.attribute, function (data) {
+                        dataBase.onChange(o.attribute, function (data) {
                             dataParser(data, o.item);
                             o.item.setValue(data);
                             n.resolve();
@@ -1501,6 +1522,14 @@ cjs.Component = function () {
                     need.add(cjs.Need().resolve())
                 }
                 return need;
+            };
+
+            obj.forEach = function (callback) {
+                collection.forEach(callback);
+            };
+
+            obj.off = function (path) {
+                dataBase.off(path);
             };
 
             obj.save = function (item) {
@@ -1562,11 +1591,12 @@ cjs.Component = function () {
             if (match) {
                 var c = Component.get(match[1].toCamelCase());
                 var config = node.toJSON();
+                var configExt = cjs.Object.extend({}, config, c.config);
                 var comp = Component({
                     template: (node.get().innerHTML) ? parseTemplate(c.template, cjs.Object.extend({}, config, c.config)) : c.template,
-                    style: (node.get().innerHTML) ? parseStyle(c.style, cjs.Object.extend({}, config, c.config)) : c.style,
+                    style: (node.get().innerHTML) ? parseStyle(c.style, configExt) : c.style,
                     config: c.config
-                }, c.controller(config));
+                }, c.controller(configExt));
                 comp.createIn(node.get(), 'before');
                 for (var i = 0; i < node.attributes().length; i++) {
                     var a = node.attributes()[i];
@@ -1750,6 +1780,25 @@ cjs.Component = function () {
             return a;
         };
 
+        obj.remove = function (id) {
+            obj.node.clearListeners();
+            obj.items.each(function (index, key, item) {
+                var i = item.get ? item.get() : item;
+                i.clearListeners();
+            });
+            dataProxy.forEach(function (o, index) {
+                if (obj.get() === o.item) {
+                    dataProxy.off(o.attribute);
+                }
+                if (obj.items.indexOf(o.item)) {
+                    dataProxy.off(o.attribute);
+                }
+            });
+
+            var parent = obj.node.get().parentNode;
+            parent.removeChild(obj.node.get());
+        };
+
         cjs.Object.extend(obj, extensions);
 
         return obj;
@@ -1765,7 +1814,7 @@ cjs.Component = function () {
     };
 
     Component.injectDatabaseProxy = function (db) {
-        dataBase.proxyTo(db);
+        dataBase = db;
     };
 
     Component.collectData = function () {

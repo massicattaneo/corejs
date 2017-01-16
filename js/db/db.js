@@ -11,29 +11,39 @@
 (function () {
 
     cjs.Db = function () {
-        var obj = {};
-        var proxy;
+        return {
+            onChange: function () {}
+        }
+    };
 
-        obj.on = function (attr, callback) {
-            // var commentsRef = proxy.ref(attr);
-            // commentsRef.on('child_added', function(data) {
-            // });
-            //
-            // commentsRef.on('child_changed', function(data) {
-            // });
-            //
-            // commentsRef.on('child_removed', function(data) {
-            // });
-            // return cjs.Need().resolve(commentsRef)
-            proxy.ref(attr).on('value', function (data) {
+    cjs.Db.firebaseAdapter = function (db) {
+        var obj = {};
+
+        obj.once = function (path, callback) {
+            db.ref(path).once('value').then(callback);
+        };
+
+        obj.onChange = function (path, callback) {
+            db.ref(path).on('value', function (data) {
                 callback(data.val())
             });
         };
 
-        obj.proxyTo = function (p) {
-            proxy = p;
+        obj.onRemove = function (path, callback) {
+            db.ref(path).on('child_removed', callback);
         };
 
+        obj.get = function (path) {
+            return db.ref().child(path);
+        };
+
+        obj.remove = function (path) {
+            db.ref(path).remove();
+        };
+
+        obj.off = function (path) {
+            db.ref(path).off();
+        };
 
         return obj
     }

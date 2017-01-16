@@ -102,6 +102,7 @@
             this._listeners.forEach(function (listener) {
                 removeListener.call(this, listener.action, listener.callback)
             }, this);
+            this._listeners.length = 0;
         }
     }
 
