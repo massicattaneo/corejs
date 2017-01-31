@@ -1492,8 +1492,8 @@ cjs.navigator = {};
         }
     };
 
-    cjs.Db.firebaseAdapter = function (db) {
-        var obj = {};
+    cjs.Db.firebaseAdapter = function () {
+        var obj = {}, db;
 
         obj.once = function (path, callback) {
             db.ref(path).once('value').then(callback);
@@ -1545,6 +1545,7 @@ cjs.navigator = {};
 
         obj.init = function (config) {
             firebase.initializeApp(config);
+            db = firebase.database();
         };
 
         return obj;
