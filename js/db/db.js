@@ -41,9 +41,99 @@
             db.ref(path).remove();
         };
 
+        obj.add = function (path, info) {
+            var newStoreRef = db.ref(path).push();
+            info.created = new Date().getTime();
+            newStoreRef.set(info);
+            return newStoreRef.key;
+        };
+
+        obj.update = function (path, info) {
+            var newStoreRef = db.ref(path);
+            info.modified = new Date().getTime();
+            return newStoreRef.set(info);
+        };
+
         obj.off = function (path) {
             db.ref(path).off();
         };
+
+        obj.login = function (email, password) {
+            var n = cjs.Need();
+            firebase.auth()
+                .signInWithEmailAndPassword(email, password)
+                .then(n.resolve)
+                .catch(n.reject);
+            return n;
+        };
+
+        obj.init = function (config) {
+            firebase.initializeApp(config);
+        };
+
+        return obj;
+    };
+
+    cjs.Db.staticJSONAdapter = function (JSON) {
+        var obj = {};
+        var onChange, onRemove;
+
+        obj.once = function (path, callback) {
+            var array = JSON[path.replace('/', '')];
+            var json = {};
+            array.forEach(function (o,i) {
+                json[i] = o;
+            });
+            callback({
+                val: function () {
+                    return json;
+                },
+                exportVal: function () {
+                    return json;
+                }
+            });
+        };
+
+        obj.onChange = function (path, callback) {
+            onChange = callback;
+            var k = path.split('/');
+            var f = JSON;
+            k.forEach(function (o) {
+                f = f[o]
+            });
+            callback(f);
+        };
+
+        obj.onRemove = function (path, callback) {
+        };
+
+        obj.get = function (path) {
+            return json[path.replace('/', '')];
+        };
+
+        obj.remove = function (path) {
+            //db.ref(path).remove();
+        };
+
+        obj.add = function (path, info) {
+            var d = json[path.replace('/', '')];
+            d.push(info);
+            return d.length -1;
+        };
+
+        obj.update = function (path, info) {
+
+        };
+
+        obj.off = function (path) {
+
+        };
+
+        obj.login = function () {
+            return cjs.Need().resolve();
+        };
+
+        obj.init = function () {};
 
         return obj
     }

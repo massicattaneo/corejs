@@ -183,9 +183,18 @@ function cjs() {}
                 var key = this.keys[index];
                 return this.remove(key);
             },
-            filter: function(key) {
+            filter: function(callback, thisArg) {
                 var coll = new (cjs.CollectionOf(ClassType).create())();
-                this.each(function(i, k, object) {
+                this.forEach(function(object, k, i) {
+                    if (callback.call(thisArg ||this, object, k, i)) {
+                        coll.add(object, k);
+                    }
+                });
+                return coll;
+            },
+            filterByKey: function(key) {
+                var coll = new (cjs.CollectionOf(ClassType).create())();
+                this.forEach(function(object, k, i) {
                     if (typeof key === 'undefined' || k === key) {
                         coll.add(object, key);
                     }
@@ -194,6 +203,11 @@ function cjs() {}
             },
             clone: function () {
                 return this.filter();
+            },
+            forEach: function(callback, thisArg) {
+                for (var index = 0; index < this.items.length; index++) {
+                    callback.call(thisArg || this, this.items[index], this.keys[index], parseInt(index, 10));
+                }
             },
             each: function(callback, thisArg) {
                 for (var index = 0; index < this.items.length; index++) {
@@ -206,14 +220,21 @@ function cjs() {}
             },
             toArray: function() {
                 var array = [];
-                this.each(function(index,key,value) {
-                    array.push(value);
+                this.forEach(function(o) {
+                    array.push(o);
+                });
+                return array;
+            },
+            keysToArray: function() {
+                var array = [];
+                this.forEach(function(o, k) {
+                    array.push(k);
                 });
                 return array;
             },
             toJSON: function() {
                 var toJSON = {};
-                this.each(function(index, key, value) {
+                this.forEach(function(value, key) {
                     toJSON[key] = value;
                 });
                 return toJSON;

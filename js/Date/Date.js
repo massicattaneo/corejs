@@ -48,5 +48,13 @@
     cjs.Date.getMothName = function (day) {
         return monthNames[day]
     };
+    cjs.Date.isToday = function (time) {
+        var d = new Date(time);
+        var today = new Date();
+        if (d.getFullYear() !== today.getFullYear()) return false;
+        if (d.getMonth() !== today.getMonth()) return false;
+        if (d.getDate() !== today.getDate()) return false;
+        return true;
+    }
 
 })();

@@ -46,8 +46,8 @@ cjs.Component = function () {
                         var n = cjs.Need();
                         need.add(n);
                         dataBase.onChange(o.attribute, function (data) {
-                            dataParser(data, o.item);
                             o.item.setValue(data);
+                            dataParser(data, o.item);
                             n.resolve();
                         });
                     }
@@ -272,6 +272,7 @@ cjs.Component = function () {
         obj.node = node;
 
         obj.createIn = function (parent, position) {
+            parent = parent instanceof HTMLElement ? parent : parent.get()
             if (!position) {
                 parent.appendChild(node.get(0));
             } else {
@@ -315,10 +316,10 @@ cjs.Component = function () {
             return a;
         };
 
-        obj.remove = function (id) {
+        obj.remove = function () {
             obj.node.clearListeners();
             obj.items.each(function (index, key, item) {
-                var i = item.get ? item.get() : item;
+                var i = item.get() instanceof HTMLElement ? item : item.get();
                 i.clearListeners();
             });
             dataProxy.forEach(function (o, index) {
@@ -379,6 +380,10 @@ cjs.Component = function () {
 
     Component.registerParserFunction = function (name, func) {
         parsingFunctions[name] = func;
+    };
+
+    Component.parse = function (name, data, item) {
+        return parsingFunctions[name](data, item);
     };
 
     return Component;

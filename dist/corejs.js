@@ -187,9 +187,18 @@ function cjs() {}
                 var key = this.keys[index];
                 return this.remove(key);
             },
-            filter: function(key) {
+            filter: function(callback, thisArg) {
                 var coll = new (cjs.CollectionOf(ClassType).create())();
-                this.each(function(i, k, object) {
+                this.forEach(function(object, k, i) {
+                    if (callback.call(thisArg ||this, object, k, i)) {
+                        coll.add(object, k);
+                    }
+                });
+                return coll;
+            },
+            filterByKey: function(key) {
+                var coll = new (cjs.CollectionOf(ClassType).create())();
+                this.forEach(function(object, k, i) {
                     if (typeof key === 'undefined' || k === key) {
                         coll.add(object, key);
                     }
@@ -198,6 +207,11 @@ function cjs() {}
             },
             clone: function () {
                 return this.filter();
+            },
+            forEach: function(callback, thisArg) {
+                for (var index = 0; index < this.items.length; index++) {
+                    callback.call(thisArg || this, this.items[index], this.keys[index], parseInt(index, 10));
+                }
             },
             each: function(callback, thisArg) {
                 for (var index = 0; index < this.items.length; index++) {
@@ -210,14 +224,21 @@ function cjs() {}
             },
             toArray: function() {
                 var array = [];
-                this.each(function(index,key,value) {
-                    array.push(value);
+                this.forEach(function(o) {
+                    array.push(o);
+                });
+                return array;
+            },
+            keysToArray: function() {
+                var array = [];
+                this.forEach(function(o, k) {
+                    array.push(k);
                 });
                 return array;
             },
             toJSON: function() {
                 var toJSON = {};
-                this.each(function(index, key, value) {
+                this.forEach(function(value, key) {
                     toJSON[key] = value;
                 });
                 return toJSON;
@@ -778,6 +799,37 @@ String.prototype.toDate = function () {
     cjs.Date.getMothName = function (day) {
         return monthNames[day]
     };
+    cjs.Date.isToday = function (time) {
+        var d = new Date(time);
+        var today = new Date();
+        if (d.getFullYear() !== today.getFullYear()) return false;
+        if (d.getMonth() !== today.getMonth()) return false;
+        if (d.getDate() !== today.getDate()) return false;
+        return true;
+    }
+
+})();
+
+
+(function() {
+
+    cjs.Currency = cjs.create({
+        constructor: function (a) {
+            this._original = a!== undefined ? a : 0;
+        },
+        format: function (pattern) {
+            var integer = parseInt(this._original, 10);
+            var float = this._original.toString().split('.')[1] ||[];
+            pattern = pattern.replace(/i/g, integer);
+            var count = -1;
+            pattern = pattern.split('').map(function (char) {
+                if (char === 'f') count++;
+                return (char === 'f') ? float[count] || 0 : char;
+            }).join('');
+            pattern = pattern.replace(/s/g, '€');
+            return pattern;
+        }
+    });
 
 })();
 
@@ -1465,9 +1517,98 @@ cjs.navigator = {};
             db.ref(path).remove();
         };
 
+        obj.add = function (path, info) {
+            var newStoreRef = db.ref(path).push();
+            info.created = new Date().getTime();
+            newStoreRef.set(info);
+            return newStoreRef.key;
+        };
+
+        obj.update = function (path, info) {
+            var newStoreRef = db.ref(path);
+            info.modified = new Date().getTime();
+            return newStoreRef.set(info);
+        };
+
         obj.off = function (path) {
             db.ref(path).off();
         };
+
+        obj.login = function (email, password) {
+            var n = cjs.Need();
+            firebase.auth()
+                .signInWithEmailAndPassword(email, password)
+                .then(n.resolve)
+                .catch(n.reject);
+            return n;
+        };
+
+        obj.init = function (config) {
+            firebase.initializeApp(config);
+        };
+
+        return obj;
+    };
+
+    cjs.Db.staticJSONAdapter = function (JSON) {
+        var obj = {};
+        var onChange, onRemove;
+
+        obj.once = function (path, callback) {
+            var array = JSON[path.replace('/', '')];
+            var json = {};
+            array.forEach(function (o,i) {
+                json[i] = o;
+            });
+            callback({
+                val: function () {
+                    return json;
+                },
+                exportVal: function () {
+                    return json;
+                }
+            });
+        };
+
+        obj.onChange = function (path, callback) {
+            onChange = callback;
+            var k = path.split('/');
+            var f = JSON;
+            k.forEach(function (o) {
+                f = f[o]
+            });
+            callback(f);
+        };
+
+        obj.onRemove = function (path, callback) {
+        };
+
+        obj.get = function (path) {
+            return json[path.replace('/', '')];
+        };
+
+        obj.remove = function (path) {
+        };
+
+        obj.add = function (path, info) {
+            var d = json[path.replace('/', '')];
+            d.push(info);
+            return d.length -1;
+        };
+
+        obj.update = function (path, info) {
+
+        };
+
+        obj.off = function (path) {
+
+        };
+
+        obj.login = function () {
+            return cjs.Need().resolve();
+        };
+
+        obj.init = function () {};
 
         return obj
     }
@@ -1512,8 +1653,8 @@ cjs.Component = function () {
                         var n = cjs.Need();
                         need.add(n);
                         dataBase.onChange(o.attribute, function (data) {
-                            dataParser(data, o.item);
                             o.item.setValue(data);
+                            dataParser(data, o.item);
                             n.resolve();
                         });
                     }
@@ -1737,6 +1878,7 @@ cjs.Component = function () {
         obj.node = node;
 
         obj.createIn = function (parent, position) {
+            parent = parent instanceof HTMLElement ? parent : parent.get()
             if (!position) {
                 parent.appendChild(node.get(0));
             } else {
@@ -1780,10 +1922,10 @@ cjs.Component = function () {
             return a;
         };
 
-        obj.remove = function (id) {
+        obj.remove = function () {
             obj.node.clearListeners();
             obj.items.each(function (index, key, item) {
-                var i = item.get ? item.get() : item;
+                var i = item.get() instanceof HTMLElement ? item : item.get();
                 i.clearListeners();
             });
             dataProxy.forEach(function (o, index) {
@@ -1844,6 +1986,10 @@ cjs.Component = function () {
 
     Component.registerParserFunction = function (name, func) {
         parsingFunctions[name] = func;
+    };
+
+    Component.parse = function (name, data, item) {
+        return parsingFunctions[name](data, item);
     };
 
     return Component;
