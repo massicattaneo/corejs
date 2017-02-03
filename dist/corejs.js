@@ -547,11 +547,10 @@ String.prototype.toDate = function () {
                     return false;
                 }
 
-                var origEvent = e.originalEvent,
-                    touchData = {
+                var touchData = {
                         'position': {
-                            'x': ((settings.touch_capable) ? origEvent.touches[0].screenX : e.screenX),
-                            'y': (settings.touch_capable) ? origEvent.touches[0].screenY : e.screenY
+                            'x': ((settings.touch_capable) ? e.touches[0].screenX : e.screenX),
+                            'y': (settings.touch_capable) ? e.touches[0].screenY : e.screenY
                         },
                         'time': Date.now(),
                         'target': e.target
@@ -560,7 +559,6 @@ String.prototype.toDate = function () {
                 return true;
             })
         };
-
         evs.tap = function (callback) {
             var self = this,
                 started = false,
@@ -625,7 +623,6 @@ String.prototype.toDate = function () {
                 return true;
             });
         };
-
         evs.tapend = function (callback) {
             var self = this;
             addListener.call(this, settings.endevent, function (e) {
@@ -701,17 +698,14 @@ String.prototype.toDate = function () {
                 return true;
             });
             addListener.call(this, settings.endevent, function tapHoldFunc2() {
-                $this.data('callee2', tapHoldFunc2);
-                $this.data('tapheld', false);
                 window.clearTimeout(settings.hold_timer);
             });
             addListener.call(this, settings.moveevent, function tapHoldFunc3(e) {
-                $this.data('callee3', tapHoldFunc3);
-
                 end_x = (e.targetTouches) ? e.targetTouches[0].pageX : e.pageX;
                 end_y = (e.targetTouches) ? e.targetTouches[0].pageY : e.pageY;
             });
         };
+
         function triggerCustomEvent(obj, eventType, callback, event, touchData) {
             var originalType = event.type;
             event.type = eventType;
