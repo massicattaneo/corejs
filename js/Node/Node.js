@@ -273,6 +273,8 @@
             });
         };
 
+        /** TODO: magage DBLTAP*/
+
         /** TODO: TO BE REFACTORED - REMOVED JQUERY */
         // evs.swipe = function () {
         //     var self = this,
