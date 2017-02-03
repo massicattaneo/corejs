@@ -236,7 +236,10 @@ cjs.Component = function () {
         Object.keys(stylesFunctions).forEach(function (fname) {
             match = style.match(new RegExp(fname + '\\((.*)\\)')) || [];
             if (match[1]) {
-                style = style.replace(match[0], stylesFunctions[fname](match[1]));
+                while (match[1]) {
+                    style = style.replace(match[0], stylesFunctions[fname](match[1]));
+                    match = style.match(new RegExp(fname + '\\((.*)\\)')) || [];
+                }
             }
         });
 
@@ -271,8 +274,14 @@ cjs.Component = function () {
         obj.config = config;
         obj.node = node;
 
+        function getParent(parent) {
+            if (parent instanceof HTMLElement) return parent;
+            if (typeof parent === 'string') return cjs.Node(parent).get();
+            return parent.get();
+        }
+
         obj.createIn = function (parent, position) {
-            parent = parent instanceof HTMLElement ? parent : parent.get()
+            parent = getParent(parent);
             if (!position) {
                 parent.appendChild(node.get(0));
             } else {

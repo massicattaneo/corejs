@@ -520,16 +520,221 @@ String.prototype.toDate = function () {
         }
     }
 
+    var specialEvents = {};
+    (function (evs) {
+
+        var agent = navigator.userAgent.toLowerCase(),
+            isChromeDesktop = (agent.indexOf('chrome') > -1 && ((agent.indexOf('windows') > -1) || (agent.indexOf('macintosh') > -1) || (agent.indexOf('linux') > -1)) && agent.indexOf('mobile') < 0 && agent.indexOf('android') < 0),
+            settings = {
+                tap_pixel_range: 5,
+                swipe_h_threshold: 50,
+                swipe_v_threshold: 50,
+                taphold_threshold: 750,
+                touch_capable: ('ontouchstart' in window && !isChromeDesktop),
+                tapevent:    ('ontouchstart' in window && !isChromeDesktop) ? 'tap' : 'click',
+                startevent: (('ontouchstart' in window && !isChromeDesktop) ? 'touchstart' : 'mousedown'),
+                endevent: (('ontouchstart' in window && !isChromeDesktop) ? 'touchend' : 'mouseup'),
+                moveevent: (('ontouchstart' in window && !isChromeDesktop) ? 'touchmove' : 'mousemove'),
+                scrollevent: ('ontouchstart' in window && !isChromeDesktop) ? 'touchmove' : 'scroll',
+                hold_timer: null
+            };
+
+        evs.tapstart = function(callback) {
+            var self = this;
+            addListener.call(this, settings.startevent, function tapStartFunc(e) {
+
+                if (e.which && e.which !== 1) {
+                    return false;
+                }
+
+                var origEvent = e.originalEvent,
+                    touchData = {
+                        'position': {
+                            'x': ((settings.touch_capable) ? origEvent.touches[0].screenX : e.screenX),
+                            'y': (settings.touch_capable) ? origEvent.touches[0].screenY : e.screenY
+                        },
+                        'time': Date.now(),
+                        'target': e.target
+                    };
+                triggerCustomEvent(self, 'tapstart', callback, e, touchData);
+                return true;
+            })
+        };
+
+        evs.tap = function (callback) {
+            var self = this,
+                started = false,
+                origTarget = null,
+                start_time,
+                start_pos = {
+                    x: 0,
+                    y: 0
+                },
+                touches;
+            addListener.call(this, settings.startevent, function (e) {
+                if (e.which && e.which !== 1) {
+                    return false;
+                }
+                started = true;
+                start_pos.x = (e.targetTouches) ? e.targetTouches[0].pageX : e.pageX;
+                start_pos.y = (e.targetTouches) ? e.targetTouches[0].pageY : e.pageY;
+                start_time = Date.now();
+                origTarget = e.target;
+                touches = (e.targetTouches) ? e.targetTouches : [e];
+                return true;
+            });
+            addListener.call(this, settings.endevent, function (e) {
+                var end_x = (e.targetTouches) ? e.changedTouches[0].pageX : e.pageX,
+                    end_y = (e.targetTouches) ? e.changedTouches[0].pageY : e.pageY,
+                    diff_x = (start_pos.x - end_x),
+                    diff_y = (start_pos.y - end_y);
+
+                if (origTarget == e.target && started && ((Date.now() - start_time) < settings.taphold_threshold) && ((start_pos.x == end_x && start_pos.y == end_y) || (diff_x >= -(settings.tap_pixel_range) && diff_x <= settings.tap_pixel_range && diff_y >= -(settings.tap_pixel_range) && diff_y <= settings.tap_pixel_range))) {
+                    var touchData = [];
+
+                    for (var i = 0; i < touches.length; i++) {
+                        var touch = {
+                            'position': {
+                                'x': (settings.touch_capable) ? e.changedTouches[i].screenX : e.screenX,
+                                'y': (settings.touch_capable) ? e.changedTouches[i].screenY : e.screenY
+                            },
+                            'time': Date.now(),
+                            'target': e.target
+                        };
+
+                        touchData.push(touch);
+                    }
+                    triggerCustomEvent(self, 'tap', callback, e, touchData);
+                }
+            });
+
+        };
+        evs.tapmove = function (callback) {
+            var self = this;
+            addListener.call(this, settings.moveevent, function tapMoveFunc(e) {
+                var touchData = {
+                    'position': {
+                        'x': ((settings.touch_capable) ? e.touches[0].screenX : e.screenX),
+                        'y': (settings.touch_capable) ? e.touches[0].screenY : e.screenY
+                    },
+                    'time': Date.now(),
+                    'target': e.target
+                };
+
+                triggerCustomEvent(self, 'tapmove', callback, e, touchData);
+                return true;
+            });
+        };
+
+        evs.tapend = function (callback) {
+            var self = this;
+            addListener.call(this, settings.endevent, function (e) {
+                var touchData = {
+                    'position': {
+                        'x': (settings.touch_capable) ? e.changedTouches[0].screenX : e.screenX,
+                        'y': (settings.touch_capable) ? e.changedTouches[0].screenY : e.screenY
+                    },
+                    'time': Date.now(),
+                    'target': e.target
+                };
+                triggerCustomEvent(self, 'tapend', callback, e, touchData);
+                return true;
+            });
+        };
+        evs.taphold = function (callback) {
+            var self = this,
+                $this = ret(self),
+                origTarget,
+                start_pos = {
+                    x: 0,
+                    y: 0
+                },
+                end_x = 0,
+                end_y = 0;
+
+            addListener.call(this, settings.startevent, function tapHoldFunc1(e) {
+                if (e.which && e.which !== 1) {return false;}
+
+                origTarget = e.target;
+                var start_time = Date.now(),
+                    startPosition = {
+                        'x': (settings.touch_capable) ? e.touches[0].screenX : e.screenX,
+                        'y': (settings.touch_capable) ? e.touches[0].screenY : e.screenY
+                    },
+                    startOffset = {
+                        'x': (settings.touch_capable) ? e.touches[0].pageX - e.touches[0].target.offsetLeft : e.offsetX,
+                        'y': (settings.touch_capable) ? e.touches[0].pageY - e.touches[0].target.offsetTop : e.offsetY
+                    };
+
+                start_pos.x = (e.targetTouches) ? e.targetTouches[0].pageX : e.pageX;
+                start_pos.y = (e.targetTouches) ? e.targetTouches[0].pageY : e.pageY;
+
+                end_x = start_pos.x;
+                end_y = start_pos.y;
+
+                settings.hold_timer = window.setTimeout(function() {
+
+                    var diff_x = (start_pos.x - end_x),
+                        diff_y = (start_pos.y - end_y);
+
+                    if (e.target == origTarget && ((start_pos.x == end_x && start_pos.y == end_y) || (diff_x >= -(settings.tap_pixel_range) && diff_x <= settings.tap_pixel_range && diff_y >= -(settings.tap_pixel_range) && diff_y <= settings.tap_pixel_range))) {
+                        var end_time = Date.now(),
+                            endPosition = {
+                                'x': (settings.touch_capable) ? e.touches[0].screenX : e.screenX,
+                                'y': (settings.touch_capable) ? e.touches[0].screenY : e.screenY
+                            };
+                        var duration = end_time - start_time;
+
+                        var touchData = {
+                            'startTime': start_time,
+                            'endTime': end_time,
+                            'startPosition': startPosition,
+                            'startOffset': startOffset,
+                            'endPosition': endPosition,
+                            'duration': duration,
+                            'target': e.target
+                        };
+                        triggerCustomEvent(self, 'taphold', callback, e, touchData);
+                    }
+                }, settings.taphold_threshold);
+
+                return true;
+            });
+            addListener.call(this, settings.endevent, function tapHoldFunc2() {
+                $this.data('callee2', tapHoldFunc2);
+                $this.data('tapheld', false);
+                window.clearTimeout(settings.hold_timer);
+            });
+            addListener.call(this, settings.moveevent, function tapHoldFunc3(e) {
+                $this.data('callee3', tapHoldFunc3);
+
+                end_x = (e.targetTouches) ? e.targetTouches[0].pageX : e.pageX;
+                end_y = (e.targetTouches) ? e.targetTouches[0].pageY : e.pageY;
+            });
+        };
+        function triggerCustomEvent(obj, eventType, callback, event, touchData) {
+            var originalType = event.type;
+            event.type = eventType;
+            callback.call(obj, event, touchData);
+            event.type = originalType;
+        }
+
+    })(specialEvents);
+
     function addListener(action, callback) {
-        this._listeners = this._listeners || [];
-        this._listeners.push({
-            action: action,
-            callback: callback
-        });
-        if (this.addEventListener) {
-            this.addEventListener(action, callback);
-        } else {
-            this.attachEvent('on' + action, callback);
+        if (['tapstart', 'tap', 'tapmove', 'tapend', 'taphold'].indexOf(action) !== -1) {
+            specialEvents[action].call(this, callback);
+        } else{
+            this._listeners = this._listeners || [];
+            this._listeners.push({
+                action: action,
+                callback: callback
+            });
+            if (this.addEventListener) {
+                this.addEventListener(action, callback);
+            } else {
+                this.attachEvent('on' + action, callback);
+            }
         }
     }
 
@@ -1290,115 +1495,190 @@ cjs.navigator = {};
     };
     obj.deviceManager = function (params) {
         var ua = params.userAgent;
-        var ret = {};
-        ret.deviceType = 'desktop';
+        var dm = {};
+        dm.deviceType = 'desktop';
         var osInfo = getOsInfo(ua);
-        ret.os = osInfo[0];
-        ret.osVersion = osInfo[1];
+        dm.os = osInfo[0];
+        dm.osVersion = osInfo[1];
         var browserInfo = getBrowserInfo(ua);
-        ret.browserName = browserInfo[1].toLowerCase();
-        ret.browserVersion = browserInfo[2];
-        ret.getScreenOrientation = getScreenOrientation;
-        return ret;
+        dm.browserName = browserInfo[1].toLowerCase();
+        dm.browserVersion = browserInfo[2];
+        dm.getScreenOrientation = getScreenOrientation;
+        return dm;
     };
-    obj.screenManager = function () {
-        var obj = {};
+    obj.screenManager = function (params) {
 
-        function resize(p) {
-            var windowWidth = window.innerWidth;
-            var windowHeight = window.innerHeight;
-            var transform = '';
-            var scale;
-            var isRotated = false;
-            var canvas = p.canvas;
-            var canvasContainer = p.canvasContainer;
-            var htmlContainer = p.htmlContainer;
-            var body = cjs.Node(document.body);
-            var gameRatio = p.width / p.height;
-            var windowRatio = windowWidth / windowHeight;
+        var sm = {};
+        var fixedSize = [];
+        var tops = [];
+        var bottoms = [];
+        var rights = [];
+        var fullScreen = [];
 
-            var widthRatio = windowWidth / p.width;
-            var heightRatio = windowWidth / p.height;
-
-            if (windowWidth > windowHeight) {
-                scale = (windowRatio > gameRatio) ? windowHeight / p.height : widthRatio;
-                transform = 'scale3d(' + scale + ',' + scale + ',1)';
-                body.removeStyle('portrait');
-            } else {
-                scale = (windowHeight / p.width < heightRatio) ? windowHeight / p.width : heightRatio;
-                transform = 'scale3d(' + scale + ',' + scale + ',1) rotate3d(0,0,1,90deg)';
-                body.addStyle('portrait');
-                isRotated = true;
-            }
-
-            html.addStyle({
-                'transform': transform,
-                'transform-origin': '50% 50% 0',
-                left: -((p.width - windowWidth) / 2) + 'px',
-                top: -((p.height - windowHeight) / 2) + 'px'
+        sm.centered = function (p) {
+            fixedSize.push({
+                node: cjs.Node(p.selector),
+                width: p.width,
+                height: p.height
             });
-            canvas.addStyle({
-                width: '100%',
-                height: '100%',
-                top: 0
+            resize();
+        };
+        sm.top = function (p) {
+            tops.push({
+                node: cjs.Node(p.selector)
             });
+            resize();
+        };
+        sm.bottom = function (p) {
+            bottoms.push({
+                node: cjs.Node(p.selector)
+            });
+            resize();
+        };
+        sm.right = function (p) {
+            rights.push({
+                node: cjs.Node(p.selector)
+            });
+            resize();
+        };
+        sm.fullScreen = function (p) {
+            fullScreen.push({
+                node: cjs.Node(p.selector)
+            });
+            resize();
+        };
 
-            if (windowRatio > gameRatio) {
-                canvas.width = windowWidth / (windowHeight / p.height);
-                canvas.height = p.height;
-
+        function choseOrientation(landscape, portrait) {
+            if (window.innerWidth > window.innerHeight || !params.rotateOnPortrait) {
+                return landscape;
             } else {
-                canvas.width = p.width;
-                canvas.height = windowHeight / (widthRatio);
-            }
-
-            if (windowWidth > windowHeight) {
-                if (windowRatio > gameRatio) {
-                    canvasContainer.setTransform((windowWidth * (p.height / windowHeight) - p.width) / 2, 0);
-                } else {
-                    canvasContainer.setTransform(0, (windowHeight * (p.width / windowWidth) - p.height) / 2);
-                }
-            } else {
-                if (gameRatio < 1 / windowRatio) {
-                    canvasContainer.setTransform(p.width, (canvas.height - p.width * gameRatio) / 2, gameRatio, gameRatio, 90, 0, 0, 0, 0);
-                } else {
-                    canvasContainer.setTransform(p.width - ((canvas.width / (canvas.height / p.width) - p.height) / 2), 0, canvas.height / p.width, canvas.height / p.width, 90, 0, 0, 0, 0);
-                }
+                return portrait;
             }
         }
+        function getTransformation(scale) {
+            return choseOrientation(
+                'scale3d(' + scale + ',' + scale + ',1)',
+                'scale3d(' + scale + ',' + scale + ',1) rotate3d(0,0,1,90deg)'
+            )
+        }
+        function getScale(width, height) {
+            var windowWidth = window.innerWidth;
+            var windowHeight = window.innerHeight;
+            var gameRatio = width / height;
+            var windowRatio = windowWidth / windowHeight;
+            var widthRatio = windowWidth / width;
+            var heightRatio = windowWidth / height;
 
-        obj.resize = resize;
+            var scaleLandscape = (windowRatio > gameRatio) ? windowHeight / height : widthRatio;
+            var scalePortrait = (windowHeight / width < heightRatio) ? windowHeight / width : heightRatio;
 
-        return obj;
+            return choseOrientation(scaleLandscape, scalePortrait);
+        }
+        function resize() {
+            var windowWidth = window.innerWidth;
+            var windowHeight = window.innerHeight;
+            var scale = getScale(params.width, params.height);
+
+            fixedSize.forEach(function (o) {
+                o.node.addStyle({
+                    'position': 'absolute',
+                    'width': o.width + 'px',
+                    'height': o.height + 'px',
+                    'transform': getTransformation(getScale(o.width, o.height)),
+                    'transform-origin': '50% 50% 0',
+                    left: -((o.width - windowWidth) / 2) + 'px',
+                    top: -((o.height - windowHeight) / 2) + 'px'
+                })
+            });
+
+            tops.forEach(function (o) {
+                o.node.addStyle({
+                    'position': 'absolute',
+                    'height': '1px',
+                    'width': choseOrientation(windowWidth / scale + 'px', windowHeight / scale + 'px'),
+                    'transform': getTransformation(scale),
+                    'transform-origin': '0% 0% 0',
+                    top: choseOrientation('0px', '0px'),
+                    left: choseOrientation('0px', 'auto'),
+                    right: choseOrientation('auto', -windowHeight / scale + 'px')
+                })
+            });
+
+            bottoms.forEach(function (o) {
+                console.log(windowHeight, params.height, windowWidth, params.width, scale);
+                o.node.addStyle({
+                    'position': 'absolute',
+                    'height': '1px',
+                    'width': choseOrientation(windowWidth / scale + 'px', windowHeight / scale + 'px'),
+                    'transform': getTransformation(scale),
+                    'transform-origin': '0% 0% 0',
+                    bottom: choseOrientation('0px', windowHeight + 'px'),
+                    left: choseOrientation('0px', '0px')
+                })
+            });
+
+            rights.forEach(function (o) {
+                o.node.addStyle({
+                    'position': 'absolute',
+                    'width': '1px',
+                    'height': params.height + 'px',
+                    'transform': getTransformation(scale),
+                    'transform-origin': '50% 50% 0',
+                    right: choseOrientation('0px',  windowWidth/2 + 'px'),
+                    top: choseOrientation((windowHeight-params.height)/2 +'px', windowHeight-(params.height/2)+'px')
+                })
+            });
+
+            fullScreen.forEach(function (o) {
+                o.node.addStyle({
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    top: 0
+                });
+
+                if (o.node.get() instanceof HTMLCanvasElement) {
+                    var gameRatio = params.width / params.height;
+                    var windowRatio = windowWidth / windowHeight;
+
+                    if (windowRatio > gameRatio) {
+                        o.node.get().width = windowWidth / (windowHeight / params.height);
+                        o.node.get().height = params.height;
+                    } else {
+                        o.node.get().width = params.width;
+                        o.node.get().height = windowHeight / (windowWidth / params.width);
+                    }
+                }
+            });
+
+        }
+
+        window.onresize = resize;
+
+        resize();
+
+        return sm;
 
     };
 
-    obj.fileLoader = function (p) {
+    obj.fileLoader = function () {
 
         var loadingSpeed;
         var imagesLoaded = [];
         var obj = {};
 
-        function previouslyLoaded(url) {
+        function previouslyLoaded(p) {
             return imagesLoaded.filter(function (o) {
-                return o.url === url;
+                return o.url === p.url;
             })[0];
         }
-
-        function getFileSize(image) {
-            var fileLength = obj.fileLength(image.url + '?v=' + p.version || '');
-            fileLength.done(function (size) {
-                image.size = size;
-            });
-            return fileLength;
-        }
-
         function loadImage(url, onProgress, imageSize) {
             var defer = cjs.Need(), image = cjs.Need('<img>');
             var totalRemainingToLoad = imageSize;
+            var startTime = new Date().getTime();
 
             var int = setInterval(function () {
-                var sizeLoaded = loadingSpeed * 1.2;
+                var sizeLoaded = loadingSpeed * 0.3;
                 if (totalRemainingToLoad > sizeLoaded) {
                     totalRemainingToLoad -= sizeLoaded;
                     onProgress(sizeLoaded)
@@ -1406,9 +1686,10 @@ cjs.navigator = {};
             }, 100);
 
             image
-                .setAttribute('src', url + '?v=' + p.version || '')
+                .setAttribute('src', url)
                 .addOnceEventListener('load', function (data) {
                     clearInterval(int);
+                    updateLoadingSpeed(startTime, new Date().getTime(), imageSize);
                     onProgress(totalRemainingToLoad);
                     image = null;
                     defer.resolve(data);
@@ -1417,17 +1698,11 @@ cjs.navigator = {};
                     clearInterval(int);
                     defer.resolve({});
                 });
-            return defer;
-        }
-        function getFilesLength(images) {
-            var defs = [];
-            images.forEach(function (image) {
-                defs.push(getFileSize(image))
-            });
-            return cjs.Need(defs);
+            return defer.promise();
         }
         function loadImages(images, onProgress) {
             var defs = [];
+
             var totalSize = 0, totalLoaded = 0;
             images.forEach(function (image) {
                 image.size = isNaN(image.size) ? 0 : image.size;
@@ -1446,38 +1721,32 @@ cjs.navigator = {};
         }
 
         obj.load = function (array, onProgress) {
-            var defer = cjs.Need();
             var images = [];
-            array.forEach(function (url) {
-                if (!previouslyLoaded(url)) {
-                    images.push({
-                        url: url,
-                        size: 0,
-                        loaded: 0
-                    })
+            array.forEach(function (o) {
+                if (!previouslyLoaded(o)) {
+                    images.push(o)
                 }
             });
             onProgress = onProgress || function () {};
-            getFilesLength(images)
-                .done(function () {
-                    loadImages(images, onProgress).then(defer.resolve)
-                });
-
-            return defer;
+            onProgress(1, 100);
+            return loadImages(images, onProgress);
         };
 
-        obj.calculateSpeed = function (testImageUrl) {
+        obj.calculateSpeed = function (testImageUrl, testImageSize) {
             var d = cjs.Need();
             var startTime = new Date().getTime();
-            cjs.Need('<img>')
+            cjs.Node('<img>')
                 .setAttribute('src', testImageUrl)
                 .addOnceListener('load', function () {
-                    var endTime = new Date().getTime();
-                    loadingSpeed = 505/((endTime - startTime)/1000); 
+                    updateLoadingSpeed(startTime, new Date().getTime(), testImageSize);
                     d.resolve();
                 });
-            return d;
+            return d.promise();
         };
+
+        function updateLoadingSpeed(startTime, endTime, fileSize) {
+            loadingSpeed = fileSize/((endTime - startTime)/1000);
+        }
 
         return obj;
     }
@@ -1843,7 +2112,10 @@ cjs.Component = function () {
         Object.keys(stylesFunctions).forEach(function (fname) {
             match = style.match(new RegExp(fname + '\\((.*)\\)')) || [];
             if (match[1]) {
-                style = style.replace(match[0], stylesFunctions[fname](match[1]));
+                while (match[1]) {
+                    style = style.replace(match[0], stylesFunctions[fname](match[1]));
+                    match = style.match(new RegExp(fname + '\\((.*)\\)')) || [];
+                }
             }
         });
 
@@ -1878,8 +2150,14 @@ cjs.Component = function () {
         obj.config = config;
         obj.node = node;
 
+        function getParent(parent) {
+            if (parent instanceof HTMLElement) return parent;
+            if (typeof parent === 'string') return cjs.Node(parent).get();
+            return parent.get();
+        }
+
         obj.createIn = function (parent, position) {
-            parent = parent instanceof HTMLElement ? parent : parent.get()
+            parent = getParent(parent);
             if (!position) {
                 parent.appendChild(node.get(0));
             } else {

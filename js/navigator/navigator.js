@@ -171,138 +171,206 @@ cjs.navigator = {};
     };
     obj.deviceManager = function (params) {
         var ua = params.userAgent;
-        var ret = {};
-        ret.deviceType = 'desktop';
+        var dm = {};
+        dm.deviceType = 'desktop';
         var osInfo = getOsInfo(ua);
-        ret.os = osInfo[0];
-        ret.osVersion = osInfo[1];
+        dm.os = osInfo[0];
+        dm.osVersion = osInfo[1];
         var browserInfo = getBrowserInfo(ua);
-        ret.browserName = browserInfo[1].toLowerCase();
-        ret.browserVersion = browserInfo[2];
-        ret.getScreenOrientation = getScreenOrientation;
-        return ret;
+        dm.browserName = browserInfo[1].toLowerCase();
+        dm.browserVersion = browserInfo[2];
+        dm.getScreenOrientation = getScreenOrientation;
+        return dm;
     };
-    obj.screenManager = function () {
-        var obj = {};
+    obj.screenManager = function (params) {
 
-        /** TODO be refactored and tested - coming from BJ ...  */
-        function resize(p) {
-            var windowWidth = window.innerWidth;
-            var windowHeight = window.innerHeight;
-            var transform = '';
-            var scale;
-            var isRotated = false;
-            var canvas = p.canvas;
-            var canvasContainer = p.canvasContainer;
-            var htmlContainer = p.htmlContainer;
-            var body = cjs.Node(document.body);
-            var gameRatio = p.width / p.height;
-            var windowRatio = windowWidth / windowHeight;
+        var sm = {};
+        var fixedSize = [];
+        var tops = [];
+        var bottoms = [];
+        var rights = [];
+        var fullScreen = [];
 
-            var widthRatio = windowWidth / p.width;
-            var heightRatio = windowWidth / p.height;
-
-            if (windowWidth > windowHeight) {
-                scale = (windowRatio > gameRatio) ? windowHeight / p.height : widthRatio;
-                transform = 'scale3d(' + scale + ',' + scale + ',1)';
-                body.removeStyle('portrait');
-            } else {
-                scale = (windowHeight / p.width < heightRatio) ? windowHeight / p.width : heightRatio;
-                transform = 'scale3d(' + scale + ',' + scale + ',1) rotate3d(0,0,1,90deg)';
-                body.addStyle('portrait');
-                isRotated = true;
-            }
-
-            html.addStyle({
-                'transform': transform,
-                'transform-origin': '50% 50% 0',
-                left: -((p.width - windowWidth) / 2) + 'px',
-                top: -((p.height - windowHeight) / 2) + 'px'
+        sm.centered = function (p) {
+            fixedSize.push({
+                node: cjs.Node(p.selector),
+                width: p.width,
+                height: p.height
             });
-            canvas.addStyle({
-                width: '100%',
-                height: '100%',
-                top: 0
+            resize();
+        };
+        sm.top = function (p) {
+            tops.push({
+                node: cjs.Node(p.selector)
             });
+            resize();
+        };
+        sm.bottom = function (p) {
+            bottoms.push({
+                node: cjs.Node(p.selector)
+            });
+            resize();
+        };
+        sm.right = function (p) {
+            rights.push({
+                node: cjs.Node(p.selector)
+            });
+            resize();
+        };
+        sm.fullScreen = function (p) {
+            fullScreen.push({
+                node: cjs.Node(p.selector)
+            });
+            resize();
+        };
 
-            if (windowRatio > gameRatio) {
-                //height should be respected
-                canvas.width = windowWidth / (windowHeight / p.height);
-                canvas.height = p.height;
-
+        function choseOrientation(landscape, portrait) {
+            if (window.innerWidth > window.innerHeight || !params.rotateOnPortrait) {
+                return landscape;
             } else {
-                //width should be respected
-                canvas.width = p.width;
-                canvas.height = windowHeight / (widthRatio);
-            }
-
-            if (windowWidth > windowHeight) {
-                if (windowRatio > gameRatio) {
-                    canvasContainer.setTransform((windowWidth * (p.height / windowHeight) - p.width) / 2, 0);
-                } else {
-                    canvasContainer.setTransform(0, (windowHeight * (p.width / windowWidth) - p.height) / 2);
-                }
-            } else {
-                if (gameRatio < 1 / windowRatio) {
-                    canvasContainer.setTransform(p.width, (canvas.height - p.width * gameRatio) / 2, gameRatio, gameRatio, 90, 0, 0, 0, 0);
-                } else {
-                    canvasContainer.setTransform(p.width - ((canvas.width / (canvas.height / p.width) - p.height) / 2), 0, canvas.height / p.width, canvas.height / p.width, 90, 0, 0, 0, 0);
-                }
+                return portrait;
             }
         }
+        function getTransformation(scale) {
+            return choseOrientation(
+                'scale3d(' + scale + ',' + scale + ',1)',
+                'scale3d(' + scale + ',' + scale + ',1) rotate3d(0,0,1,90deg)'
+            )
+        }
+        function getScale(width, height) {
+            var windowWidth = window.innerWidth;
+            var windowHeight = window.innerHeight;
+            var gameRatio = width / height;
+            var windowRatio = windowWidth / windowHeight;
+            var widthRatio = windowWidth / width;
+            var heightRatio = windowWidth / height;
 
-        obj.resize = resize;
+            var scaleLandscape = (windowRatio > gameRatio) ? windowHeight / height : widthRatio;
+            var scalePortrait = (windowHeight / width < heightRatio) ? windowHeight / width : heightRatio;
 
-        return obj;
+            return choseOrientation(scaleLandscape, scalePortrait);
+        }
+        function resize() {
+            var windowWidth = window.innerWidth;
+            var windowHeight = window.innerHeight;
+            var scale = getScale(params.width, params.height);
+
+            fixedSize.forEach(function (o) {
+                o.node.addStyle({
+                    'position': 'absolute',
+                    'width': o.width + 'px',
+                    'height': o.height + 'px',
+                    'transform': getTransformation(getScale(o.width, o.height)),
+                    'transform-origin': '50% 50% 0',
+                    left: -((o.width - windowWidth) / 2) + 'px',
+                    top: -((o.height - windowHeight) / 2) + 'px'
+                })
+            });
+
+            tops.forEach(function (o) {
+                o.node.addStyle({
+                    'position': 'absolute',
+                    'height': '1px',
+                    'width': choseOrientation(windowWidth / scale + 'px', windowHeight / scale + 'px'),
+                    'transform': getTransformation(scale),
+                    'transform-origin': '0% 0% 0',
+                    top: choseOrientation('0px', '0px'),
+                    left: choseOrientation('0px', 'auto'),
+                    right: choseOrientation('auto', -windowHeight / scale + 'px')
+                })
+            });
+
+            bottoms.forEach(function (o) {
+                console.log(windowHeight, params.height, windowWidth, params.width, scale);
+                o.node.addStyle({
+                    'position': 'absolute',
+                    'height': '1px',
+                    'width': choseOrientation(windowWidth / scale + 'px', windowHeight / scale + 'px'),
+                    'transform': getTransformation(scale),
+                    'transform-origin': '0% 0% 0',
+                    bottom: choseOrientation('0px', windowHeight + 'px'),
+                    left: choseOrientation('0px', '0px')
+                })
+            });
+
+            rights.forEach(function (o) {
+                o.node.addStyle({
+                    'position': 'absolute',
+                    'width': '1px',
+                    'height': params.height + 'px',
+                    'transform': getTransformation(scale),
+                    'transform-origin': '50% 50% 0',
+                    // top: choseOrientation('0px', window.innerHeight / 2 + 'px'),
+                    // left: choseOrientation(-((params.width - windowWidth) / 2) + 'px', 'auto'),
+                    right: choseOrientation('0px',  windowWidth/2 + 'px'),
+                    top: choseOrientation((windowHeight-params.height)/2 +'px', windowHeight-(params.height/2)+'px')
+                })
+            });
+
+            fullScreen.forEach(function (o) {
+                o.node.addStyle({
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    top: 0
+                });
+
+                if (o.node.get() instanceof HTMLCanvasElement) {
+                    var gameRatio = params.width / params.height;
+                    var windowRatio = windowWidth / windowHeight;
+
+                    if (windowRatio > gameRatio) {
+                        o.node.get().width = windowWidth / (windowHeight / params.height);
+                        o.node.get().height = params.height;
+                    } else {
+                        o.node.get().width = params.width;
+                        o.node.get().height = windowHeight / (windowWidth / params.width);
+                    }
+                }
+            });
+
+            // var canvasContainer = p.canvasContainer;
+            // if (windowWidth > windowHeight) {
+            //     if (windowRatio > gameRatio) {
+            //         canvasContainer.setTransform((windowWidth * (p.height / windowHeight) - p.width) / 2, 0);
+            //     } else {
+            //         canvasContainer.setTransform(0, (windowHeight * (p.width / windowWidth) - p.height) / 2);
+            //     }
+            // } else {
+            //     if (gameRatio < 1 / windowRatio) {
+            //         canvasContainer.setTransform(p.width, (canvas.height - p.width * gameRatio) / 2, gameRatio, gameRatio, 90, 0, 0, 0, 0);
+            //     } else {
+            //         canvasContainer.setTransform(p.width - ((canvas.width / (canvas.height / p.width) - p.height) / 2), 0, canvas.height / p.width, canvas.height / p.width, 90, 0, 0, 0, 0);
+            //     }
+            // }
+        }
+
+        window.onresize = resize;
+
+        resize();
+
+        return sm;
 
     };
 
-    obj.fileLoader = function (p) {
+    obj.fileLoader = function () {
 
         var loadingSpeed;
         var imagesLoaded = [];
         var obj = {};
 
-        function previouslyLoaded(url) {
+        function previouslyLoaded(p) {
             return imagesLoaded.filter(function (o) {
-                return o.url === url;
+                return o.url === p.url;
             })[0];
         }
-
-        function getFileSize(image) {
-            var fileLength = obj.fileLength(image.url + '?v=' + p.version || '');
-            fileLength.done(function (size) {
-                image.size = size;
-            });
-            return fileLength;
-        }
-        // function loadFile(url, onProgress) {
-        //     var defer = new $.Deferred();
-        //     var xhr = new XMLHttpRequest();
-        //     var totalLoaded = 0;
-        //     xhr.open('GET', url + '?length', true);
-        //     xhr.responseType = 'document'
-        //     // xhr.setRequestHeader('Content-Length','');
-        //
-        //     xhr.onload = function(data) {
-        //         defer.resolve(data);
-        //     };
-        //     xhr.onprogress = function(evt) {
-        //         if (evt.lengthComputable) {
-        //             onProgress(evt.loaded - totalLoaded, evt.total);
-        //             totalLoaded = evt.loaded;
-        //         }
-        //     };
-        //     xhr.send();
-        //     return defer.promise();
-        // }
-
         function loadImage(url, onProgress, imageSize) {
             var defer = cjs.Need(), image = cjs.Need('<img>');
             var totalRemainingToLoad = imageSize;
+            var startTime = new Date().getTime();
 
             var int = setInterval(function () {
-                var sizeLoaded = loadingSpeed * 1.2;
+                var sizeLoaded = loadingSpeed * 0.3;
                 if (totalRemainingToLoad > sizeLoaded) {
                     totalRemainingToLoad -= sizeLoaded;
                     onProgress(sizeLoaded)
@@ -310,9 +378,10 @@ cjs.navigator = {};
             }, 100);
 
             image
-                .setAttribute('src', url + '?v=' + p.version || '')
+                .setAttribute('src', url)
                 .addOnceEventListener('load', function (data) {
                     clearInterval(int);
+                    updateLoadingSpeed(startTime, new Date().getTime(), imageSize);
                     onProgress(totalRemainingToLoad);
                     image = null;
                     defer.resolve(data);
@@ -321,17 +390,11 @@ cjs.navigator = {};
                     clearInterval(int);
                     defer.resolve({});
                 });
-            return defer;
-        }
-        function getFilesLength(images) {
-            var defs = [];
-            images.forEach(function (image) {
-                defs.push(getFileSize(image))
-            });
-            return cjs.Need(defs);
+            return defer.promise();
         }
         function loadImages(images, onProgress) {
             var defs = [];
+
             var totalSize = 0, totalLoaded = 0;
             images.forEach(function (image) {
                 image.size = isNaN(image.size) ? 0 : image.size;
@@ -350,38 +413,32 @@ cjs.navigator = {};
         }
 
         obj.load = function (array, onProgress) {
-            var defer = cjs.Need();
             var images = [];
-            array.forEach(function (url) {
-                if (!previouslyLoaded(url)) {
-                    images.push({
-                        url: url,
-                        size: 0,
-                        loaded: 0
-                    })
+            array.forEach(function (o) {
+                if (!previouslyLoaded(o)) {
+                    images.push(o)
                 }
             });
             onProgress = onProgress || function () {};
-            getFilesLength(images)
-                .done(function () {
-                    loadImages(images, onProgress).then(defer.resolve)
-                });
-
-            return defer;
+            onProgress(1, 100);
+            return loadImages(images, onProgress);
         };
 
-        obj.calculateSpeed = function (testImageUrl) {
+        obj.calculateSpeed = function (testImageUrl, testImageSize) {
             var d = cjs.Need();
             var startTime = new Date().getTime();
-            cjs.Need('<img>')
+            cjs.Node('<img>')
                 .setAttribute('src', testImageUrl)
                 .addOnceListener('load', function () {
-                    var endTime = new Date().getTime();
-                    loadingSpeed = 505/((endTime - startTime)/1000); // bytes/s
+                    updateLoadingSpeed(startTime, new Date().getTime(), testImageSize);
                     d.resolve();
                 });
-            return d;
+            return d.promise();
         };
+
+        function updateLoadingSpeed(startTime, endTime, fileSize) {
+            loadingSpeed = fileSize/((endTime - startTime)/1000);// bytes/s
+        }
 
         return obj;
     }

@@ -64,28 +64,266 @@
         }
     }
 
+    var specialEvents = {};
+    (function (evs) {
+
+        var agent = navigator.userAgent.toLowerCase(),
+            isChromeDesktop = (agent.indexOf('chrome') > -1 && ((agent.indexOf('windows') > -1) || (agent.indexOf('macintosh') > -1) || (agent.indexOf('linux') > -1)) && agent.indexOf('mobile') < 0 && agent.indexOf('android') < 0),
+            settings = {
+                tap_pixel_range: 5,
+                swipe_h_threshold: 50,
+                swipe_v_threshold: 50,
+                taphold_threshold: 750,
+                touch_capable: ('ontouchstart' in window && !isChromeDesktop),
+                tapevent:    ('ontouchstart' in window && !isChromeDesktop) ? 'tap' : 'click',
+                startevent: (('ontouchstart' in window && !isChromeDesktop) ? 'touchstart' : 'mousedown'),
+                endevent: (('ontouchstart' in window && !isChromeDesktop) ? 'touchend' : 'mouseup'),
+                moveevent: (('ontouchstart' in window && !isChromeDesktop) ? 'touchmove' : 'mousemove'),
+                scrollevent: ('ontouchstart' in window && !isChromeDesktop) ? 'touchmove' : 'scroll',
+                hold_timer: null
+            };
+
+        evs.tapstart = function(callback) {
+            var self = this;
+            addListener.call(this, settings.startevent, function tapStartFunc(e) {
+
+                if (e.which && e.which !== 1) {
+                    return false;
+                }
+
+                var origEvent = e.originalEvent,
+                    touchData = {
+                        'position': {
+                            'x': ((settings.touch_capable) ? origEvent.touches[0].screenX : e.screenX),
+                            'y': (settings.touch_capable) ? origEvent.touches[0].screenY : e.screenY
+                        },
+                        // 'offset': {
+                        //     'x': (settings.touch_capable) ? Math.round(origEvent.changedTouches[0].pageX - $this.offset().left) : Math.round(e.pageX - $this.offset().left),
+                        //     'y': (settings.touch_capable) ? Math.round(origEvent.changedTouches[0].pageY - $this.offset().top) : Math.round(e.pageY - $this.offset().top)
+                        // },
+                        'time': Date.now(),
+                        'target': e.target
+                    };
+                triggerCustomEvent(self, 'tapstart', callback, e, touchData);
+                return true;
+            })
+        };
+
+        evs.tap = function (callback) {
+            var self = this,
+                started = false,
+                origTarget = null,
+                start_time,
+                start_pos = {
+                    x: 0,
+                    y: 0
+                },
+                touches;
+            addListener.call(this, settings.startevent, function (e) {
+                if (e.which && e.which !== 1) {
+                    return false;
+                }
+                started = true;
+                start_pos.x = (e.targetTouches) ? e.targetTouches[0].pageX : e.pageX;
+                start_pos.y = (e.targetTouches) ? e.targetTouches[0].pageY : e.pageY;
+                start_time = Date.now();
+                origTarget = e.target;
+                touches = (e.targetTouches) ? e.targetTouches : [e];
+                return true;
+            });
+            addListener.call(this, settings.endevent, function (e) {
+                // Only trigger if they've started, and the target matches:
+                var end_x = (e.targetTouches) ? e.changedTouches[0].pageX : e.pageX,
+                    end_y = (e.targetTouches) ? e.changedTouches[0].pageY : e.pageY,
+                    diff_x = (start_pos.x - end_x),
+                    diff_y = (start_pos.y - end_y);
+
+                if (origTarget == e.target && started && ((Date.now() - start_time) < settings.taphold_threshold) && ((start_pos.x == end_x && start_pos.y == end_y) || (diff_x >= -(settings.tap_pixel_range) && diff_x <= settings.tap_pixel_range && diff_y >= -(settings.tap_pixel_range) && diff_y <= settings.tap_pixel_range))) {
+                    var touchData = [];
+
+                    for (var i = 0; i < touches.length; i++) {
+                        var touch = {
+                            'position': {
+                                'x': (settings.touch_capable) ? e.changedTouches[i].screenX : e.screenX,
+                                'y': (settings.touch_capable) ? e.changedTouches[i].screenY : e.screenY
+                            },
+                            // 'offset': {
+                            //     'x': (settings.touch_capable) ? Math.round(origEvent.changedTouches[i].pageX - $this.offset().left) : Math.round(e.pageX - $this.offset().left),
+                            //     'y': (settings.touch_capable) ? Math.round(origEvent.changedTouches[i].pageY - $this.offset().top) : Math.round(e.pageY - $this.offset().top)
+                            // },
+                            'time': Date.now(),
+                            'target': e.target
+                        };
+
+                        touchData.push(touch);
+                    }
+                    triggerCustomEvent(self, 'tap', callback, e, touchData);
+                }
+            });
+
+        };
+        evs.tapmove = function (callback) {
+            var self = this;
+            addListener.call(this, settings.moveevent, function tapMoveFunc(e) {
+                var touchData = {
+                    'position': {
+                        'x': ((settings.touch_capable) ? e.touches[0].screenX : e.screenX),
+                        'y': (settings.touch_capable) ? e.touches[0].screenY : e.screenY
+                    },
+                    // 'offset': {
+                    //     'x': (settings.touch_capable) ? Math.round(origEvent.changedTouches[0].pageX - $this.offset().left) : Math.round(e.pageX - $this.offset().left),
+                    //     'y': (settings.touch_capable) ? Math.round(origEvent.changedTouches[0].pageY - $this.offset().top) : Math.round(e.pageY - $this.offset().top)
+                    // },
+                    'time': Date.now(),
+                    'target': e.target
+                };
+
+                triggerCustomEvent(self, 'tapmove', callback, e, touchData);
+                return true;
+            });
+        };
+
+        evs.tapend = function (callback) {
+            var self = this;
+            addListener.call(this, settings.endevent, function (e) {
+                var touchData = {
+                    'position': {
+                        'x': (settings.touch_capable) ? e.changedTouches[0].screenX : e.screenX,
+                        'y': (settings.touch_capable) ? e.changedTouches[0].screenY : e.screenY
+                    },
+                    // 'offset': {
+                    //     'x': (settings.touch_capable) ? Math.round(e.changedTouches[0].pageX - $this.offset().left) : Math.round(e.pageX - $this.offset().left),
+                    //     'y': (settings.touch_capable) ? Math.round(e.changedTouches[0].pageY - $this.offset().top) : Math.round(e.pageY - $this.offset().top)
+                    // },
+                    'time': Date.now(),
+                    'target': e.target
+                };
+                triggerCustomEvent(self, 'tapend', callback, e, touchData);
+                return true;
+            });
+        };
+        evs.taphold = function (callback) {
+            var self = this,
+                $this = ret(self),
+                origTarget,
+                start_pos = {
+                    x: 0,
+                    y: 0
+                },
+                end_x = 0,
+                end_y = 0;
+
+            addListener.call(this, settings.startevent, function tapHoldFunc1(e) {
+                if (e.which && e.which !== 1) {return false;}
+
+                origTarget = e.target;
+                var start_time = Date.now(),
+                    startPosition = {
+                        'x': (settings.touch_capable) ? e.touches[0].screenX : e.screenX,
+                        'y': (settings.touch_capable) ? e.touches[0].screenY : e.screenY
+                    },
+                    startOffset = {
+                        'x': (settings.touch_capable) ? e.touches[0].pageX - e.touches[0].target.offsetLeft : e.offsetX,
+                        'y': (settings.touch_capable) ? e.touches[0].pageY - e.touches[0].target.offsetTop : e.offsetY
+                    };
+
+                start_pos.x = (e.targetTouches) ? e.targetTouches[0].pageX : e.pageX;
+                start_pos.y = (e.targetTouches) ? e.targetTouches[0].pageY : e.pageY;
+
+                end_x = start_pos.x;
+                end_y = start_pos.y;
+
+                settings.hold_timer = window.setTimeout(function() {
+
+                    var diff_x = (start_pos.x - end_x),
+                        diff_y = (start_pos.y - end_y);
+
+                    if (e.target == origTarget && ((start_pos.x == end_x && start_pos.y == end_y) || (diff_x >= -(settings.tap_pixel_range) && diff_x <= settings.tap_pixel_range && diff_y >= -(settings.tap_pixel_range) && diff_y <= settings.tap_pixel_range))) {
+                        var end_time = Date.now(),
+                            endPosition = {
+                                'x': (settings.touch_capable) ? e.touches[0].screenX : e.screenX,
+                                'y': (settings.touch_capable) ? e.touches[0].screenY : e.screenY
+                            };
+                        // endOffset = {
+                        //     'x': (settings.touch_capable) ? Math.round(e.changedTouches[0].pageX - $this.offset().left) : Math.round(e.pageX - $this.offset().left),
+                        //     'y': (settings.touch_capable) ? Math.round(e.changedTouches[0].pageY - $this.offset().top) : Math.round(e.pageY - $this.offset().top)
+                        // };
+                        var duration = end_time - start_time;
+
+                        // Build the touch data:
+                        var touchData = {
+                            'startTime': start_time,
+                            'endTime': end_time,
+                            'startPosition': startPosition,
+                            'startOffset': startOffset,
+                            'endPosition': endPosition,
+                            // 'endOffset': endOffset,
+                            'duration': duration,
+                            'target': e.target
+                        };
+                        triggerCustomEvent(self, 'taphold', callback, e, touchData);
+                    }
+                }, settings.taphold_threshold);
+
+                return true;
+            });
+            addListener.call(this, settings.endevent, function tapHoldFunc2() {
+                $this.data('callee2', tapHoldFunc2);
+                $this.data('tapheld', false);
+                window.clearTimeout(settings.hold_timer);
+            });
+            addListener.call(this, settings.moveevent, function tapHoldFunc3(e) {
+                $this.data('callee3', tapHoldFunc3);
+
+                end_x = (e.targetTouches) ? e.targetTouches[0].pageX : e.pageX;
+                end_y = (e.targetTouches) ? e.targetTouches[0].pageY : e.pageY;
+            });
+        };
+        function triggerCustomEvent(obj, eventType, callback, event, touchData) {
+            var originalType = event.type;
+            event.type = eventType;
+            callback.call(obj, event, touchData);
+            event.type = originalType;
+        }
+
+    })(specialEvents);
+
     function addListener(action, callback) {
-        this._listeners = this._listeners || [];
-        this._listeners.push({
-            action: action,
-            callback: callback
-        });
-        if (this.addEventListener) {
-            this.addEventListener(action, callback);
-        } else {
-            /* istanbul ignore next */
-            this.attachEvent('on' + action, callback);
+        if (['tapstart', 'tap', 'tapmove', 'tapend', 'taphold'].indexOf(action) !== -1) {
+            specialEvents[action].call(this, callback);
+        } else{
+            this._listeners = this._listeners || [];
+            this._listeners.push({
+                action: action,
+                callback: callback
+            });
+            if (this.addEventListener) {
+                this.addEventListener(action, callback);
+            } else {
+                this.attachEvent('on' + action, callback);
+            }
         }
     }
 
-    /*TO FIX  */
+    /* TO FIX */
     function removeListener(action, callback) {
+        /** TODO */
+        // if (['tapstart'].indexOf(action) !== -1) {
+        //     removeListener(settings.startevent, callback);
+        // } else if (['tapmove'].indexOf(action) !== -1) {
+        //     removeListener(settings.moveevent, callback);
+        // } else if (['tapend'].indexOf(action) !== -1) {
+        //     removeListener(settings.endevent, callback);
+        // } else if (['tap'].indexOf(action) !== -1) {
+        //     removeListener(settings.startevent, callback);
+        //     removeListener(settings.endevent, callback);
+        // } else {
         if (this.removeEventListener) {
             this.removeEventListener(action, callback);
         } else {
-            /* istanbul ignore next */
             this.detachEvent('on' + action, callback);
         }
+        // }
     }
 
     function addOnceListener(action, callback) {
