@@ -185,6 +185,15 @@ cjs.Need = function () {
             }
             return queue;
         };
+        queue.reject = function () {
+            array = [];
+            index = -1;
+            if (always) {
+                always.apply(queue, arguments);
+            }
+            queuePromise.reject();
+            always = undefined;
+        };
         queue.length = function () {
             return array.length;
         };

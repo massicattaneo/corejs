@@ -823,7 +823,8 @@ String.prototype.toDate = function () {
         }
     }
 
-    function runAnimation(name, time) {
+    function runAnimation(name, params) {
+        params = params || {time: 500, times: 1}
         var onEnds = 'animationend animationend webkitAnimationEnd oanimationend MSAnimationEnd'.split(' ');
         var n = cjs.Need();
         var self = this;
@@ -832,16 +833,21 @@ String.prototype.toDate = function () {
             n.resolve()
         };
         onEnds.forEach(function (action) {
-            addListener.call(this, action, callback)
+            addListener.call(self, action, callback)
         });
         n.done(function () {
             onEnds.forEach(function (action) {
-                removeListener.call(this, action, callback)
+                removeListener.call(self, action, callback)
             });
         });
-        this.style.animation = name + ' ' + time + 'ms';
+        this.style.animation = name + ' ' + params.time + 'ms ' + (params.times || 1) + ' ' + (params.ease || 'linear');
         return n;
     }
+
+    function appendChild(node) {
+        return this.appendChild(node.get());
+    }
+
 
     function create(markup) {
         var div = document.createElement('div');
@@ -898,6 +904,7 @@ String.prototype.toDate = function () {
             setValue, getValue,
             getAttribute, setAttribute,
             runAnimation,
+            appendChild,
             fire,
             toJSON,
             removeAllChildren]
@@ -1205,6 +1212,15 @@ cjs.Need = function () {
                 queue.push.apply(queue, arguments)
             }
             return queue;
+        };
+        queue.reject = function () {
+            array = [];
+            index = -1;
+            if (always) {
+                always.apply(queue, arguments);
+            }
+            queuePromise.reject();
+            always = undefined;
         };
         queue.length = function () {
             return array.length;
@@ -1600,7 +1616,6 @@ cjs.navigator = {};
             });
 
             bottoms.forEach(function (o) {
-                console.log(windowHeight, params.height, windowWidth, params.width, scale);
                 o.node.addStyle({
                     'position': 'absolute',
                     'height': '1px',
@@ -2169,8 +2184,12 @@ cjs.Component = function () {
             return obj.items.get(itemName) || obj.node;
         };
 
-        obj.runAnimation = function (name, time, item) {
-            return obj.get(item).runAnimation(name + '-' + className, time);
+        obj.getClassName = function () {
+            return className;
+        };
+
+        obj.runAnimation = function (name, params) {
+            return obj.get(params.item).runAnimation(name + '-' + className, params);
         };
 
         obj.save = function () {

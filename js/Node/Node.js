@@ -568,7 +568,8 @@
         }
     }
 
-    function runAnimation(name, time) {
+    function runAnimation(name, params) {
+        params = params || {time: 500, times: 1}
         var onEnds = 'animationend animationend webkitAnimationEnd oanimationend MSAnimationEnd'.split(' ');
         var n = cjs.Need();
         var self = this;
@@ -577,16 +578,21 @@
             n.resolve()
         };
         onEnds.forEach(function (action) {
-            addListener.call(this, action, callback)
+            addListener.call(self, action, callback)
         });
         n.done(function () {
             onEnds.forEach(function (action) {
-                removeListener.call(this, action, callback)
+                removeListener.call(self, action, callback)
             });
         });
-        this.style.animation = name + ' ' + time + 'ms';
+        this.style.animation = name + ' ' + params.time + 'ms ' + (params.times || 1) + ' ' + (params.ease || 'linear');
         return n;
     }
+
+    function appendChild(node) {
+        return this.appendChild(node.get());
+    }
+
 
     function create(markup) {
         var div = document.createElement('div');
@@ -647,6 +653,7 @@
             setValue, getValue,
             getAttribute, setAttribute,
             runAnimation,
+            appendChild,
             fire,
             toJSON,
             removeAllChildren]

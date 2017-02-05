@@ -281,7 +281,6 @@ cjs.navigator = {};
             });
 
             bottoms.forEach(function (o) {
-                console.log(windowHeight, params.height, windowWidth, params.width, scale);
                 o.node.addStyle({
                     'position': 'absolute',
                     'height': '1px',

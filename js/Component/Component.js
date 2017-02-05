@@ -298,8 +298,12 @@ cjs.Component = function () {
             return obj.items.get(itemName) || obj.node;
         };
 
-        obj.runAnimation = function (name, time, item) {
-            return obj.get(item).runAnimation(name + '-' + className, time);
+        obj.getClassName = function () {
+            return className;
+        };
+
+        obj.runAnimation = function (name, params) {
+            return obj.get(params.item).runAnimation(name + '-' + className, params);
         };
 
         obj.save = function () {
