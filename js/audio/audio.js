@@ -13,18 +13,26 @@ cjs.Audio = function () {
     var obj = {};
 
     var sounds = {name: {url: ''}};
+    var instances = {};
     var isMuted = false;
 
     obj.init = function (sds) {
         sounds = sds;
+        Object.keys(sounds).forEach(function (type) {
+            instances[type] = new Audio(sounds[type].url);
+        });
     };
 
     obj.play = function (type) {
         var sound = sounds[type];
         if (sound && !isMuted) {
-            var audio = new Audio(sound.url);
-            audio.play();
+            instances[type].play();
         }
+    };
+
+    obj.stop = function (type) {
+        instances[type].pause();
+        instances[type].currentTime = 0;
     };
 
     obj.mute = function () {
