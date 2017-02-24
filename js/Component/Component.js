@@ -192,7 +192,6 @@ cjs.Component = function () {
                     i++
                 }
             }
-
             split.forEach(function (rule) {
                 var m1 = rule.match(/.*\{.*\}/);
                 m1 && m1.forEach(function (r) {
@@ -263,14 +262,13 @@ cjs.Component = function () {
         var style = parseStyle(p.style || '', config);
         var template = parseTemplate(p.template || '', config);
         var className = '';
-        var node = cjs.Node(template);
+        var node;
 
         obj = obj || {};
         obj.items = cjs.Collection();
         obj.template = template;
         obj.style = style;
         obj.config = config;
-        obj.node = node;
 
         function getParent(parent) {
             if (parent instanceof HTMLElement) return parent;
@@ -279,18 +277,27 @@ cjs.Component = function () {
         }
 
         obj.createIn = function (parent, position) {
-            parent = getParent(parent);
-            if (!position) {
-                parent.appendChild(node.get(0));
+            if (parent instanceof cjs.NodeCanvas) {
+                node = obj.node = new cjs.NodeCanvas(parent.getCtx(), template);
+                if (style) {
+                    className = appendStyle(style);
+                    node.addStyle(className);
+                }
             } else {
-                position === 'before' && parent.parentNode.insertBefore(node.get(), parent);
-                position === 'after' && parent.parentNode.insertBefore(node.get(), parent.nextSibling);
+                node = obj.node =  cjs.Node(template);
+                parent = getParent(parent);
+                if (!position) {
+                    parent.appendChild(node.get(0));
+                } else {
+                    position === 'before' && parent.parentNode.insertBefore(node.get(), parent);
+                    position === 'after' && parent.parentNode.insertBefore(node.get(), parent.nextSibling);
+                }
+                if (style) {
+                    className = appendStyle(style);
+                    node.addStyle(className);
+                }
+                node && parseNode(node, obj);
             }
-            if (style) {
-                className = appendStyle(style);
-                node.addStyle(className);
-            }
-            node && parseNode(node, obj);
             obj.init && obj.init();
         };
 
@@ -395,6 +402,12 @@ cjs.Component = function () {
 
     Component.parse = function (name, data, item) {
         return parsingFunctions[name](data, item);
+    };
+
+    Component.getStyle = function (name) {
+        return styles.filter(function (s) {
+            return s.className === name;
+        })[0].style;
     };
 
     return Component;

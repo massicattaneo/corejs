@@ -189,11 +189,11 @@ cjs.navigator = {};
         var tops = [];
         var bottoms = [];
         var rights = [];
-        var fullScreen = [];
+        var canvasFullScreen = [];
 
         sm.centered = function (p) {
             fixedSize.push({
-                node: cjs.Node(p.selector),
+                node: p.node,
                 width: p.width,
                 height: p.height
             });
@@ -201,25 +201,19 @@ cjs.navigator = {};
         };
         sm.top = function (p) {
             tops.push({
-                node: cjs.Node(p.selector)
+                node: p.node
             });
             resize();
         };
         sm.bottom = function (p) {
             bottoms.push({
-                node: cjs.Node(p.selector)
+                node: p.node
             });
             resize();
         };
         sm.right = function (p) {
             rights.push({
-                node: cjs.Node(p.selector)
-            });
-            resize();
-        };
-        sm.fullScreen = function (p) {
-            fullScreen.push({
-                node: cjs.Node(p.selector)
+                node: p.node
             });
             resize();
         };
@@ -249,6 +243,9 @@ cjs.navigator = {};
             var scalePortrait = (windowHeight / width < heightRatio) ? windowHeight / width : heightRatio;
 
             return choseOrientation(scaleLandscape, scalePortrait);
+        }
+        function isCanvas(node) {
+            return node.get() instanceof HTMLCanvasElement;
         }
         function resize() {
             var windowWidth = window.innerWidth;
@@ -306,15 +303,15 @@ cjs.navigator = {};
                 })
             });
 
-            fullScreen.forEach(function (o) {
-                o.node.addStyle({
-                    position: 'relative',
-                    width: '100%',
-                    height: '100%',
-                    top: 0
-                });
+            canvasFullScreen.forEach(function (o) {
 
-                if (o.node.get() instanceof HTMLCanvasElement) {
+                if (isCanvas(o.node)) {
+                    o.node.addStyle({
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%',
+                        top: 0
+                    });
                     var gameRatio = params.width / params.height;
                     var windowRatio = windowWidth / windowHeight;
 
@@ -345,6 +342,12 @@ cjs.navigator = {};
         }
 
         window.onresize = resize;
+
+        if (params.canvas) {
+            canvasFullScreen.push({
+                node: cjs.Node(params.canvas)
+            });
+        }
 
         resize();
 

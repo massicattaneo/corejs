@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game</title>
+    <style>body {font-family: Arial;padding: 0; margin: 0;}</style>
+</head>
+<body>
+<script src='js/Core/Core.js'></script>
+<script src='js/Array/Array.js'></script>
+<script src='js/String/String.js'></script>
+<script src='js/Object/Object.js'></script>
+<script src='js/Node/Node.js'></script>
+<script src='js/NodeCanvas/NodeCanvas.js'></script>
+<script src='js/Date/Date.js'></script>
+<script src='js/Currency/Currency.js'></script>
+<script src='js/Need/Need.js'></script>
+<script src='js/Bus/bus.js'></script>
+<script src='js/navigator/navigator.js'></script>
+<script src='js/db/db.js'></script>
+<script src='js/Component/Component.js'></script>
+<script src='js/audio/audio.js'></script>
+<canvas id="canvas"></canvas>
+<div id="html"></div>
+<script>
+    var sm = cjs.navigator.screenManager({width: 1920, height: 1080, canvas: '#canvas'});
+//    var canvas = cjs.Node('#canvas');
+    var component = cjs.Component({
+        template: '<div></div>',
+        style: '.& {width: 100px; height: 100px; background-color: black; position: absolute; top: 0;}'
+    });
+//    component.createIn(document.body);
+    var ctx = document.getElementById("canvas").getContext("2d");
+//    ctx.rect(20,20,150,100);
+//    ctx.stroke();
+    var htmlContainer = cjs.Node('#html');
+    sm.centered({node: htmlContainer, width: 1920, height: 1080});
+    component.createIn(htmlContainer);
+
+    var canvasContainer = new cjs.NodeCanvas(ctx);
+    sm.centered({node: canvasContainer, width: 1920, height: 1080});
+    component.createIn(canvasContainer);
+
+</script>
+
+</body>
+</html>

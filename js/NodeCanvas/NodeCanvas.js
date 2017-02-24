@@ -11,24 +11,42 @@
 
 (function () {
 
-    function addClass() {
-        for (var a = 0; a < arguments.length; a++) {
-            var className = arguments[a].trim();
-            if (this.className) {
-                if (!this.className.match(className)) {
-                    this.className += ' ' + className;
-                }
-            } else {
-                this.className = className;
-            }
+    function parseStyleForCanvas(cssStyle) {
+        cssStyle = cssStyle.replace(/\.&/g, '').replace(/;\s*}/g, ';').replace(/{/g, ';');
+        var values = cssStyle.match(/(\:[^\:]*;)/g).map(function (o) {
+            return o.replace(/\s*;\s*/g, '').replace(/\s*:\s*/g, '')
+        });
+        var properties = cssStyle.match(/(\;[^\;]*:)/g).map(function (o) {
+            return o.replace(/\s*;\s*/g, '').replace(/\s*:\s*/g, '')
+        });
+
+        var o = {};
+        properties.forEach(function (p, i) {
+            o[p] = parseValue(values[i]);
+        });
+        return o;
+    }
+
+    function addClass(className) {
+        addCss.call(this, parseStyleForCanvas(cjs.Component.getStyle(className)))
+    }
+
+    function parseValue(value) {
+        if (value.match(/\d*px/)) {
+            return Number(value.replace('px', ''));
         }
+        if (value.match(/0/)) {
+            return Number(0);
+        }
+        return value;
     }
 
     function addCss(o) {
-        var e = this;
-        Object.keys(o).forEach(function (k) {
-            e.style[k] = o[k];
-        })
+        var ctx = this;
+        ctx.beginPath();
+        ctx.fillStyle=o['background-color'];
+        ctx.fillRect(0,0,o.width,o.height);
+        ctx.stroke();
     }
 
     function addStyle() {
@@ -40,28 +58,15 @@
     }
 
     function clearStyles() {
-        this.className = "";
     }
 
     function removeStyle() {
-        for (var a = 0; a < arguments.length; a++) {
-            var className = arguments[a].trim();
-            if (this.className.match(className)) {
-                this.className = this.className.replace(className, '').replace(/\s\s/g, ' ').trim();
-            }
-        }
     }
 
     function hasStyle(className) {
-        return this.className.match(className) !== null;
     }
 
     function toggleStyle(className) {
-        if (hasStyle.call(this, className)) {
-            removeStyle.call(this, className);
-        } else {
-            addStyle.call(this, className);
-        }
     }
 
     var specialEvents = {};
@@ -448,206 +453,67 @@
     })(specialEvents);
 
     function addListener(action, callback) {
-        if (['tapstart', 'tap', 'tapmove', 'tapend', 'taphold'].indexOf(action) !== -1) {
-            specialEvents[action].call(this, callback);
-        } else{
-            this._listeners = this._listeners || [];
-            this._listeners.push({
-                action: action,
-                callback: callback
-            });
-            if (this.addEventListener) {
-                this.addEventListener(action, callback);
-            } else {
-                this.attachEvent('on' + action, callback);
-            }
-        }
     }
 
-    /* TO FIX */
     function removeListener(action, callback) {
-        /** TODO */
-        // if (['tapstart'].indexOf(action) !== -1) {
-        //     removeListener(settings.startevent, callback);
-        // } else if (['tapmove'].indexOf(action) !== -1) {
-        //     removeListener(settings.moveevent, callback);
-        // } else if (['tapend'].indexOf(action) !== -1) {
-        //     removeListener(settings.endevent, callback);
-        // } else if (['tap'].indexOf(action) !== -1) {
-        //     removeListener(settings.startevent, callback);
-        //     removeListener(settings.endevent, callback);
-        // } else {
-        if (this.removeEventListener) {
-            this.removeEventListener(action, callback);
-        } else {
-            this.detachEvent('on' + action, callback);
-        }
-        // }
     }
 
     function addOnceListener(action, callback) {
-        var self = this;
-        var once = function () {
-            callback();
-            removeListener.call(self, action, once)
-        };
-        addListener.call(self, action, once);
     }
 
     function clearListeners() {
-        if (this._listeners) {
-            this._listeners.forEach(function (listener) {
-                removeListener.call(this, listener.action, listener.callback)
-            }, this);
-            this._listeners.length = 0;
-        }
     }
 
     function removeAllChildren() {
-        var fc = this.firstChild;
-        while (fc) {
-            this.removeChild( fc );
-            fc = this.firstChild;
-        }
-        return this;
     }
 
     function getTarget(selector) {
-        var event = selector || window.event;
-        return event.target || event.srcElement;
     }
 
     function fire(action, params) {
-        /* istanbul ignore if */
-        if (document.action) {
-            var evt = document.createEventObject();
-            evt.data = params;
-            return this.fireEvent('on' + action, evt)
-        }
-        else {
-            var e = document.createEvent("HTMLEvents");
-            e.initEvent(action, true, true);
-            e.data = params;
-            return !this.dispatchEvent(e);
-        }
     }
 
     function setValue(value) {
-        if (this.getAttribute('type') === 'checkbox') {
-            this.checked = value;
-        } else if (['text', 'email', 'tel', ].indexOf(this.getAttribute('type')) !== -1) {
-            this.value = value;
-        } else {
-            this.textContent = value;
-            this.innerText = value;
-        }
-        return this;
     }
 
     function getValue() {
-        if (this.getAttribute('type') === 'checkbox') {
-            return this.checked;
-        } else if(this.value !== undefined) {
-            return this.value;
-        }
-        return this.innerText
     }
 
     function getAttribute(attrName) {
-        var element = this;
-        if (!(element && element.getAttribute)) return null;
-        return element.getAttribute(attrName)
     }
 
     function setAttribute(name, value) {
-        var element = this;
-        if (value === undefined) {
-            element.removeAttribute(name);
-        } else {
-            element.setAttribute(name, value);
-        }
     }
 
     function runAnimation(name, params) {
-        params = params || {time: 500, times: 1}
-        var onEnds = 'animationend animationend webkitAnimationEnd oanimationend MSAnimationEnd'.split(' ');
-        var n = cjs.Need();
-        var self = this;
-        var callback = function () {
-            self.style.animation = '';
-            n.resolve()
-        };
-        onEnds.forEach(function (action) {
-            addListener.call(self, action, callback)
-        });
-        n.done(function () {
-            onEnds.forEach(function (action) {
-                removeListener.call(self, action, callback)
-            });
-        });
-        this.style.animation = name + ' ' + params.time + 'ms ' + (params.times || 1) + ' ' + (params.ease || 'linear');
-        return n;
     }
 
     function appendChild(node) {
-        return this.appendChild(node.get());
     }
 
 
     function create(markup) {
-        var div = document.createElement('div');
-        div.innerHTML = markup;
-        return div.children[0];
-        //var doc = document.implementation.createHTMLDocument("");
-        //doc.body.innerHTML = markup;
-        //return doc.body.childNodes[0];
     }
 
     /** toJSON */
     function getNodeValue(node) {
-        var text = node.textContent || node.innerText;
-        var value = isNaN(text) ? text : parseFloat(text);
-        return value;
     }
 
     var isEmpty = function (obj) {
-        for (var prop in obj) {
-            if (obj.hasOwnProperty(prop)) {
-                return false;
-            }
-        }
-        return true;
     };
 
     function parseNode(children) {
-        var json = {};
-        for (var n = 0; n < children.length; n++) {
-            var node = children[n];
-            var tagName = node.tagName.toCamelCase();
-
-            if (json[tagName] && !(json[tagName] instanceof Array)) {
-                json[tagName] = [json[tagName]];
-            }
-
-            var value = parseNode(node.children) || getNodeValue(node);
-
-            if (json[tagName] instanceof Array) {
-                json[tagName].push(value);
-            } else {
-                json[tagName] = value;
-            }
-        }
-        return (isEmpty(json)) ? null : json;
     }
 
     function toJSON() {
-        return parseNode(this.children);
     }
 
     var extensions = {};
-    function Node(element) {
-        var obj = {};
 
+    cjs.NodeCanvas = function NodeCanvas(ctx, template) {
+        var json = cjs.Node(template || '<div></div>').toJSON() || {};
+        var children = [];
+        var self = this;
         [addStyle, clearStyles, removeStyle, hasStyle, toggleStyle,
             addListener, addOnceListener, removeListener, clearListeners,
             setValue, getValue,
@@ -658,49 +524,36 @@
             toJSON,
             removeAllChildren]
             .forEach(function (func) {
-                obj[func.name] = function () {
-                    var apply = func.apply(element, arguments);
-                    return apply === undefined ? obj : apply;
+                self[func.name] = function () {
+                    var apply = func.apply(ctx, arguments);
+                    return apply === undefined ? self : apply;
                 }
             });
 
-        obj.get = function () {
-            return element;
+        this.getCtx = function () {
+            return ctx;
         };
 
-        obj.attributes = function () {
-            return element.attributes;
+        this.get = function () {
+            // return element;
         };
 
-        obj.getTagName = function() {
-            return element.tagName
+        this.attributes = function () {
+            // return element.attributes;
         };
 
-        obj.children = function() {
-            if (!(element && element.childNodes)) return [];
-            var nodes = Array.prototype.slice.call(element.childNodes);
-            return nodes.map(function(e) {
-                return Node(e)
-            })
+        this.getTagName = function() {
+            // return element.tagName
         };
 
-        cjs.Object.extend(obj, extensions);
+        this.children = function() {
+        //
+        };
 
-        return obj;
-    }
-
-    cjs.Node = function (node) {
-        if (typeof node === 'object') {
-            return Node(getTarget(node));
-        }
-        if (node.indexOf('#') === -1) {
-            return Node(create(node));
-        }
-        var e = document.getElementById(node.replace('#', ''));
-        return Node(e);
+        cjs.Object.extend(this, extensions);
     };
 
-    cjs.Node.extend = function (o) {
+    cjs.NodeCanvas.extend = function (o) {
         cjs.Object.extend(extensions, o);
     };
 
