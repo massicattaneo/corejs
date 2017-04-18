@@ -953,7 +953,7 @@ String.prototype.toDate = function () {
 
     cjs.Node.extend = function (o) {
         cjs.Object.extend(extensions, o);
-    }
+    };
 
 
 
@@ -1309,11 +1309,19 @@ cjs.Need = function () {
             events.push({
                 eventName: eventName,
                 callback: function () {
-                    callback();
+                    callback.apply(null, arguments);
                     obj.off(eventName, callback);
                 },
                 priority: priority || 1000
             })
+        };
+
+        obj.need = function (eventName) {
+            var p = cjs.Need();
+            obj.once(eventName, function (o) {
+                p.resolve(o)
+            });
+            return p;
         };
 
         obj.fire = function (eventName, param) {
@@ -1524,11 +1532,11 @@ cjs.navigator = {};
         var tops = [];
         var bottoms = [];
         var rights = [];
-        var fullScreen = [];
+        var canvasFullScreen = [];
 
         sm.centered = function (p) {
             fixedSize.push({
-                node: cjs.Node(p.selector),
+                node: p.node,
                 width: p.width,
                 height: p.height
             });
@@ -1536,25 +1544,19 @@ cjs.navigator = {};
         };
         sm.top = function (p) {
             tops.push({
-                node: cjs.Node(p.selector)
+                node: p.node
             });
             resize();
         };
         sm.bottom = function (p) {
             bottoms.push({
-                node: cjs.Node(p.selector)
+                node: p.node
             });
             resize();
         };
         sm.right = function (p) {
             rights.push({
-                node: cjs.Node(p.selector)
-            });
-            resize();
-        };
-        sm.fullScreen = function (p) {
-            fullScreen.push({
-                node: cjs.Node(p.selector)
+                node: p.node
             });
             resize();
         };
@@ -1584,6 +1586,9 @@ cjs.navigator = {};
             var scalePortrait = (windowHeight / width < heightRatio) ? windowHeight / width : heightRatio;
 
             return choseOrientation(scaleLandscape, scalePortrait);
+        }
+        function isCanvas(node) {
+            return node.get() instanceof HTMLCanvasElement;
         }
         function resize() {
             var windowWidth = window.innerWidth;
@@ -1639,15 +1644,15 @@ cjs.navigator = {};
                 })
             });
 
-            fullScreen.forEach(function (o) {
-                o.node.addStyle({
-                    position: 'relative',
-                    width: '100%',
-                    height: '100%',
-                    top: 0
-                });
+            canvasFullScreen.forEach(function (o) {
 
-                if (o.node.get() instanceof HTMLCanvasElement) {
+                if (isCanvas(o.node)) {
+                    o.node.addStyle({
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%',
+                        top: 0
+                    });
                     var gameRatio = params.width / params.height;
                     var windowRatio = windowWidth / windowHeight;
 
@@ -1664,6 +1669,12 @@ cjs.navigator = {};
         }
 
         window.onresize = resize;
+
+        if (params.canvas) {
+            canvasFullScreen.push({
+                node: cjs.Node(params.canvas)
+            });
+        }
 
         resize();
 
@@ -1779,9 +1790,12 @@ cjs.navigator = {};
         };
 
         obj.onChange = function (path, callback) {
+            var d = cjs.Need();
             db.ref(path).on('value', function (data) {
-                callback(data.val())
+                callback(data.val());
+                d.resolve();
             });
+            return d;
         };
 
         obj.onRemove = function (path, callback) {
@@ -2078,7 +2092,6 @@ cjs.Component = function () {
                     i++
                 }
             }
-
             split.forEach(function (rule) {
                 var m1 = rule.match(/.*\{.*\}/);
                 m1 && m1.forEach(function (r) {
@@ -2149,14 +2162,13 @@ cjs.Component = function () {
         var style = parseStyle(p.style || '', config);
         var template = parseTemplate(p.template || '', config);
         var className = '';
-        var node = cjs.Node(template);
+        var node;
 
         obj = obj || {};
         obj.items = cjs.Collection();
         obj.template = template;
         obj.style = style;
         obj.config = config;
-        obj.node = node;
 
         function getParent(parent) {
             if (parent instanceof HTMLElement) return parent;
@@ -2165,18 +2177,27 @@ cjs.Component = function () {
         }
 
         obj.createIn = function (parent, position) {
-            parent = getParent(parent);
-            if (!position) {
-                parent.appendChild(node.get(0));
+            if (parent instanceof cjs.NodeCanvas) {
+                node = obj.node = new cjs.NodeCanvas(parent.getCtx(), template);
+                if (style) {
+                    className = appendStyle(style);
+                    node.addStyle(className);
+                }
             } else {
-                position === 'before' && parent.parentNode.insertBefore(node.get(), parent);
-                position === 'after' && parent.parentNode.insertBefore(node.get(), parent.nextSibling);
+                node = obj.node =  cjs.Node(template);
+                parent = getParent(parent);
+                if (!position) {
+                    parent.appendChild(node.get(0));
+                } else {
+                    position === 'before' && parent.parentNode.insertBefore(node.get(), parent);
+                    position === 'after' && parent.parentNode.insertBefore(node.get(), parent.nextSibling);
+                }
+                if (style) {
+                    className = appendStyle(style);
+                    node.addStyle(className);
+                }
+                node && parseNode(node, obj);
             }
-            if (style) {
-                className = appendStyle(style);
-                node.addStyle(className);
-            }
-            node && parseNode(node, obj);
             obj.init && obj.init();
         };
 
@@ -2281,6 +2302,12 @@ cjs.Component = function () {
 
     Component.parse = function (name, data, item) {
         return parsingFunctions[name](data, item);
+    };
+
+    Component.getStyle = function (name) {
+        return styles.filter(function (s) {
+            return s.className === name;
+        })[0].style;
     };
 
     return Component;

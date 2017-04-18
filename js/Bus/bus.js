@@ -35,11 +35,19 @@
             events.push({
                 eventName: eventName,
                 callback: function () {
-                    callback();
+                    callback.apply(null, arguments);
                     obj.off(eventName, callback);
                 },
                 priority: priority || 1000
             })
+        };
+
+        obj.need = function (eventName) {
+            var p = cjs.Need();
+            obj.once(eventName, function (o) {
+                p.resolve(o)
+            });
+            return p;
         };
 
         obj.fire = function (eventName, param) {

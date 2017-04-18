@@ -24,9 +24,12 @@
         };
 
         obj.onChange = function (path, callback) {
+            var d = cjs.Need();
             db.ref(path).on('value', function (data) {
-                callback(data.val())
+                callback(data.val());
+                d.resolve();
             });
+            return d;
         };
 
         obj.onRemove = function (path, callback) {
