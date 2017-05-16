@@ -82,11 +82,15 @@ cjs.Component = function () {
         }());
 
     var createListeners = function (attribute, node, obj) {
-        attribute.trim().split(',').forEach(function (attribute) {
+        attribute.trim().split('||').forEach(function (attribute) {
             var split = attribute.trim().split(':');
-            node.addListener(split[0], function (event) {
-                obj[split[1]].call(obj, event);
-            });
+            var actions = split[0].split(',');
+            var listener = split[1];
+            actions.forEach(function (action) {
+                node.addListener(action, function (event) {
+                    obj[listener].call(obj, event);
+                });
+            })
         });
     };
 
