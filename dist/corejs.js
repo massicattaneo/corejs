@@ -731,6 +731,8 @@ String.prototype.toDate = function () {
                 this.attachEvent('on' + action, callback);
             }
         }
+        var self = this;
+        return function () {removeListener.call(self,action, callback)}
     }
 
     function removeListener(action, callback) {
@@ -743,8 +745,8 @@ String.prototype.toDate = function () {
 
     function addOnceListener(action, callback) {
         var self = this;
-        var once = function () {
-            callback();
+        var once = function (a) {
+            callback(a);
             removeListener.call(self, action, once)
         };
         addListener.call(self, action, once);
