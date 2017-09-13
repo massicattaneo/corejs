@@ -1957,7 +1957,8 @@ cjs.Component = function () {
 
             obj.save = function (item) {
                 var elem = obj.get(item);
-                return cjs.navigator.send('POST', '/data/' + elem.attribute);
+                dataBase.update(elem.attribute, elem.item.getValue());
+                return cjs.Need().resolve();
             };
 
             obj.get = function (item) {
