@@ -41,6 +41,10 @@
             db.ref(path).remove();
         };
 
+        obj.ref = function (reference) {
+            return db.ref(reference);
+        };
+
         obj.add = function (path, info) {
             var newStoreRef = db.ref(path).push();
             info.created = new Date().getTime();
@@ -75,14 +79,14 @@
         return obj;
     };
 
-    cjs.Db.staticJSONAdapter = function (JSON) {
+    cjs.Db.staticJSONAdapter = function (privateData) {
         var obj = {};
         var onChange, onRemove;
 
         obj.once = function (path, callback) {
-            var array = JSON[path.replace('/', '')];
+            var array = privateData[path.replace('/', '')];
             var json = {};
-            array.forEach(function (o,i) {
+            array.forEach(function (o, i) {
                 json[i] = o;
             });
             callback({
@@ -98,7 +102,7 @@
         obj.onChange = function (path, callback) {
             onChange = callback;
             var k = path.split('/');
-            var f = JSON;
+            var f = privateData;
             k.forEach(function (o) {
                 f = f[o]
             });
@@ -134,7 +138,22 @@
             return cjs.Need().resolve();
         };
 
-        obj.init = function () {};
+        obj.ref = function (reference) {
+            const ref = reference.replace('/', '');
+            return {
+                on: function (action, callback) {
+                    if (action === 'child_added') {
+                        Object.keys(privateData[ref]).forEach(function (key) {
+                            callback({ key: key, val: function() { return privateData[ref][key] }
+                        })
+                        });
+                    }
+                }
+            };
+        };
+
+        obj.init = function () {
+        };
 
         return obj
     }
