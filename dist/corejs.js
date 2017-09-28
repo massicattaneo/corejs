@@ -1015,7 +1015,11 @@ String.prototype.toDate = function () {
         if (d.getMonth() !== today.getMonth()) return false;
         if (d.getDate() !== today.getDate()) return false;
         return true;
-    }
+    };
+    cjs.Date.setUp = function (_dayNames, _monthNames) {
+        dayNames = _dayNames;
+        monthNames = _monthNames;
+    };
 
 })();
 
