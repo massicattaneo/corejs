@@ -2008,6 +2008,26 @@ cjs.navigator = {};
             return promise;
         };
 
+        obj.update = function (calendarOwner, eventId, modify) {
+            var cal = calendars[calendarOwner];
+            var promise = cjs.Need();
+            gapi.client.calendar.events.get({calendarId: cal.id,eventId: eventId,}).then(function (e) {
+                var params = {
+                    calendarId: cal.id,
+                    eventId: eventId,
+                    summary: modify.summary || e.result.summary,
+                    location: cal.location,
+                    start: { "dateTime": modify.start ? modify.start.toISOString() : e.result.start, timeZone: cal.timeZone},
+                    end: { "dateTime": modify.end ? modify.end.toISOString() : e.result.end, timeZone: cal.timeZone },
+                    description: modify.description || e.result.description
+                };
+                gapi.client.calendar.events.update(params).then(function(err) {
+                    promise.resolve();
+                });
+            });
+            return promise;
+        };
+
         obj.getCalendars = function (calendarOwner) {
             return calendarOwner ? calendars[calendarOwner] : calendars;
         };
