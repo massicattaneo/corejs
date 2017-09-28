@@ -25,6 +25,7 @@ module.exports = (function () {
             'js/navigator/navigator.js',
             'js/navigator/cookies.js',
             'js/db/db.js',
+            'js/Calendar/Calendar.js',
             'js/Component/Component.js',
             'js/audio/audio.js'
         ],
