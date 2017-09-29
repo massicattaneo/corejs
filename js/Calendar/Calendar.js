@@ -12,7 +12,7 @@
 
     cjs.Calendar = function () {};
 
-    cjs.Calendar.googleCalendar = function () {
+    cjs.Calendar.googleCalendar = function (token) {
         var obj = {};
         var calendars = {};
 
@@ -28,19 +28,28 @@
         obj.init = function (config) {
             var promise = cjs.Need();
             gapi.load('client:auth2', function () {
-                gapi.client.init({
-                    discoveryDocs: config.DISCOVERY_DOCS,
-                    clientId: config.CLIENT_ID,
-                    scope: config.SCOPES
-                }).then(function () {
-                    if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
-                        gapi.auth2.getAuthInstance().signIn().then(function (e) {
-                            getCalendarList(promise);
-                        });
-                    } else {
+                if (token) {
+                    gapi.client.setToken({
+                        access_token: token
+                    });
+                    gapi.client.load('calendar', 'v3', function () {
                         getCalendarList(promise);
-                    }
-                })
+                    });
+                } else {
+                    gapi.client.init({
+                        discoveryDocs: config.DISCOVERY_DOCS,
+                        clientId: config.CLIENT_ID,
+                        scope: config.SCOPES
+                    }).then(function () {
+                        if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
+                            gapi.auth2.getAuthInstance().signIn().then(function (e) {
+                                getCalendarList(promise);
+                            });
+                        } else {
+                            getCalendarList(promise);
+                        }
+                    })
+                }
             });
             return promise;
         };
