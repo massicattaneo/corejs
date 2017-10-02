@@ -19,11 +19,15 @@
         function getCalendarList(promise) {
             gapi.client.calendar.calendarList.list().then(function (e) {
                 e.result.items.forEach(function (c) {
-                    calendars[c.summary] = c;
+                    calendars[c.id] = c;
                 });
                 promise.resolve();
             });
         }
+
+        obj.setToken = function(access_token) {
+            gapi.client.setToken({ access_token: access_token });
+        };
 
         obj.init = function (config) {
             var promise = cjs.Need();
@@ -54,8 +58,8 @@
             return promise;
         };
 
-        obj.get = function (calendarOwner, datetime) {
-            var cal = calendars[calendarOwner];
+        obj.get = function (calendarId, datetime) {
+            var cal = calendars[calendarId];
             var promise = cjs.Need();
             datetime.setHours(0,0,0,0);
             var timeMin = datetime.toISOString();
@@ -73,10 +77,11 @@
             return promise;
         };
 
-        obj.insert = function (calendarOwner, params) {
-            var summary = params.summary, start= params.start, end = params.end, description = params.description;
+        obj.insert = function (calendarId, params) {
+            var summary = params.summary, start= params.start,
+                end = params.end, description = params.description, processId = params.processId;
             var promise = cjs.Need();
-            var cal = calendars[calendarOwner];
+            var cal = calendars[calendarId];
             gapi.client.calendar.events.insert({
                 calendarId: cal.id,
                 resource: {
@@ -84,7 +89,8 @@
                     location: cal.location,
                     start: { "dateTime": start.toISOString(), timeZone: cal.timeZone},
                     end: { "dateTime": end.toISOString(), timeZone: cal.timeZone },
-                    description: description
+                    description: description,
+                    extendedProperties: {private: {processId: processId}}
                 }
             }).then(function (e) {
                 promise.resolve(e.result.id);
@@ -92,8 +98,8 @@
             return promise;
         };
 
-        obj.delete = function (calendarOwner, eventId) {
-            var cal = calendars[calendarOwner];
+        obj.delete = function (calendarId, eventId) {
+            var cal = calendars[calendarId];
             var promise = cjs.Need();
             var params = {
                 calendarId: cal.id,
@@ -105,10 +111,10 @@
             return promise;
         };
 
-        obj.update = function (calendarOwner, eventId, modify) {
-            var cal = calendars[calendarOwner];
+        obj.update = function (calendarId, eventId, modify) {
+            var cal = calendars[calendarId];
             var promise = cjs.Need();
-            gapi.client.calendar.events.get({calendarId: cal.id,eventId: eventId,}).then(function (e) {
+            gapi.client.calendar.events.get({calendarId: cal.id,eventId: eventId}).then(function (e) {
                 var params = {
                     calendarId: cal.id,
                     eventId: eventId,
@@ -116,7 +122,8 @@
                     location: cal.location,
                     start: { "dateTime": modify.start ? modify.start.toISOString() : e.result.start.dateTime, timeZone: cal.timeZone},
                     end: { "dateTime": modify.end ? modify.end.toISOString() : e.result.end.dateTime, timeZone: cal.timeZone },
-                    description: modify.description || e.result.description
+                    description: modify.description || e.result.description,
+                    extendedProperties: {private: { processId: modify.processId || e.result.extendedProperties ? e.result.extendedProperties.processId : undefined }}
                 };
                 gapi.client.calendar.events.update(params).then(function(err) {
                     promise.resolve();
@@ -125,8 +132,8 @@
             return promise;
         };
 
-        obj.getCalendars = function (calendarOwner) {
-            return calendarOwner ? calendars[calendarOwner] : calendars;
+        obj.getCalendars = function (calendarId) {
+            return calendarId ? calendars[calendarId] : calendars;
         };
 
         return obj;
@@ -134,7 +141,6 @@
 
     cjs.Calendar.staticJSONAdapter = function (privateData) {
         var obj = {};
-
         return obj
     }
 
