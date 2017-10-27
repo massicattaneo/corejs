@@ -1900,16 +1900,21 @@ cjs.navigator = {};
 
         obj.ref = function (reference) {
             const ref = reference.replace('/', '');
-            return {
+            const ret = {
+                orderByChild: function () {return ret;},
+                startAt: function () {return ret;},
+                endAt: function () {return ret;},
+                equalTo: function () {return ret;},
                 on: function (action, callback) {
                     if (action === 'child_added') {
                         Object.keys(privateData[ref]).forEach(function (key) {
                             callback({ key: key, val: function() { return privateData[ref][key] }
-                        })
+                            })
                         });
                     }
                 }
             };
+            return ret;
         };
 
         obj.init = function () {
