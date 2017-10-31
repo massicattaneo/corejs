@@ -1808,7 +1808,7 @@ cjs.navigator = {};
 
         obj.add = function (path, info) {
             var newStoreRef = db.ref(path).push();
-            info.created = new Date().getTime();
+            info.created = info.created || new Date().getTime();
             newStoreRef.set(info);
             return newStoreRef.key;
         };
