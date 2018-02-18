@@ -1995,7 +1995,7 @@ cjs.navigator = {};
         };
 
         obj.insert = function (calendarId, params) {
-            var summary = params.summary, start= params.start,
+            var summary = params.summary, start= params.start, label = params.label,
                 end = params.end, description = params.description, processId = params.processId;
             var promise = cjs.Need();
             var cal = calendars[calendarId];
@@ -2007,7 +2007,7 @@ cjs.navigator = {};
                     start: { "dateTime": start.toISOString(), timeZone: cal.timeZone},
                     end: { "dateTime": end.toISOString(), timeZone: cal.timeZone },
                     description: description,
-                    extendedProperties: {private: {processId: processId}}
+                    extendedProperties: {private: {processId: processId, label: label}}
                 }
             }).then(function (e) {
                 promise.resolve(e.result.id);
