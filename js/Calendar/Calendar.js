@@ -123,7 +123,12 @@
                     start: { "dateTime": modify.start ? modify.start.toISOString() : e.result.start.dateTime, timeZone: cal.timeZone},
                     end: { "dateTime": modify.end ? modify.end.toISOString() : e.result.end.dateTime, timeZone: cal.timeZone },
                     description: modify.description || e.result.description,
-                    extendedProperties: {private: { processId: modify.processId || (e.result.extendedProperties ? e.result.extendedProperties.private.processId : undefined) }}
+                    extendedProperties: {
+                        private: {
+                            label: modify.label || (e.result.extendedProperties ? e.result.extendedProperties.private.label : undefined),
+                            processId: modify.processId || (e.result.extendedProperties ? e.result.extendedProperties.private.processId : undefined)
+                        }
+                    }
                 };
                 gapi.client.calendar.events.update(params).then(function(err) {
                     promise.resolve();
